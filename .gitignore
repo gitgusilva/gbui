@@ -1,0 +1,18 @@
+build/
+out/
+gallery/
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# Screenshots the examples write.
+*.ppm
+
+# Editor and tooling leftovers.
+compile_commands.json
+.cache/
+.DS_Store
+
+# The roadmap is a working document, not part of the published site.
+ROADMAP.md
+docs/roadmap.md

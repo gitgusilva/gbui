@@ -1,0 +1,160 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(gbui
+    VERSION 0.2.0
+    DESCRIPTION "A retained-mode UI toolkit with flexbox layout and themeable components"
+    LANGUAGES CXX)
+
+# Standalone builds get the developer defaults; consumed as a subdirectory, the
+# parent project decides.
+set(GBUI_STANDALONE OFF)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(GBUI_STANDALONE ON)
+endif()
+
+option(GBUI_BUILD_TESTS "Build the gbui test suite" ${GBUI_STANDALONE})
+option(GBUI_BUILD_EXAMPLES "Build the gbui examples" ${GBUI_STANDALONE})
+option(GBUI_WERROR "Treat warnings as errors" ${GBUI_STANDALONE})
+option(GBUI_PLATFORM_SDL2 "Build the SDL2 window backend when SDL2 is present" ON)
+
+# ---- the library -----------------------------------------------------------
+# Sources are grouped by module. Everything above `platform` is free of any
+# dependency beyond the standard library; `platform` is where the machine
+# starts to matter.
+set(GBUI_SOURCES
+    src/anim/animator.cpp
+    src/anim/easing.cpp
+    src/core/color.cpp
+    src/core/json.cpp
+    src/core/path.cpp
+    src/input/interaction.cpp
+    src/input/textEdit.cpp
+    src/overlay/placement.cpp
+    src/style/design.cpp
+    src/style/theme.cpp
+    src/scene/tree.cpp
+    src/scene/ui.cpp
+    src/layout/layout.cpp
+    src/layout/textWrap.cpp
+    src/paint/paint.cpp
+    src/paint/canvas.cpp
+    src/widgets/detail.cpp
+    src/widgets/badge.cpp
+    src/widgets/box.cpp
+    src/widgets/button.cpp
+    src/widgets/chart.cpp
+    src/widgets/checkbox.cpp
+    src/widgets/colorPicker.cpp
+    src/widgets/datePicker.cpp
+    src/widgets/dateTimePicker.cpp
+    src/widgets/icon.cpp
+    src/widgets/icons.cpp
+    src/widgets/label.cpp
+    src/widgets/hyperlink.cpp
+    src/widgets/listRow.cpp
+    src/widgets/menu.cpp
+    src/widgets/modal.cpp
+    src/widgets/numberField.cpp
+    src/widgets/panel.cpp
+    src/widgets/popover.cpp
+    src/widgets/progress.cpp
+    src/widgets/radio.cpp
+    src/widgets/richEditor.cpp
+    src/widgets/scroll.cpp
+    src/widgets/select.cpp
+    src/widgets/slider.cpp
+    src/widgets/spacing.cpp
+    src/widgets/switchToggle.cpp
+    src/widgets/table.cpp
+    src/widgets/tabs.cpp
+    src/widgets/text.cpp
+    src/widgets/textField.cpp
+    src/widgets/timePicker.cpp
+    src/widgets/toolbar.cpp
+    src/widgets/tooltip.cpp
+    src/widgets/virtualList.cpp
+    src/platform/font.cpp
+    src/platform/shell.cpp
+    src/platform/stbTruetypeImpl.cpp)
+
+find_package(SDL2 QUIET)
+set(GBUI_HAVE_SDL2 OFF)
+if(GBUI_PLATFORM_SDL2 AND SDL2_FOUND)
+    set(GBUI_HAVE_SDL2 ON)
+    list(APPEND GBUI_SOURCES src/platform/sdl2/window.cpp)
+else()
+    list(APPEND GBUI_SOURCES src/platform/nullWindow.cpp)
+endif()
+
+add_library(gbui ${GBUI_SOURCES})
+add_library(gbui::gbui ALIAS gbui)
+
+target_compile_features(gbui PUBLIC cxx_std_20)
+
+target_include_directories(gbui
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
+if(GBUI_HAVE_SDL2)
+    target_link_libraries(gbui PUBLIC SDL2::SDL2)
+    target_compile_definitions(gbui PUBLIC GBUI_HAVE_SDL2=1)
+endif()
+
+if(MSVC)
+    target_compile_options(gbui PRIVATE /W4 $<$<BOOL:${GBUI_WERROR}>:/WX>)
+else()
+    target_compile_options(gbui PRIVATE
+        -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+        -Wnon-virtual-dtor -Woverloaded-virtual
+        $<$<BOOL:${GBUI_WERROR}>:-Werror>)
+    # Third-party code was not written for those flags.
+    set_source_files_properties(src/platform/stbTruetypeImpl.cpp PROPERTIES
+        COMPILE_OPTIONS "-w")
+endif()
+
+set_target_properties(gbui PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    CXX_EXTENSIONS OFF
+    POSITION_INDEPENDENT_CODE ON)
+
+if(GBUI_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+if(GBUI_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+message(STATUS "gbui ${PROJECT_VERSION}: SDL2 backend ${GBUI_HAVE_SDL2}")
+
+# ---- install ---------------------------------------------------------------
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS gbui EXPORT gbuiTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT gbuiTargets
+    FILE gbuiTargets.cmake
+    NAMESPACE gbui::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/gbui)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfig.cmake"
+"include(\"\${CMAKE_CURRENT_LIST_DIR}/gbuiTargets.cmake\")\n")
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/gbui)

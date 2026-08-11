@@ -1,0 +1,606 @@
+# widgets
+
+Every component is a free function taking a `Ui&` and an options struct. See
+[Writing a component](/guide/writing-a-component) to add your own.
+
+**One component, one header.** `button` is `gbui/widgets/button.hpp`, `slider`
+is `gbui/widgets/slider.hpp`, and so on, so a translation unit includes what it
+uses. Four umbrellas gather the groups for callers who want all of it:
+
+| Umbrella | What it pulls in |
+| --- | --- |
+| `gbui/widgets/components.hpp` | badge, button, chart, icon, list row, panel, spacing, text, toolbar |
+| `gbui/widgets/controls.hpp` | checkbox, radio, switch, text field, number field, slider, progress, label, link, rich editor, and the date, time and colour pickers |
+| `gbui/widgets/containers.hpp` | box and its presets, scroll view, virtualised list, table, tabs |
+| `gbui/widgets/overlays.hpp` | tooltip, popover, menu, select, modal |
+
+Interactive components take an [`Interaction`](/reference/input) and an **id**,
+report what the user did, and hold no state: the value is yours.
+
+```cpp
+if (checkbox(ui, input, "settings.tags", value, {.label = "Show tags"}))
+    value = !value;
+```
+
+The component never writes to your model. It says what happened and leaves the
+decision with you, which is what makes undo, validation and "are you sure?"
+possible without the toolkit knowing about any of them.
+
+## Text
+
+```cpp
+NodeId text(Ui&, std::string_view value, const TextOptions& = {});
+NodeId sectionHeading(Ui&, std::string_view value);
+NodeId strong(Ui&, std::string_view, TextOptions = {});     // importance
+NodeId emphasis(Ui&, std::string_view, TextOptions = {});   // stress
+```
+
+```cpp
+struct TextOptions {
+    Token        color = Token::Text;
+    FontWeight   weight = FontWeight::Regular;
+    FontSlant    slant = FontSlant::Normal;
+    FontRole     role = FontRole::Ui;
+    float        size = kAuto;
+    TextAlign    align = TextAlign::Start;
+    float        grow = 0.0f;                       // take the rest of the row
+    TextOverflow overflow = TextOverflow::Ellipsis;
+    int          maxLines = 0;                      // wrapping only; 0 is unlimited
+    float        lineHeight = 0.0f;
+    bool         underline = false, strikeThrough = false;
+    Gradient     gradient{};                        // across the run
+};
+```
+
+`sectionHeading` is the small, muted, uppercase heading — "UNSTAGED (3)". The
+two shorthands carry the meaning HTML gives them rather than the appearance:
+`strong` happens to be drawn semibold and `emphasis` italic today, and a call
+site that says what it means is one a restyle does not have to visit.
+
+### Mixed runs
+
+```cpp
+richText(ui, {{"on branch "}, {"main", Token::Accent, {}, FontWeight::SemiBold},
+              {", 3 files changed"}}, {.wrap = true});
+```
+
+A node holds one `TextStyle` and therefore one colour, so a line whose runs
+differ is a **row of spans** rather than a string with markup in it. Keeping
+them as data is what stops this becoming a parser.
+
+`wrap` lets the line break **between** spans — not inside one, which would need
+an inline formatting context the engine does not have. Splitting a sentence into
+more spans gives the layout more places to break. A paragraph that must break
+mid-sentence wants `text` with `TextOverflow::Wrap` instead.
+
+## Button
+
+```cpp
+NodeId button(Ui&, std::string_view label, const ButtonOptions& = {});
+NodeId button(Ui&, const Interaction&, std::string_view label, const ButtonOptions& = {});
+
+struct ButtonOptions {
+    ButtonVariant       variant = ButtonVariant::Secondary;  // Primary Secondary Ghost Danger
+    std::optional<Icon> leading;                             // drawn before the label
+    bool                disabled = false;
+    bool                block = false;                       // fill the row
+    float               height = 0.0f;                       // 0 = the design's control height
+    std::string_view    id;                                  // tag
+    std::optional<bool> ripple;                              // unset asks the Design
+};
+```
+
+Disabled is drawn, not merely flagged: the button renders at 45% opacity and
+stops taking focus.
+
+The `Interaction` overload is what a ripple needs — the ink grows from the
+*point* the press landed, which the frame knows and the builder does not. Unset,
+`ripple` asks the active `Design`: Material throws ink, the others change the
+surface.
+
+## Icon and badge
+
+```cpp
+NodeId icon(Ui&, Icon which, const IconOptions& = {});   // color, size, stroke
+NodeId badge(Ui&, std::string_view value, const BadgeOptions& = {});
+```
+
+A badge is a pill, and it never shrinks: a branch name that elides to nothing is
+worse than a row that overflows. See [Icons](/guide/icons) for the set and how
+to extend it.
+
+## Containers
+
+```cpp
+Ui::Scope beginBox(Ui&, const BoxOptions& = {});
+Ui::Scope beginPanel(Ui&, const PanelOptions& = {});
+Ui::Scope beginToolbar(Ui&, const ToolbarOptions& = {});
+Ui::Scope beginListRow(Ui&, const ListRowOptions& = {});
+NodeId    spacer(Ui&, float grow = 1.0f);
+NodeId    divider(Ui&, Direction containerDirection);
+```
+
+`beginBox` is the general container, the way `<div>` is one — `ui.begin(Style{…})`
+already builds anything the layout engine can express, so this is the
+ergonomics. The presets are functions returning options, not a second API:
+
+```cpp
+auto card    = beginBox(ui, BoxStyle::card());
+auto sidebar = beginBox(ui, BoxStyle::sidebar());
+auto bar     = beginBox(ui, BoxStyle::navbar({.height = 44.0f}));
+auto body    = beginBox(ui, BoxStyle::section());
+auto middle  = beginBox(ui, BoxStyle::centre());
+```
+
+`BoxOptions` carries the layout, size, appearance, `cursor`, `id` and
+`focusable` fields a container repeats; `beginPanel` stays as the older, narrower
+form of `card`.
+
+```cpp
+struct ListRowOptions {
+    bool             selected = false;
+    bool             hovered = false;
+    float            height = 28.0f;
+    Edges            padding = Edges::symmetric(0.0f, 12.0f);
+    float            gap = 6.0f;
+    std::string_view id;
+};
+```
+
+`selected` washes the row in the accent at 18%; `hovered` uses `surfaceHover`.
+Both are passed in — components hold no state.
+
+`divider` takes the direction of the container it sits in, because a rule spans
+the cross axis and is one pixel on the main one.
+
+::: warning `ToolbarOptions::bottomBorder` draws nothing
+`Border` is all four edges, so a toolbar cannot ask for a rule on one of them.
+Add `divider(ui, Direction::Column)` after the toolbar until the primitive grows
+per-edge widths.
+:::
+
+## Scrolling and virtualised lists
+
+`#include "gbui/widgets/scroll.hpp"`, `virtualList.hpp`
+
+```cpp
+Ui::Scope beginScroll(Ui&, const Interaction&, id, ScrollState&, const ScrollOptions& = {});
+```
+
+The content is laid out at its natural size, clipped to the viewport, and moved
+by `state.offset`. The wheel scrolls it while it is the innermost scrollable
+node under the pointer; Page Up, Page Down, Home and End do too when focus is on
+it *or inside it*; the bar can be dragged. `ScrollState` is the application's:
+
+```cpp
+struct ScrollState {
+    float offset;         // yours to set — restore it and the view opens where it was
+    float contentSize;    // written by the component from last frame's geometry
+    float viewportSize;
+    float maxOffset() const;
+    bool  scrollable() const;
+    float progress() const;   // 0 at the top, 1 at the bottom
+};
+```
+
+`ScrollOptions` carries `direction`, an explicit `axis`
+(`None | Vertical | Horizontal`), the wheel `step`, the bar's width and
+auto-hiding, `focusable`, and minimums and maximums on the **viewport** — a
+maximum is what turns "as tall as its content" into "as tall as its content,
+then scroll", which is the rule a dropdown needs. `None` still clips: a box that
+must not grow past a size but must not scroll either is a real thing. Both axes
+at once is not built, and is named rather than half-done.
+
+Everything inside a scroll view costs a node, so 50 000 rows really do build
+50 000 nodes. When the rows are uniform, don't:
+
+```cpp
+VirtualSlice shown = virtualList(ui, input, "history", state,
+                                 {.count = commits.size(), .rowHeight = 28.0f},
+                                 [&](Ui& ui, std::size_t index) {
+                                     auto row = beginListRow(ui, {.id = rowId(index)});
+                                     text(ui, commits[index].subject, {.grow = 1.0f});
+                                 });
+```
+
+`row` is called once per visible index, in order, inside a box of exactly
+`rowHeight` — the list enforces the height rather than trusting the caller,
+because a row that laid itself out taller would slide the ones after it out of
+step with the scrollbar.
+
+The rows that are *not* visible become two spacers, one standing in for
+everything above the slice and one for everything below. The content is
+therefore the full height it would have been, so the scrollbar, `maxOffset` and
+Page Down all keep working on the real list while the arena holds the forty rows
+a person can see.
+
+```cpp
+struct VirtualSlice { std::size_t first, count, total; float pitch; };
+```
+
+Returned rather than kept, so a caller can say "showing 41–78 of 50 000" without
+counting anything. `overscan` (2 by default) builds that many rows above and
+below the viewport, which is what keeps a fast drag from showing an edge — the
+viewport is last frame's, like everything else that needs geometry before layout
+has run.
+
+```cpp
+struct RowMetrics { float height, gap, top; float pitch() const; };
+void revealRow(ScrollState&, const RowMetrics&, std::size_t index);
+```
+
+Scrolls the least distance that brings a row fully into view, and does nothing
+when it already is: a row one line below the fold moves one line rather than
+jumping the list under the reader. This is what arrow-key navigation over a list
+needs, virtualised or not — a select's open list uses the same call.
+`VirtualListOptions::rows()` hands over the metrics of a virtualised one.
+
+## Table
+
+`#include "gbui/widgets/table.hpp"`
+
+```cpp
+TableResult table(Ui&, const Interaction&, id, const std::vector<Column>&,
+                  std::size_t rowCount, TableState&,
+                  const std::function<void(Ui&, std::size_t row, std::size_t column)>& cell,
+                  const TableOptions& = {});
+```
+
+What makes a table a table is the part a list of rows cannot do: **the widths
+are resolved once for the whole table** and handed to the rows, so every row's
+third cell starts at the same x. `cell` is called for each visible cell and
+builds whatever belongs there, into a box that is already the right width.
+
+```cpp
+struct Column {
+    std::string_view title;
+    ColumnSize       sizing = ColumnSize::Fraction;   // Fixed | Fraction | FitContent
+    float            width = 1.0f;      // pixels, or the share
+    std::string_view fitSample;         // the widest value expected, for FitContent
+    float            minWidth = 48.0f, maxWidth = kAuto;
+    TextAlign        align = TextAlign::Start;
+    bool             sortable = false;
+    bool             resizable = true;
+};
+```
+
+`FitContent` measures the header's title and `fitSample`, **not** the cells, and
+that is a real limit rather than an oversight: a cell is a callback building
+arbitrary UI, so asking it how wide it would like to be means building the whole
+table twice. For a commit hash, a date or a count — the columns that actually
+want fitting — a sample is exact.
+
+`sortable` is off by default and deliberately: this widget owns the geometry,
+not the data. It reports that the reader asked for a different order and the
+application reorders its rows. A column that advertises sorting it does not
+implement is worse than one that never offered.
+
+```cpp
+struct TableState {
+    ScrollState body, columns;     // vertical, and the shared horizontal one
+    std::vector<float> widths;     // what the reader dragged; kAuto keeps the rule
+    int sortColumn = -1; bool ascending = true;
+    std::size_t selected = npos;
+};
+```
+
+Dragged widths live in the state rather than in `Column` so the layout rules a
+developer wrote and the widths a reader chose stay separate — shipping a new
+column order should not throw away either. The header and the rows share one
+horizontal scroll so they cannot drift apart.
+
+`TableOptions` carries row and header heights, `stickyHeader`, `zebra`,
+`virtualise` (on, and reusing `virtualList`), cell padding and the three kinds
+of rule: `gridLines` under the header, `rowLines` and `columnLines`. Both row
+and column lines are off by default — on a table read top to bottom the rows are
+already separated by their alignment, and a line under each is a lot of ink for
+no information.
+
+`TableResult` reports `sortChanged`, `selectionChanged`, the `shown` slice and
+the resolved `columnWidths`.
+
+**Known rough edge:** the horizontal scrollbar is a child of the box that
+scrolls, so it slides with the columns instead of staying pinned to the bottom
+edge. It should be lifted out and given the viewport's geometry, the way the
+sticky header already is.
+
+## Tabs
+
+```cpp
+std::optional<std::size_t> tabs(Ui&, const Interaction&, id,
+                                const std::vector<TabItem>&, std::size_t selected,
+                                const TabsOptions& = {});
+void tabPanels(Ui&, std::size_t selected,
+               const std::vector<std::function<void(Ui&)>>& panels,
+               const TabPanelsOptions& = {});
+```
+
+The strip is **one** focusable stop — the ARIA roving-tabindex pattern — so Tab
+moves past the whole strip rather than through every tab in it, and the arrow
+keys move between them once it has the keyboard. Home and End jump to the ends
+and disabled tabs are skipped. The indicator slides to the new tab when an
+animator is present and simply appears when there is not.
+
+`TabsOrientation::Vertical` is a sidebar: same component, same keys, the
+indicator down the leading edge. `TabItem::group` draws a heading above the
+first tab of a run — vertical strips only, and drawn *between* tabs rather than
+being one, so the keyboard walks straight past it.
+
+`tabPanels` is separate because the two are rarely siblings: a vertical strip
+sits beside its panels and a horizontal one above them. An unselected panel is
+built inside a box of no height that clips, so it takes part in nothing the
+reader can see while still being *there* — `lazy` turns that off and skips it
+entirely, which is cheaper and means `frameOf` finds nothing inside it.
+
+**Not built:** an overflow menu for when the tabs do not fit (they shrink and
+elide), a close affordance, and reordering by drag.
+
+## Controls
+
+| Component | Signature | Reports |
+| --- | --- | --- |
+| `checkbox` | `(ui, input, id, checked, options)` | `true` on the frame it was toggled |
+| `radio` | `(ui, input, id, selected, options)` | `true` when chosen; nothing when already selected |
+| `switchToggle` | `(ui, input, id, on, options)` | `true` on the frame it was flipped |
+| `textField` | `(ui, input, id, TextEditState&, options)` | `TextFieldResult` — changed, moved, submitted, cancelled, toggledReveal |
+| `numberField` | `(ui, input, id, value, options)` | `{value, changed}`, already clamped and stepped |
+| `slider` | `(ui, input, id, value, options)` | `{value, changed}`, snapped to `step` |
+| `progressBar` | `(ui, options)` | nothing; a negative value draws the indeterminate form |
+| `label` | `(ui, input, id, text, options)` | the id to focus when it was clicked, or nothing |
+| `hyperlink` | `(ui, input, id, label, options)` | `true` on the frame it was followed |
+
+Every one of them:
+
+- is activated by a click **or** by Space/Return while focused;
+- dims to 45% when `disabled`, **and recolours** — opacity alone still reads as
+  editable — and stops taking focus;
+- takes its size and shape from the active `Design`, so a switch is 40×22 under
+  `gitbox()` and 52×32 under `material()` without any call site changing;
+- shows its focus ring only when focus arrived from the keyboard — the
+  `:focus-visible` rule, described under
+  [focus and its ring](/reference/input#focus-and-its-ring-are-two-questions).
+
+### Text and numbers
+
+`textField` supports a placeholder, a leading icon, `readOnly` and `password`,
+with a reveal eye at the trailing edge that shows the text while it is held
+(`revealToggle`, on by default — a field you cannot read back is a field people
+mistype into). It and `numberField` are the exception to the ring rule above: a
+box that will swallow the next keystroke rings however focus arrived.
+
+The pointer places its caret. A press puts the caret on the character boundary
+nearest the click, and holding and moving drags a selection out from there —
+both measuring the run exactly as the caret is drawn, so what is clicked is
+where it lands. A password field maps the click against its bullets and counts
+that many characters into the string, because the two are not the same number
+of bytes.
+
+`numberField` owns the parse: it clamps, steps and rounds before returning, so
+a caller never sees a value outside the range. The wheel steps it while the
+pointer is over it. Its steppers go `Sides`, `Stacked` (the classic spin box) or
+`None`, and drop to `Stacked` automatically below `stackedBelow` pixels wide, so
+a field in a narrow column shows its value rather than two buttons.
+
+### Label and link
+
+```cpp
+if (const auto target = label(ui, input, "f.name", "Repository", {.forId = "name"}))
+    interaction.focus(*target);
+```
+
+Clicking a label focuses the control it names, exactly as `<label for>` does —
+and does not when that control is disabled or read-only. It returns the id
+rather than moving focus itself, which keeps the toolkit from mutating
+interaction state behind a component's back.
+
+`hyperlink` follows `href` through [`openUrl`](/reference/platform#opening-a-url)
+on click or Return. An empty `href` reports the click and follows nothing, which
+is what a link that scrolls somewhere inside the application wants. `chord`
+requires modifiers for a click to count — for a link inside editable text, where
+a plain click has to place the caret instead. It underlines always by default,
+because colour alone is not a cue for everyone.
+
+## Pickers
+
+`#include "gbui/widgets/datePicker.hpp"`, `timePicker.hpp`,
+`dateTimePicker.hpp`, `colorPicker.hpp`
+
+Each comes in two entry points rather than a flag: an **inline** one that is
+always open and owns its space, and a **field** that borrows space from a
+popover. They share the state and the drawing.
+
+```cpp
+DatePickerResult   datePicker(ui, input, id, selected, DatePickerState&, options);
+DateFieldResult    dateField(ui, input, id, selected, DatePickerState&, options);
+TimePickerResult   timePicker(ui, input, id, selected, TimePickerState&, options);
+DateTimePickerResult dateTimePicker(ui, input, id, selected, DateTimePickerState&, options);
+DateTimeFieldResult  dateTimeField(ui, input, id, selected, DateTimeFieldState&, options);
+ColorPickerResult  colorPicker(ui, input, id, ColorPickerState&, options);
+ColorPickerResult  colorField(ui, input, id, ColorPickerState&, options);
+```
+
+`Date` is three integers and `Time` is three more, deliberately not
+`std::chrono::year_month_day` — that type does the arithmetic inside, and
+putting it in the public surface would push a `<chrono>` include into every call
+site. `Date::serial()` and `Time::secondsOfDay()` are how two of them compare
+and step.
+
+**The calendar.** Arrows move by a day, Page Up and Page Down by a month, and
+days outside the month or outside `minimum`/`maximum` are **drawn and dimmed,
+not hidden** — a grid with holes in it is harder to read than one with days you
+cannot pick. Today is marked with a dot rather than a ring, so it cannot be
+confused with the selection. The state carries what is being *looked at*, which
+is not the same as what is chosen — the same split a select makes between its
+highlight and its value.
+
+**The clock.** Columns of hours and minutes rather than steppers, because a time
+is picked far more often than it is nudged: "quarter past two" is two glances,
+and two number fields make it two edits. Each column scrolls its selection into
+view, so opening on 23:45 does not show midnight. `minuteStep` coarsens it, and
+bounds that wrap midnight are handled as two ranges.
+
+**Twelve-hour is a display, not a value.** `Time::hour` is always 0–23, so
+switching a picker to AM/PM keeps the same instant.
+
+**Formatting is a pattern**, in the grammar every date library uses:
+
+```cpp
+formatDate(date, "dd/MM/yyyy", locale);
+formatTime(time, "HH'h'mm", clock);
+formatDateTime(when, "EEE, d MMM 'at' h:mm a", calendar, clock);
+```
+
+`yyyy yy MMMM MMM MM M dd d EEEE EEE` for dates, `HH H hh h mm m ss s a` for
+times; anything else is copied through, and text in single quotes is verbatim —
+which is how a pattern says "de" in Portuguese without the `d` being read as a
+day. The pattern decides the **shape** and `CalendarLocale`/`ClockLocale` decide
+the **words**, which is how one function covers Brazilian, American and ISO
+without a locale database.
+
+**The colour picker** is a saturation/value square, a hue rail, an alpha rail
+over a chequerboard, a hex readout and optional swatches, each switchable off on
+its own. The square is built the way every picker on the web is: the pure hue
+behind, white-to-transparent across it and transparent-to-black down it — two
+gradients over a fill, three nodes rather than a shader. Its state is `Hsv`, not
+`Color`, for the reason on the [core](/reference/core#colour) page.
+
+**Still missing:** a text field that accepts a *typed* date, and relative
+phrasing ("3 days ago"), which needs its own words from the locale.
+
+## Rich editor
+
+`#include "gbui/widgets/richEditor.hpp"`
+
+```cpp
+RichEditorResult richEditor(Ui&, const Interaction&, id, RichDocument&,
+                            RichEditorState&, const RichEditorOptions& = {});
+```
+
+A block editor: paragraphs, headings, lists, quotes and code blocks, with bold,
+italic, underline, strikethrough, inline code and links over ranges within a
+block. Typing, splitting a block with Return and merging with Backspace all
+work, and the toolbar is the caller's to compose — `defaultToolbar()` is a
+starting point, and a `Custom` item runs a callback given the document and the
+state.
+
+Marks are **ranges over the text**, not a tree of nested spans, which is the
+model every editor that survived contact with users ended up at — Quill's
+deltas, ProseMirror's marks. Nesting looks natural until a bold run and a link
+overlap by half, and then it is two trees that cannot both be right.
+
+The `BlockStyle` toolbar item is a dropdown rather than one button per heading,
+because a block is a heading *or* a paragraph and a row of mutually exclusive
+buttons is a select wearing the wrong clothes.
+
+**Not finished, and the gaps are named rather than discovered:** no images (the
+painter cannot decode one), no undo, no nested lists, and the caret moves by
+character and by block rather than by *visual line* — so a block that wraps is
+edited by a caret that does not know where the lines are.
+
+## Overlays
+
+`#include "gbui/widgets/overlays.hpp"`
+
+All of them sit in a layer above the content, are positioned by the
+[placement engine](/reference/overlay) rather than by the flex flow, and are
+anchored **by tag**: they ask the interaction layer where the anchor was last
+frame, which is the rectangle the user was pointing at and the only geometry
+available while the tree is being built.
+
+**The application owns whether they are open.** A component that decided that
+for itself would need to keep state, and a toolkit that keeps state cannot
+rebuild its tree.
+
+```cpp
+void      tooltip(Ui&, const Interaction&, anchorId, std::string_view text, options);
+Ui::Scope beginPopover(Ui&, const Interaction&, id, anchorId, options);
+bool      menuItem(Ui&, const Interaction&, id, std::string_view label, options);
+void      menuSeparator(Ui&);
+Modal     beginModal(Ui&, const Interaction&, id, title, Vec2 position, options);
+Ui::Scope beginModalActions(Ui&);
+```
+
+Every one of them takes a `FloatingOptions` — `placement`, `gap`, `margin`,
+`flip`, `shift`, `bounds` — as the base of its own options struct.
+
+`tooltip` draws nothing when its anchor is not hovered, so the call sits
+unconditionally beside the control it describes. `delay` (0.4 s) is what stops a
+pointer dragged across a toolbar from flashing one per control; it needs an
+animator for the clock, and without one the tooltip shows at once.
+
+`beginPopover` bounds its own height: `maxHeight = kAuto` does **not** mean
+unbounded, it means the room actually available on the side it lands on, less
+the margin — so a popup that would run past the bottom of the window stops at it
+and scrolls inside instead. Pass a `ScrollState*` for that scrolling; null means
+it clips without moving. `matchAnchorWidth` is what a select's list wants.
+
+`menuItem`'s check mark goes on the leading edge for a menu — where every
+desktop menu reserves a gutter for state — and on the trailing edge for a
+select, where the leading edge belongs to the labels being compared. It is
+focusable by default, which is right for a menu the keyboard should walk and
+wrong for a list whose owner drives the highlight.
+
+`beginModal` takes the position and gives it back, so dragging survives the tree
+being rebuilt; pass an empty position on the first frame to have it centred.
+`dismissed` covers the close button, the backdrop and Escape.
+
+**Not built:** toasts, and closing a menu on the next click outside — the
+application does that today.
+
+## Select
+
+`#include "gbui/widgets/select.hpp"`
+
+```cpp
+struct SelectState {
+    bool open = false;
+    std::optional<std::size_t> highlighted;   // where the keyboard is, not the value
+    ScrollState list;                         // written by the component
+};
+
+SelectResult select(ui, input, id, items, selected, SelectState&, options);   // {chosen}
+```
+
+The state is the application's, like every other piece the toolkit reads. The
+important field is `highlighted`: **walking a list is not choosing from it.**
+
+| | Closed | Open |
+| --- | --- | --- |
+| `Up` / `Down` | step the value | move the highlight, wrapping at both ends |
+| `Home` / `End` | — | first / last row |
+| `Return`, `Space` | open the list | commit the highlight, close |
+| `Escape` | — | close, value untouched |
+
+Opening puts the highlight on the current value, so a list opened to look at and
+closed with Return changes nothing. The list keeps the highlighted row in view
+as it moves, scrolls past `maxVisible` (or `maxListHeight`, which wins when both
+apply — a row count cannot know how tall the window is), and **the box keeps the
+keyboard**: its rows are drawn and clickable but are not places Tab can land, so
+Tab leaves the control rather than walking into an open popup.
+
+The filterable form is not built.
+
+## Charts
+
+`lineChart`, `barChart`, `scatterChart`, `heatmap`, `candlestickChart` and
+`donutChart` have a page of their own: [charts](/reference/charts).
+
+## Icons
+
+```cpp
+enum class Icon { Archive, Bold, ChartPie, Check, ChevronDown, …, X, Count };
+
+std::string_view iconPath(Icon);
+std::optional<Icon> iconFromName("git-branch");
+```
+
+Forty Lucide glyphs, generated by `tools/generate_icons.py`; do not edit the
+table by hand. See [Icons](/guide/icons).
+
+## Not built yet
+
+Named rather than half-built: a **tree view** (the branch sidebar), a **split
+pane** with draggable dividers, a **breadcrumb**, a **toast**, a **marquee**, an
+**empty state**, an **avatar**, and a **code and diff view** with syntax
+highlighting — that last one is a project of its own and is the honest reason a
+full migration off a web stack is a year rather than a quarter.

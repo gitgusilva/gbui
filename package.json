@@ -1,0 +1,15 @@
+{
+  "name": "gbui-docs",
+  "private": true,
+  "description": "Documentation site for the gbui toolkit",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:build:versions": "tools/build_docs.sh"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
