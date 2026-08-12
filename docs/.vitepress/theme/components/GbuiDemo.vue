@@ -1,55 +1,79 @@
 <script setup lang="ts">
-// A live demo screen, running in the page.
+// A demo screen: its source, and — when the reader asks for it — the screen
+// itself, running.
 //
-// The component owns the frame around it — the picker, the skin menu, the
-// state while the module downloads — and nothing about the demo itself: that is
-// `demos/web/gbui-embed.js`, which knows how to put one on a canvas and is
-// framework-free so that anything else can use it too.
+// **Nothing runs until it is asked to.** The WebAssembly module is 1.7 MB and
+// then rasterises every frame on the CPU, which is a real cost on a phone and
+// an unreasonable one to charge someone who came to read. So the page opens on
+// the code, the reader presses Run, and only then is anything downloaded. That
+// is also the more useful default for a documentation page: the source is what
+// the page is teaching, and the running screen is the evidence.
 //
-// The WebAssembly module is a build artefact and is not committed, so the
-// component has to behave when it is absent: `npm run docs:dev` on a machine
-// with no Emscripten shows the placeholder below and every other page works.
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+// The frame around it is here; the screen itself is `demos/web/gbui-embed.js`,
+// which is framework-free so anything else can drive it too. The catalogue and
+// the highlighted source come from `demos.data.ts`, which reads both out of the
+// C++ at build time — so neither can drift from the code it describes.
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, withBase } from 'vitepress'
+
+import { data as demos } from '../demos.data'
 
 const props = withDefaults(
   defineProps<{
     /** Which screen to open on. Empty takes the first in the catalogue. */
     id?: string
-    /** Height of the canvas, in CSS pixels. */
+    /** Height of the stage, in CSS pixels. */
     height?: number
-    /** Show the strip of screens along the top. */
-    picker?: boolean
-    /** Show the skin menu and the restart button. */
-    controls?: boolean
+    /** Start on the source or on the running screen. */
+    mode?: 'code' | 'run'
   }>(),
-  { id: '', height: 620, picker: false, controls: true },
+  { id: '', height: 620, mode: 'code' },
 )
 
 const { isDark } = useData()
 
-type Entry = { id: string; title: string; sector: string; summary: string; palette: string }
-type Skin = { id: string; name: string }
-
 const canvas = ref<HTMLCanvasElement | null>(null)
 const demo = shallowRef<any>(null)
-const entries = ref<Entry[]>([])
-const skins = ref<Skin[]>([])
-const current = ref(props.id)
+const skins = ref<{ id: string; name: string }[]>([])
+const current = ref(props.id || demos[0].id)
 const skin = ref('gitbox')
-const status = ref<'loading' | 'ready' | 'missing' | 'error'>('loading')
+const mode = ref<'code' | 'run'>(props.mode)
+const status = ref<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
 const message = ref('')
 
-const selected = computed(() => entries.value.find((entry) => entry.id === current.value))
+const selected = computed(() => demos.find((entry) => entry.id === current.value) ?? demos[0])
+const sourceUrl = computed(
+  () => `https://github.com/gitgusilva/gbui/blob/main/${selected.value.path}`,
+)
+
+// The highlighted source is a hundred kilobytes and lives in a chunk of its
+// own, fetched once the component is on the page rather than bundled into the
+// theme every other page loads. Until it arrives the block shows the plain
+// file, which is the honest placeholder: it is the same text, uncoloured.
+const highlighted = shallowRef<Record<string, string> | null>(null)
+const code = computed(() => highlighted.value?.[current.value] ?? '')
 
 onMounted(async () => {
+  const module = await import('../demoCode.data')
+  highlighted.value = module.data
+})
+
+/** Downloads the module and mounts the selected screen. Only ever from Run. */
+async function start() {
+  mode.value = 'run'
+  if (demo.value) {
+    demo.value.select(current.value)
+    return
+  }
+  if (status.value === 'loading') return
+
+  status.value = 'loading'
   try {
     const module = await import(/* @vite-ignore */ withBase('/demo/gbui-embed.js'))
-    const [catalogue, available] = await Promise.all([module.catalogue(), module.skins()])
-    entries.value = catalogue
-    skins.value = available
-    if (!current.value && catalogue.length) current.value = catalogue[0].id
-
+    skins.value = await module.skins()
+    // The canvas is `v-show`n, so it exists — but it has just been unhidden and
+    // its box is measured on mount. A tick, and it is the size it will be.
+    await nextTick()
     demo.value = await module.mountDemo(canvas.value, {
       id: current.value,
       dark: isDark.value,
@@ -57,8 +81,8 @@ onMounted(async () => {
     })
     status.value = 'ready'
   } catch (error) {
-    // A 404 on the module is the ordinary case — the artefact was never built
-    // here — and is worth a different message from a module that loaded and
+    // A 404 on the module is the ordinary case — the bundle was never built in
+    // this checkout — and deserves a different message from one that loaded and
     // then threw.
     const text = String((error as Error)?.message ?? error)
     status.value = /Failed to fetch|Importing a module script failed|404/.test(text)
@@ -66,88 +90,131 @@ onMounted(async () => {
       : 'error'
     message.value = text
   }
-})
+}
 
-onBeforeUnmount(() => demo.value?.destroy())
-
-watch(isDark, (dark) => demo.value?.setDark(dark))
+function showCode() {
+  mode.value = 'code'
+  demo.value?.pause()
+}
 
 function choose(id: string) {
-  if (id === current.value) return
   current.value = id
-  demo.value?.select(id)
+  if (mode.value === 'run') demo.value?.select(id)
 }
 
 function chooseSkin(event: Event) {
   skin.value = (event.target as HTMLSelectElement).value
   demo.value?.setSkin(skin.value)
 }
+
+watch(isDark, (dark) => demo.value?.setDark(dark))
+watch(mode, (next) => {
+  if (next === 'run') demo.value?.resume()
+})
+
+onBeforeUnmount(() => demo.value?.destroy())
 </script>
 
 <template>
-  <div class="gbui-demo" :class="`is-${status}`">
-    <div v-if="picker && entries.length" class="gbui-demo-tabs" role="tablist">
-      <button
-        v-for="entry in entries"
-        :key="entry.id"
-        class="gbui-demo-tab"
-        :class="{ active: entry.id === current }"
-        role="tab"
-        :aria-selected="entry.id === current"
-        @click="choose(entry.id)"
-      >
-        {{ entry.title }}
-      </button>
-    </div>
-
-    <div v-if="controls && status === 'ready'" class="gbui-demo-bar">
-      <span class="gbui-demo-sector">{{ selected?.sector }}</span>
-      <span class="gbui-demo-spacer" />
+  <div class="gbui-demo">
+    <div class="gbui-demo-bar">
       <label class="gbui-demo-field">
-        <span>Design</span>
-        <select :value="skin" @change="chooseSkin">
-          <option v-for="option in skins" :key="option.id" :value="option.id">
-            {{ option.name }}
+        <span class="gbui-demo-caption">Screen</span>
+        <select
+          :value="current"
+          aria-label="Which demo screen"
+          @change="choose(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="entry in demos" :key="entry.id" :value="entry.id">
+            {{ entry.title }} — {{ entry.sector }}
           </option>
         </select>
       </label>
-      <button class="gbui-demo-action" @click="demo?.restart()">Restart</button>
+
+      <span class="gbui-demo-spacer" />
+
+      <template v-if="mode === 'run' && status === 'ready'">
+        <label class="gbui-demo-field">
+          <span class="gbui-demo-caption">Design</span>
+          <select :value="skin" aria-label="Which design system" @change="chooseSkin">
+            <option v-for="option in skins" :key="option.id" :value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </label>
+        <button class="gbui-demo-action" @click="demo?.restart()">Restart</button>
+      </template>
+
+      <div class="gbui-demo-modes" role="group" aria-label="View">
+        <button
+          class="gbui-demo-mode"
+          :class="{ active: mode === 'code' }"
+          :aria-pressed="mode === 'code'"
+          @click="showCode"
+        >
+          Code
+        </button>
+        <button
+          class="gbui-demo-mode"
+          :class="{ active: mode === 'run' }"
+          :aria-pressed="mode === 'run'"
+          @click="start"
+        >
+          ▶ Run
+        </button>
+      </div>
     </div>
 
-    <div class="gbui-demo-stage" :style="{ height: `${height}px` }">
-      <canvas
-        ref="canvas"
-        class="gbui-demo-canvas"
-        :aria-label="selected ? `${selected.title} — a live gbui demo` : 'a live gbui demo'"
-      />
+    <!-- The source. Highlighted during the build, so this ships no highlighter. -->
+    <div v-show="mode === 'code'" class="gbui-demo-code" :style="{ maxHeight: `${height}px` }">
+      <div v-if="code" v-html="code" />
+      <p v-else class="gbui-demo-quiet gbui-demo-waiting">Loading {{ selected.path }}…</p>
+    </div>
+
+    <div v-show="mode === 'run'" class="gbui-demo-stage" :style="{ height: `${height}px` }">
+      <canvas ref="canvas" class="gbui-demo-canvas" :aria-label="`${selected.title}, running`" />
 
       <div v-if="status !== 'ready'" class="gbui-demo-overlay">
         <template v-if="status === 'loading'">
           <strong>Starting the toolkit…</strong>
-          <p>Downloading the WebAssembly module and its fonts.</p>
+          <p>Downloading the WebAssembly module and its fonts, about 1.7 MB.</p>
         </template>
         <template v-else-if="status === 'missing'">
-          <strong>The demo module is not built in this checkout.</strong>
-          <p>
-            It is a build artefact rather than a committed file. Build it with the Emscripten
-            SDK on the path:
-          </p>
+          <strong>The demo bundle is not built in this checkout.</strong>
+          <p>It is a build artefact rather than a committed file:</p>
           <pre><code>tools/build_wasm.sh</code></pre>
           <p class="gbui-demo-quiet">
-            The published documentation builds it in CI, so this only ever appears locally.
+            The published documentation builds it in CI, so this only appears locally.
           </p>
         </template>
-        <template v-else>
+        <template v-else-if="status === 'error'">
           <strong>The demo failed to start.</strong>
           <pre><code>{{ message }}</code></pre>
         </template>
       </div>
     </div>
 
-    <p v-if="status === 'ready'" class="gbui-demo-hint">
-      This is C++ compiled to WebAssembly, rasterised on the CPU and copied into a canvas —
-      no DOM, no WebGL. Click a row, drag a slider, pan a chart. Click into it first to give it
-      the wheel and the keyboard; <kbd>Esc</kbd> hands them back to the page.
+    <!-- What the reader is looking at. Written beside the screen it describes,
+         in demos/src/*.cpp, and read out of there at build time. -->
+    <div class="gbui-demo-about">
+      <div class="gbui-demo-about-main">
+        <p class="gbui-demo-summary">{{ selected.summary }}</p>
+        <p class="gbui-demo-try"><strong>Try:</strong> {{ selected.tryThis }}</p>
+      </div>
+      <div class="gbui-demo-about-side">
+        <ul class="gbui-demo-chips">
+          <li v-for="point in selected.highlights" :key="point">{{ point }}</li>
+        </ul>
+        <a class="gbui-demo-source" :href="sourceUrl" target="_blank" rel="noreferrer">
+          {{ selected.path }} · {{ selected.lines }} lines
+        </a>
+      </div>
+    </div>
+
+    <p v-if="mode === 'run'" class="gbui-demo-hint">
+      C++ compiled to WebAssembly, rasterised on the CPU and copied into a canvas — no DOM, no
+      WebGL. Click into it first to give it the wheel and the keyboard;
+      <kbd>Esc</kbd> hands them back to the page.
     </p>
   </div>
 </template>
@@ -157,40 +224,14 @@ function chooseSkin(event: Event) {
   margin: 24px 0;
 }
 
-.gbui-demo-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.gbui-demo-tab {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  padding: 5px 11px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--vp-c-text-2);
-  background: transparent;
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
-}
-
-.gbui-demo-tab:hover {
-  color: var(--vp-c-text-1);
-  border-color: var(--vp-c-brand-1);
-}
-
-.gbui-demo-tab.active {
-  color: var(--vp-c-brand-1);
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
+/* ---- the bar ---------------------------------------------------------- */
 
 .gbui-demo-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 0 2px 8px;
+  gap: 10px;
+  margin-bottom: 10px;
   font-size: 12px;
   color: var(--vp-c-text-2);
 }
@@ -205,20 +246,72 @@ function chooseSkin(event: Event) {
   gap: 6px;
 }
 
+.gbui-demo-caption {
+  white-space: nowrap;
+}
+
 .gbui-demo-field select,
 .gbui-demo-action {
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 12px;
+  padding: 5px 9px;
+  font-size: 13px;
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
+  max-width: 46ch;
 }
 
 .gbui-demo-action:hover {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-brand-1);
 }
+
+.gbui-demo-modes {
+  display: inline-flex;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gbui-demo-mode {
+  padding: 5px 14px;
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.gbui-demo-mode + .gbui-demo-mode {
+  border-left: 1px solid var(--vp-c-divider);
+}
+
+.gbui-demo-mode:hover {
+  color: var(--vp-c-text-1);
+}
+
+.gbui-demo-mode.active {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+/* ---- the code --------------------------------------------------------- */
+
+.gbui-demo-code {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  overflow: auto;
+  background: var(--vp-c-bg-alt);
+}
+
+.gbui-demo-code :deep(pre) {
+  margin: 0;
+  padding: 16px 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: transparent !important;
+}
+
+/* ---- the stage -------------------------------------------------------- */
 
 .gbui-demo-stage {
   position: relative;
@@ -284,9 +377,71 @@ function chooseSkin(event: Event) {
   opacity: 0.75;
 }
 
+/* ---- what it is ------------------------------------------------------- */
+
+.gbui-demo-about {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 32px;
+  margin-top: 14px;
+}
+
+.gbui-demo-about-main {
+  flex: 1 1 30ch;
+  min-width: 0;
+  max-width: 78ch;
+}
+
+.gbui-demo-summary {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--vp-c-text-1);
+}
+
+.gbui-demo-try {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+}
+
+.gbui-demo-about-side {
+  flex: 0 1 auto;
+}
+
+.gbui-demo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gbui-demo-chips li {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: var(--vp-c-text-2);
+}
+
+.gbui-demo-source {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  color: var(--vp-c-text-2);
+}
+
+.gbui-demo-source:hover {
+  color: var(--vp-c-brand-1);
+}
+
 .gbui-demo-hint {
-  max-width: 760px;
-  margin: 10px 2px 0;
+  max-width: 78ch;
+  margin: 12px 0 0;
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--vp-c-text-2);

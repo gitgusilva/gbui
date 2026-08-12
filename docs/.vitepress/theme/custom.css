@@ -61,3 +61,24 @@ html.dark .light-only {
 .VPHome .vp-doc .gbui-demo {
   max-width: none;
 }
+
+/* Shiki writes both palettes into one block — `--shiki-light` and
+ * `--shiki-dark` on every span — so the code view ships once instead of twice.
+ * Which one shows is decided here, off the class VitePress puts on <html>,
+ * rather than off prefers-color-scheme, so it follows the site's own toggle. */
+.gbui-demo-code .shiki,
+.gbui-demo-code .shiki span {
+  color: var(--shiki-light);
+}
+
+html.dark .gbui-demo-code .shiki,
+html.dark .gbui-demo-code .shiki span {
+  color: var(--shiki-dark);
+}
+
+/* Colour only. The block keeps the card's own background — a per-span
+ * `background-color` would paint a grey box behind every token, which is what
+ * the theme's background value is for and not what a code block wants. */
+.gbui-demo-code .shiki {
+  background: transparent !important;
+}

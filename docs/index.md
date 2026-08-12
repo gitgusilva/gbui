@@ -33,11 +33,11 @@ features:
 
 ## Have a look at it
 
-<GbuiDemo id="analytics" :height="600" />
+<GbuiDemo id="analytics" :height="560" />
 
-A real application screen, compiled to WebAssembly and rasterised on the CPU —
-there is no DOM inside that rectangle. [Five more, and how it is put
-together](/demos).
+A real application screen and the C++ that draws it. Press Run and it is the
+same source compiled to WebAssembly, rasterised on the CPU — there is no DOM
+inside that rectangle. [Five more, and how it is put together](/demos).
 
 ## In thirty seconds
 

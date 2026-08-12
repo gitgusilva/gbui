@@ -8,87 +8,24 @@ aside: false
 
 # Demos
 
-Six application screens, running here, in this page. Not a video and not a
-screenshot: the C++ below is compiled to WebAssembly, lays out and rasterises
-every frame on the CPU, and copies the result into a `<canvas>`. There is no
-DOM inside that rectangle — no elements, no CSS, no WebGL. What you are
-pointing at is a display list.
+Six application screens, and the C++ that draws them. Press Run and they are
+not a video and not a screenshot: the same source is compiled to WebAssembly,
+lays out and rasterises every frame on the CPU, and copies the result into a
+`<canvas>`. There is no DOM inside that rectangle — no elements, no CSS, no
+WebGL. What you are pointing at is a display list.
 
-Click a row, drag a slider, sort a table, pan a chart. Click into the demo
-first to give it the wheel and the keyboard; <kbd>Esc</kbd> hands them back to
-the page.
+Between them the six exercise every chart, every container and every
+interactive control the library has. They live in
+[`demos/`](https://github.com/gitgusilva/gbui/tree/main/demos) and use nothing
+but the public headers, so a change that makes them awkward has made the
+library awkward.
 
-<GbuiDemo picker :height="660" />
+Pick a screen, read the C++ that draws it, and press **Run** when you want to
+see it move. Nothing downloads until you do: the module is 1.7 MB and then
+rasterises every frame on the CPU, which is not a bill to hand someone who came
+to read.
 
-## What each one is for
-
-The set is chosen to cover the kinds of screen a UI toolkit is actually asked
-for, and between them they exercise every chart, every container and every
-interactive control the library has.
-
-### Meridian Analytics · SaaS
-
-The familiar one, and it goes first for that reason: a reader who has built
-this screen in React knows what they are looking at and can spend their
-attention on how the toolkit says it. KPI tiles with sparklines, a line chart
-you can pan and zoom over a brush strip, a channel donut, and a table that
-sorts when you click a header — reordering the rows is the application's job,
-because only it knows how to compare two of its own.
-
-**Try:** drag inside the revenue chart; hold <kbd>Ctrl</kbd> and scroll to zoom;
-drag the window along the strip underneath; click `ARR` twice.
-
-### Aurora Weather Desk · Meteorology
-
-A forecaster's wall display. Almost nothing on it is clickable, which is the
-point — the work is making eleven numbers, a week of forecasts and a rainfall
-chart legible from across a room, and that is a typography and spacing problem
-rather than an interaction one. The current observation is a dial and a wrapping
-grid of fields; the station network at the bottom is selectable.
-
-**Try:** click a station in the network to move the whole screen to it.
-
-### Helix Process Control · Water treatment, SCADA / HMI
-
-A plant supervisory screen, and the one that behaves differently from the rest:
-it is **always dark**, whatever your preference at the top of this page says. An
-operator at three in the morning is not helped by a light theme, so the demo
-declares a fixed palette and the host honours it.
-
-Everything on it is a reading against a setpoint rather than a number on its
-own, and it is genuinely operable.
-
-**Try:** switch a pump off; drag the flow setpoint and watch the line in the
-trend move with it; acknowledge an alarm.
-
-### Kaizen Line Monitor · Manufacturing, MES / OEE
-
-OEE is one number made of three, and the screen exists to show which of the
-three is losing the shift. The two charts here are the ones a dashboard rarely
-reaches for and a factory always does: a stacked bar over time, and a heatmap
-that turns a table nobody reads into a shape anybody can. The `Takt` column is a
-meter drawn *inside* a table cell.
-
-**Try:** hover a cell in the defect grid; hover a lollipop in the Pareto.
-
-### Voltway Grid Operations · Energy, transmission
-
-Demand against generation, a day-ahead candlestick settlement and a live feeder
-table. The candlestick is the one chart in the toolkit whose scale deliberately
-does not reach zero — a price has no baseline, and forcing one on a market that
-trades between 45 and 95 squeezes the whole day into the top of the plot.
-
-**Try:** hover a candle; hover the donut's wedges, then click one to single it
-out.
-
-### Portway Control Tower · Logistics, WMS / TMS
-
-A warehouse and fleet desk, carrying the scatter — the only chart here with a
-real *x* scale. Every other chart spaces its samples evenly along the bottom,
-which is right for a series over time and wrong for a correlation. Lateness
-against distance, with the pallet count in the size of the dot.
-
-**Try:** hover a bubble out on the right.
+<GbuiDemo :height="640" />
 
 ## How it is put together
 
