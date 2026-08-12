@@ -1,6 +1,9 @@
-build/
-out/
-gallery/
+# Anchored to the repository root, all three of them: `gallery/` unanchored also
+# matched examples/gallery/, which kept that example's only source file out of
+# the first commit and broke the build everywhere CI ran it.
+/build/
+/out/
+/gallery/
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
