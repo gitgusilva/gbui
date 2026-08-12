@@ -8,15 +8,17 @@
 //     gbui_example_panel out/          # writes panel-wide.svg and panel-narrow.svg
 
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <string>
+#include <system_error>
 #include <vector>
 
-#include "gbui/widgets/components.hpp"
 #include "gbui/layout/layout.hpp"
 #include "gbui/paint/paint.hpp"
-#include "gbui/style/theme.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/style/theme.hpp"
+#include "gbui/widgets/components.hpp"
 
 using namespace gbui;
 
@@ -77,8 +79,9 @@ void buildSidebar(Ui& ui) {
     const char* views[] = {"History", "Local Changes", "Stashes"};
     for (int i = 0; i < 3; ++i) {
         auto row = beginListRow(ui, {.selected = i == 0, .height = 30.0f});
-        text(ui, views[i], {.color = i == 0 ? Token::TextStrong : Token::Text,
-                            .weight = i == 0 ? FontWeight::Medium : FontWeight::Regular});
+        text(ui, views[i],
+             {.color = i == 0 ? Token::TextStrong : Token::Text,
+              .weight = i == 0 ? FontWeight::Medium : FontWeight::Regular});
         if (i == 1) {
             spacer(ui);
             badge(ui, "1");
@@ -162,16 +165,15 @@ void buildDetail(Ui& ui) {
     {
         auto row = ui.beginRow({.align = Align::Center, .gap = 8.0f});
         sectionHeading(ui, "COMMIT");
-        text(ui, "8056e2c", {.color = Token::TextStrong, .weight = FontWeight::Medium,
-                             .role = FontRole::Mono});
+        text(ui, "8056e2c",
+             {.color = Token::TextStrong, .weight = FontWeight::Medium, .role = FontRole::Mono});
         (void)row;
     }
     divider(ui, Direction::Column);
     sectionHeading(ui, "AUTHOR");
     text(ui, "GitBox Demo", {.color = Token::TextStrong});
     sectionHeading(ui, "MESSAGE");
-    text(ui, "feat(themes): warm up the Nord hover surface",
-         {.color = Token::Text, .grow = 1.0f});
+    text(ui, "feat(themes): warm up the Nord hover surface", {.color = Token::Text, .grow = 1.0f});
     spacer(ui);
     {
         auto row = ui.beginRow({.gap = 8.0f});
@@ -191,8 +193,7 @@ NodeId buildWindow(Ui& ui) {
 
     {
         auto toolbar = beginToolbar(ui);
-        text(ui, "gitbox-themes",
-             {.color = Token::TextStrong, .weight = FontWeight::SemiBold});
+        text(ui, "gitbox-themes", {.color = Token::TextStrong, .weight = FontWeight::SemiBold});
         badge(ui, "main");
         spacer(ui);
         button(ui, "FETCH", {.variant = ButtonVariant::Ghost});
@@ -250,6 +251,12 @@ bool writeSvg(const std::string& path, const Theme& theme, float width, float he
 
 int main(int argc, char** argv) {
     const std::string directory = argc > 1 ? argv[1] : ".";
+    // The gallery already does this; this one used to fail three times over on
+    // a machine where `out/` did not exist yet — which is every machine that
+    // has just cloned the repository and followed the README.
+    std::error_code ignored;
+    std::filesystem::create_directories(directory, ignored);
+
     const Theme dark = Theme::dark();
     const Theme light = Theme::light();
 

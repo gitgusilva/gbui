@@ -76,14 +76,14 @@ Rendered renderTheme(const std::filesystem::path& directory, const Theme& theme)
 void writeIndex(const std::filesystem::path& directory, const std::vector<Rendered>& themes) {
     std::string themeButtons;
     for (const auto& theme : themes) {
-        themeButtons += "      <button data-theme=\"" + theme.id + "\">" + theme.name +
-                        "</button>\n";
+        themeButtons +=
+            "      <button data-theme=\"" + theme.id + "\">" + theme.name + "</button>\n";
     }
     std::string widthButtons;
     for (const float width : kWidths) {
         char entry[128];
-        std::snprintf(entry, sizeof(entry),
-                      "      <button data-width=\"%.0f\">%.0f px</button>\n", width, width);
+        std::snprintf(entry, sizeof(entry), "      <button data-width=\"%.0f\">%.0f px</button>\n",
+                      width, width);
         widthButtons += entry;
     }
 
@@ -115,9 +115,11 @@ void writeIndex(const std::filesystem::path& directory, const std::vector<Render
      <kbd>&larr;</kbd><kbd>&rarr;</kbd> themes, <kbd>&uarr;</kbd><kbd>&darr;</kbd> widths.</p>
 </header>
 <nav id="themes">
-)" << themeButtons << R"(</nav>
+)" << themeButtons
+        << R"(</nav>
 <nav id="widths">
-)" << widthButtons << R"(</nav>
+)" << widthButtons
+        << R"(</nav>
 <main><img id="screen" alt="rendered screen"></main>
 <script>
   const themes = document.getElementById('themes');

@@ -113,6 +113,17 @@ else()
     # Third-party code was not written for those flags.
     set_source_files_properties(src/platform/stbTruetypeImpl.cpp PROPERTIES
         COMPILE_OPTIONS "-w")
+
+    # GCC 13 reports maybe-uninitialized from inside libstdc++ when a
+    # json::Value is copied at -O3: the member it names belongs to a variant
+    # alternative that is not the active one, and reading it is the thing
+    # std::variant makes impossible. Clang does not report it and neither does
+    # a newer GCC, so it is suppressed for this file rather than for the build —
+    # a warning that is wrong gets the narrowest suppression that silences it.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set_source_files_properties(src/core/json.cpp PROPERTIES
+            COMPILE_OPTIONS "-Wno-maybe-uninitialized")
+    endif()
 endif()
 
 set_target_properties(gbui PROPERTIES

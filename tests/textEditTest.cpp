@@ -16,6 +16,25 @@ KeyEvent key(Key which, bool shift = false, bool ctrl = false) {
     return event;
 }
 
+/** A shortcut on the modifier the *platform* uses for one — Ctrl, or Cmd on
+ *  macOS, which is what `Modifiers::command()` answers.
+ *
+ *  Word movement is a different question and stays on Ctrl: `applyKey` accepts
+ *  Ctrl or Alt for it everywhere. Select-all and the clipboard go through
+ *  `command()`, so a test that hardcoded Ctrl passed on Linux and failed on a
+ *  Mac — which is exactly the kind of thing the macOS job exists to say. */
+KeyEvent commandKey(Key which, bool shift = false) {
+    KeyEvent event;
+    event.key = which;
+    event.modifiers.shift = shift;
+#if defined(__APPLE__)
+    event.modifiers.super = true;
+#else
+    event.modifiers.ctrl = true;
+#endif
+    return event;
+}
+
 TextEditState fieldWith(std::string text, std::size_t caret) {
     TextEditState state;
     state.text = std::move(text);
@@ -38,7 +57,7 @@ TEST("typing inserts at the caret") {
 TEST("typing over a selection replaces it") {
     TextEditState state = fieldWith("feature/login", 0);
     state.anchor = 0;
-    state.caret = 7;   // "feature"
+    state.caret = 7;  // "feature"
 
     insertText(state, "fix");
 
@@ -52,7 +71,7 @@ TEST("the caret moves over characters, not bytes") {
     TextEditState state = fieldWith("caf\xc3\xa9", 5);
 
     applyKey(state, key(Key::Left));
-    CHECK_EQ(state.caret, std::size_t{3});   // before the é, not inside it
+    CHECK_EQ(state.caret, std::size_t{3});  // before the é, not inside it
 
     applyKey(state, key(Key::Right));
     CHECK_EQ(state.caret, std::size_t{5});
@@ -109,7 +128,7 @@ TEST("home and end reach the ends, and select-all covers everything") {
     applyKey(state, key(Key::Home));
     CHECK_EQ(state.caret, std::size_t{0});
 
-    applyKey(state, key(Key::A, false, /*ctrl=*/true));
+    applyKey(state, commandKey(Key::A));
     CHECK(state.hasSelection());
     CHECK_EQ(std::string(state.selectedText()), state.text);
 }
@@ -119,7 +138,7 @@ TEST("return and escape are reported, not swallowed") {
 
     CHECK(applyKey(state, key(Key::Return)).submitted);
     CHECK(applyKey(state, key(Key::Escape)).cancelled);
-    CHECK_EQ(state.text, std::string("main"));   // neither changes the text
+    CHECK_EQ(state.text, std::string("main"));  // neither changes the text
 }
 
 TEST("control characters never reach the text") {
