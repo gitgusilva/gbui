@@ -24,6 +24,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -42,6 +44,21 @@ void printCatalogue() {
                     static_cast<int>(entry.title.size()), entry.title.data(),
                     static_cast<int>(entry.sector.size()), entry.sector.data());
     }
+}
+
+/**
+ * Creates the directory a file is about to be written into.
+ *
+ * `std::ofstream` does not, and the error it gives when the directory is
+ * missing is the same one it gives when the disk is full — so a CI job asked
+ * for `out/demos/` got "cannot write out/demos/analytics.ppm" and no hint that
+ * the only thing wrong was a missing `mkdir`.
+ */
+bool ensureDirectory(const std::filesystem::path& directory) {
+    if (directory.empty() || std::filesystem::exists(directory)) return true;
+    std::error_code error;
+    std::filesystem::create_directories(directory, error);
+    return !error;
 }
 
 /** Winds a fresh host forward to `seconds` without showing anything, so a still
@@ -120,7 +137,11 @@ int main(int argc, char** argv) {
     };
 
     if (!stillsDirectory.empty()) {
-        if (!stillsDirectory.empty() && stillsDirectory.back() != '/') stillsDirectory += '/';
+        if (!ensureDirectory(stillsDirectory)) {
+            std::fprintf(stderr, "gbui_demo: cannot create %s\n", stillsDirectory.c_str());
+            return 1;
+        }
+        if (stillsDirectory.back() != '/') stillsDirectory += '/';
         for (const demos::DemoInfo& entry : demos::catalogue()) {
             demos::HostOptions one = options;
             one.demo = std::string(entry.id);
@@ -142,6 +163,11 @@ int main(int argc, char** argv) {
     if (fontSize > 0.0f) host.setFontSize(fontSize);
 
     if (!shotPath.empty() || !svgPath.empty()) {
+        if (!ensureDirectory(std::filesystem::path(shotPath).parent_path()) ||
+            !ensureDirectory(std::filesystem::path(svgPath).parent_path())) {
+            std::fprintf(stderr, "gbui_demo: cannot create the output directory\n");
+            return 1;
+        }
         applyDesignSize(host);
         settle(host, at);
         if (!shotPath.empty() && !host.writePpm(shotPath)) {
@@ -149,14 +175,15 @@ int main(int argc, char** argv) {
             return 1;
         }
         if (!svgPath.empty()) {
-            std::FILE* file = std::fopen(svgPath.c_str(), "wb");
+            // An ofstream rather than `std::fopen`, which MSVC deprecates in
+            // favour of a function only MSVC has.
+            std::ofstream file(svgPath, std::ios::binary);
+            const std::string svg = host.toSvg();
+            file << svg;
             if (!file) {
                 std::fprintf(stderr, "gbui_demo: cannot write %s\n", svgPath.c_str());
                 return 1;
             }
-            const std::string svg = host.toSvg();
-            std::fwrite(svg.data(), 1, svg.size(), file);
-            std::fclose(file);
         }
         std::printf("wrote %s%s%s\n", shotPath.c_str(), shotPath.empty() ? "" : " ",
                     svgPath.c_str());

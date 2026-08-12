@@ -25,6 +25,15 @@ target_include_directories(gbui_demos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 target_link_libraries(gbui_demos PUBLIC gbui::gbui)
 target_compile_features(gbui_demos PUBLIC cxx_std_20)
 
+# `-DBUILD_SHARED_LIBS=ON` makes this a DLL too, and MSVC exports nothing from
+# one unless each symbol says so — the same trap the root CMakeLists.txt
+# explains for the library itself. Without this the runner links against a DLL
+# with no symbols in it, and the error names the linker rather than the reason.
+set_target_properties(gbui_demos PROPERTIES
+    CXX_EXTENSIONS OFF
+    POSITION_INDEPENDENT_CODE ON
+    WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 if(MSVC)
     target_compile_options(gbui_demos PRIVATE /W4 $<$<BOOL:${GBUI_WERROR}>:/WX>)
 else()
