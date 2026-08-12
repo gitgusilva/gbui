@@ -20,8 +20,7 @@ int main() {
                                       .padding = gbui::Edges::all(12.0f),
                                       .background = gbui::Fill{gbui::Token::Bg}});
         gbui::text(ui, "Linked against gbui", {.color = gbui::Token::TextStrong});
-        gbui::button(ui, "COMMIT",
-                     {.variant = gbui::ButtonVariant::Primary, .block = true});
+        gbui::button(ui, "COMMIT", {.variant = gbui::ButtonVariant::Primary, .block = true});
     }
 
     const gbui::Theme theme = gbui::Theme::dark();
