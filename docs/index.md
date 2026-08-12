@@ -31,6 +31,14 @@ features:
     details: An SVG path parser, 40 Lucide glyphs and a canvas node, so icons, commit graphs and charts are geometry rather than bitmaps — sharp at any scale, in the theme's colours.
 ---
 
+## Have a look at it
+
+<GbuiDemo id="analytics" :height="600" />
+
+A real application screen, compiled to WebAssembly and rasterised on the CPU —
+there is no DOM inside that rectangle. [Five more, and how it is put
+together](/demos).
+
 ## In thirty seconds
 
 ```cpp

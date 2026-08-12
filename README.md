@@ -10,6 +10,7 @@ standard library.
 
 ### [gitgusilva.github.io/gbui](https://gitgusilva.github.io/gbui/)
 
+[Live demos](https://gitgusilva.github.io/gbui/demos) ·
 [Guide](https://gitgusilva.github.io/gbui/guide/introduction) ·
 [Your first window](https://gitgusilva.github.io/gbui/guide/first-window) ·
 [Reference](https://gitgusilva.github.io/gbui/reference/overview) ·
@@ -36,6 +37,13 @@ It was written for [GitBox](https://github.com/gitgusilva/gitbox) as a path off
 Electron, and reads the **same `theme.json`** the
 [gitbox-themes](https://github.com/gitgusilva/gitbox-themes) registry publishes.
 
+Six full application screens — a revenue dashboard, a weather desk, a plant
+supervisory HMI, a production line monitor, a grid control desk and a logistics
+control tower — run in the browser on the
+[demos page](https://gitgusilva.github.io/gbui/demos), compiled to WebAssembly
+and rasterised on the CPU. Their source is in [`demos/`](demos), and it is
+ordinary consumer code: public headers, one link line, no private access.
+
 ## Build
 
 ```sh
@@ -44,6 +52,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 
 ./build/examples/gbui_controls     # every component, interactive
+./build/demos/gbui_demo --list     # six application screens, and one to open
 ```
 
 C++20 and CMake 3.20. SDL2 is optional — without it everything still builds and

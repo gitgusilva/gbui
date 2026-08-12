@@ -8,6 +8,12 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 
+# The WebAssembly demo bundle, and the Emscripten build that produces it.
+# Built by tools/build_wasm.sh, and by CI before the site is published.
+/build-wasm/
+/build-wasm-debug/
+docs/public/demo/
+
 # Screenshots the examples write.
 *.ppm
 

@@ -14,3 +14,50 @@ html:not(.dark) .dark-only {
 html.dark .light-only {
   display: none;
 }
+
+/* Room for a demo to be a demo.
+ *
+ * A documentation column is 688 pixels wide because that is a comfortable
+ * measure for prose, and these screens were designed at desk widths. So the
+ * demos page opts out of the column for the canvas alone: the prose keeps its
+ * measure, and the thing the page exists to show gets the width.
+ *
+ * Turned on per page with `pageClass: demos-page` in the front matter, so no
+ * other page changes shape.
+ *
+ * `!important`, and not out of laziness: VitePress's own widths come from
+ * scoped component styles, so every one of them carries a `[data-v-…]`
+ * attribute selector that no plain class selector can outweigh. The choice is
+ * this or a selector written to be long enough to win, which would break the
+ * day the theme's markup changes. */
+
+.demos-page .VPDoc .container,
+.demos-page .VPDoc .content,
+.demos-page .VPDoc .content-container {
+  max-width: 100% !important;
+}
+
+.demos-page .VPDoc {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Everything that is not a demo keeps a readable measure.
+ *
+ * The extra `> div` is VitePress's own: the rendered Markdown is wrapped in one
+ * unnamed element, so `.vp-doc > *` is that wrapper and capping it caps the
+ * demo along with the prose. */
+.demos-page .vp-doc > div > *:not(.gbui-demo) {
+  max-width: 760px;
+}
+
+.demos-page .vp-doc > div > table {
+  display: table;
+  width: auto;
+}
+
+/* The home page's own column is wider than a doc page's, but not wide enough
+ * for a dashboard. Same trade, same reason. */
+.VPHome .vp-doc .gbui-demo {
+  max-width: none;
+}

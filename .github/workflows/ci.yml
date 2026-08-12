@@ -99,6 +99,19 @@ jobs:
           ./build/examples/gbui_panel out/
           test -s frame.ppm && test -s out/panel-wide.svg
 
+      # Every demo screen, rendered headless. It is a smoke test with teeth:
+      # each one builds a tree, lays it out, records a display list and
+      # rasterises it, so a screen that has stopped composing shows up as an
+      # empty file rather than as a surprise on the documentation site.
+      - name: Render every demo screen
+        if: runner.os == 'Linux'
+        run: |
+          ./build/demos/gbui_demo --list
+          ./build/demos/gbui_demo --stills out/demos/ --at 12
+          for shot in out/demos/*.ppm; do
+            test -s "$shot" || { echo "$shot is empty"; exit 1; }
+          done
+
       - name: Keep the frame, for looking at when something changed
         if: runner.os == 'Linux' && matrix.cc == 'gcc'
         uses: actions/upload-artifact@v4
@@ -107,6 +120,7 @@ jobs:
           path: |
             frame.ppm
             out/*.svg
+            out/demos/*.ppm
           retention-days: 7
 
   # ---------------------------------------------------------------------------

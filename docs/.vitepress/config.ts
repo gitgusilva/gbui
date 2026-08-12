@@ -24,10 +24,21 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/introduction' },
       { text: 'Reference', link: '/reference/overview' },
+      { text: 'Demos', link: '/demos' },
       versionMenu(),
     ],
 
     sidebar: {
+      '/demos': [
+        {
+          text: 'Demos',
+          items: [
+            { text: 'The six screens', link: '/demos' },
+            { text: 'Your first window', link: '/guide/first-window' },
+            { text: 'Writing a component', link: '/guide/writing-a-component' },
+          ],
+        },
+      ],
       '/guide/': [
         {
           text: 'Getting started',

@@ -21,6 +21,13 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pages.yml"
+      # The site now carries a live demo compiled from the toolkit itself, so
+      # a change to either has to republish it.
+      - "tools/build_wasm.sh"
+      - "demos/**"
+      - "include/**"
+      - "src/**"
+      - "CMakeLists.txt"
     # A release rebuilds the whole site: the new version at the root, and the
     # one it replaced from its own tag into its own directory.
     tags: ["v*"]
@@ -60,6 +67,29 @@ jobs:
         id: pages
 
       - run: npm ci
+
+      # ---- the live demo ---------------------------------------------------
+      #
+      # The six screens on /demos are this repository's own C++, compiled to
+      # WebAssembly. The bundle is a build artefact and is not committed, so it
+      # is built here — and the faces that travel with it come from the runner,
+      # because a browser has no font directory to fall back on.
+      - name: Install the faces the demo bundle embeds
+        run: sudo apt-get update && sudo apt-get install -y fonts-liberation
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+
+      - name: Build the WebAssembly demos
+        run: tools/build_wasm.sh
+
+      - name: Check the bundle is really there
+        run: |
+          test -s docs/public/demo/gbui-demos.wasm
+          test -s docs/public/demo/gbui-demos.data
+          test -s docs/public/demo/gbui-embed.js
 
       # `base` comes from the Pages configuration rather than being hardcoded,
       # so renaming the repository does not silently break every asset URL.
