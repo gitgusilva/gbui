@@ -16,10 +16,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# One run per ref: a new push to a pull request supersedes the one still going.
-# Runs on main are left alone, so the history of what passed stays complete.
+# A new push to a pull request supersedes the one still going; a push to main
+# does not.
+#
+# Grouped by **commit** on a push and by ref on a pull request, and that
+# difference is the whole point. `cancel-in-progress: false` only protects a run
+# that has already *started*: GitHub cancels queued runs in the same group
+# regardless, so with a ref-wide group three commits in a row to main each
+# killed the one queued behind it, and none of them was ever verified. On a
+# runner pool with a twenty-minute wait for macOS that is not a corner case —
+# it is every busy afternoon. A per-commit group means what passed on main is
+# recorded for every commit, which is what "the history of what passed stays
+# complete" was supposed to mean in the first place.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:

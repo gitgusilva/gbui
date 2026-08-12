@@ -17,14 +17,14 @@
 // release actually said rather than today's text wearing an old label.
 
 /** The version this checkout documents. Kept in step with CMakeLists.txt. */
-export const current = '0.2'
+export const current = '0.3'
 
 /**
  * Older versions that are still deployed, newest first. A version leaves this
  * list when its directory is deleted, not before — a link that 404s is worse
  * than a page that says it is out of date.
  */
-export const archived: string[] = []
+export const archived: string[] = ['0.2']
 
 /** True while building a version that is not the current one. */
 export const isArchived = process.env.GBUI_DOCS_VERSION
