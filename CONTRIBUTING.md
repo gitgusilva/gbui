@@ -16,7 +16,13 @@ ctest --test-dir build --output-on-failure
 
 ./build/examples/gbui_controls      # every component, interactive
 ./build/examples/gbui_panel out/    # SVGs, no display needed
+./build/demos/gbui_demo --list      # six full application screens
 ```
+
+The demos are worth an early look for a different reason from the examples: they
+use nothing but the public headers, so a change that makes them awkward has made
+the library awkward. [`demos/README.md`](demos/README.md) says how to add one,
+and how the same six screens end up in the browser on the documentation site.
 
 A C++20 compiler and CMake 3.20. SDL2 is optional: without it the library still
 builds, every test still passes, and only `Window::create` changes. Nothing

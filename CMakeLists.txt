@@ -14,6 +14,7 @@ endif()
 
 option(GBUI_BUILD_TESTS "Build the gbui test suite" ${GBUI_STANDALONE})
 option(GBUI_BUILD_EXAMPLES "Build the gbui examples" ${GBUI_STANDALONE})
+option(GBUI_BUILD_DEMOS "Build the demo screens and their runners" ${GBUI_STANDALONE})
 option(GBUI_WERROR "Treat warnings as errors" ${GBUI_STANDALONE})
 option(GBUI_PLATFORM_SDL2 "Build the SDL2 window backend when SDL2 is present" ON)
 
@@ -155,6 +156,10 @@ endif()
 
 if(GBUI_BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if(GBUI_BUILD_DEMOS)
+    add_subdirectory(demos)
 endif()
 
 if(BUILD_SHARED_LIBS)
