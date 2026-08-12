@@ -149,6 +149,36 @@ set_target_properties(gbui PROPERTIES
     # fail on Windows, which is the worst way to find out.
     WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
+# ---- the metadata ----------------------------------------------------------
+#
+# What the component set *is*, as data: one entry per component, generated from
+# the widget headers by tools/generate_meta.py. A target of its own, and that
+# is the point — the designer, the importer and the documentation's gallery all
+# want to know the shape of the component set, and none of them should have to
+# link a rasteriser to find out. It depends on nothing, not even `gbui`.
+add_library(gbui_meta src/meta/components.cpp)
+add_library(gbui::meta ALIAS gbui_meta)
+
+target_compile_features(gbui_meta PUBLIC cxx_std_20)
+target_include_directories(gbui_meta
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+
+if(MSVC)
+    target_compile_options(gbui_meta PRIVATE /W4 $<$<BOOL:${GBUI_WERROR}>:/WX>)
+else()
+    target_compile_options(gbui_meta PRIVATE
+        -Wall -Wextra -Wpedantic $<$<BOOL:${GBUI_WERROR}>:-Werror>)
+endif()
+
+set_target_properties(gbui_meta PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    CXX_EXTENSIONS OFF
+    POSITION_INDEPENDENT_CODE ON
+    WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 if(GBUI_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
@@ -173,7 +203,7 @@ message(STATUS "gbui ${PROJECT_VERSION}: ${GBUI_LIBRARY_KIND} library, SDL2 back
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-install(TARGETS gbui EXPORT gbuiTargets
+install(TARGETS gbui gbui_meta EXPORT gbuiTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

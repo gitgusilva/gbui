@@ -124,6 +124,25 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
+  # Generated files still match what they were generated from
+  # ---------------------------------------------------------------------------
+  #
+  # `src/meta/components.cpp` is the component set as data, read out of the
+  # widget headers, and five separate things will read it: the designer's
+  # properties panel, the code generator, the Qt importer, the documentation's
+  # gallery and the conformance tests. A table that has quietly fallen behind
+  # the headers is worse than no table — every one of those consumers would go
+  # on believing it. So the generator runs here and the build fails if what it
+  # produces differs from what is committed.
+  generated:
+    name: generated files are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate the component metadata
+        run: python3 tools/generate_meta.py --check
+
+  # ---------------------------------------------------------------------------
   # Shared library, installed and consumed from outside
   # ---------------------------------------------------------------------------
   #
@@ -273,6 +292,14 @@ jobs:
 
           status=0
           for file in $files; do
+            # A generated file is not hand-written, and reformatting it would
+            # only mean the next regeneration undoes the reformat. The
+            # generator's output shape is the generator's business; what has to
+            # stay reviewable is the generator.
+            if head -n 1 "$file" | grep -q 'GENERATED'; then
+              echo "skipping $file — generated"
+              continue
+            fi
             # Every hunk of the diff, as a --lines=start:end argument. A hunk
             # that only deletes lines has a length of zero and no lines to
             # format, so it is skipped rather than passed as an empty range.

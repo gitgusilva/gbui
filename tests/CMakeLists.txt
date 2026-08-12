@@ -19,9 +19,10 @@ add_executable(gbui_tests
     tableTest.cpp
     sliderTest.cpp
     paintTest.cpp
+    metaTest.cpp
     shellTest.cpp)
 
-target_link_libraries(gbui_tests PRIVATE gbui::gbui)
+target_link_libraries(gbui_tests PRIVATE gbui::gbui gbui::meta)
 target_include_directories(gbui_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(NOT MSVC)
