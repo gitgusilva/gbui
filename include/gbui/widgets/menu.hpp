@@ -27,7 +27,7 @@ inline constexpr float kMenuItemHeight = 28.0f;
 enum class CheckSide { Leading, Trailing };
 
 struct MenuItemOptions {
-    std::optional<Icon> leading;
+    std::optional<Icon> leading{};
     std::string_view shortcut{};
     /** The chosen value: a check mark and the strong text colour. */
     bool selected = false;

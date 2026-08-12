@@ -29,7 +29,7 @@ struct TextFieldOptions {
     /** Whether the text is currently shown. The caller owns it, like every
      *  other piece of state here, and flips it when the result says so. */
     bool revealed = false;
-    std::optional<Icon> leading;
+    std::optional<Icon> leading{};
     float height = 32.0f;
     float width = kAuto;
     float grow = 0.0f;

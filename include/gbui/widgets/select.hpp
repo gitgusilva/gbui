@@ -45,14 +45,14 @@ struct SelectOptions : FloatingOptions {
  */
 struct SelectState {
     bool open = false;
-    std::optional<std::size_t> highlighted;
+    std::optional<std::size_t> highlighted{};
     /** Where the open list is scrolled to. Written by the component. */
     ScrollState list;
 };
 
 struct SelectResult {
     /** Index chosen this frame, or nothing. */
-    std::optional<std::size_t> chosen;
+    std::optional<std::size_t> chosen{};
 };
 
 /**

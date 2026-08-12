@@ -44,7 +44,7 @@ struct BoxOptions {
     // appearance
     Fill background{};
     Gradient backgroundGradient{};
-    std::optional<Token> border;
+    std::optional<Token> border{};
     float borderWidth = 1.0f;
     float radius = kAuto;
     float opacity = 1.0f;

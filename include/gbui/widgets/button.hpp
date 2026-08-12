@@ -15,7 +15,7 @@ enum class ButtonVariant { Primary, Secondary, Ghost, Danger };
 struct ButtonOptions {
     ButtonVariant variant = ButtonVariant::Secondary;
     /** Drawn before the label, in the label's colour. */
-    std::optional<Icon> leading;
+    std::optional<Icon> leading{};
     bool disabled = false;
     /** Stretches to fill the row it is in, the way a COMMIT button does. */
     bool block = false;

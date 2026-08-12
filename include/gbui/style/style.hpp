@@ -85,8 +85,8 @@ enum class Layer { Content, Overlay, Modal };
  *  Naming the token rather than the value is what lets a whole tree re-theme
  *  without being rebuilt. */
 struct Fill {
-    std::optional<Token> token;
-    std::optional<Color> color;  ///< Overrides the token when both are set.
+    std::optional<Token> token{};
+    std::optional<Color> color{};  ///< Overrides the token when both are set.
     float alpha = 1.0f;
 
     constexpr Fill() = default;
@@ -288,7 +288,7 @@ struct Style {
      *  A percentage resolves against the container's content box. */
     Length basis = kAuto;
     /** Overrides the container's align for this item alone. */
-    std::optional<Align> alignSelf;
+    std::optional<Align> alignSelf{};
 
     // ---- box ------------------------------------------------------------
     //

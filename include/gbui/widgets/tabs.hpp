@@ -16,7 +16,7 @@ namespace gbui {
 struct TabItem {
     std::string_view label;
     /** Drawn before the label, in the label's colour. */
-    std::optional<Icon> icon;
+    std::optional<Icon> icon{};
     bool disabled = false;
     /**
      * A heading drawn above this tab, starting a section.

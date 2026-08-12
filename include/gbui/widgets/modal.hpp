@@ -17,7 +17,7 @@ struct ModalOptions {
     bool backdrop = true;
     /** Lets the user drag it by its header, kept inside the window. */
     bool draggable = true;
-    std::optional<Icon> icon;
+    std::optional<Icon> icon{};
     bool danger = false;
 };
 

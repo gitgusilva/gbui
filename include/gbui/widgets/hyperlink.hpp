@@ -31,7 +31,7 @@ struct HyperlinkOptions {
     Modifiers chord{};
     bool disabled = false;
     /** Drawn after the label — an arrow for "this leaves the application". */
-    std::optional<Icon> trailing;
+    std::optional<Icon> trailing{};
     Token color = Token::Accent;
     float size = kAuto;
     /** Underlines always, or only under the pointer. Always is the accessible
