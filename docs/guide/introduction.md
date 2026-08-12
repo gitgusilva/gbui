@@ -21,12 +21,8 @@ positions them, and a painter draws the result. The tree is cheap enough to
 rebuild whenever your state changes, which is usually simpler than mutating one
 in place.
 
-```
-┌── scene ─────┐   ┌── layout ───┐   ┌── paint ─────┐   ┌── platform ─┐
-│ Arena + Ui   │ → │ flexbox     │ → │ DisplayList  │ → │ Canvas      │
-│ (build)      │   │ (frames)    │   │ (commands)   │   │ …or yours   │
-└──────────────┘   └─────────────┘   └──────────────┘   └─────────────┘
-```
+![The pipeline: scene builds a tree, layout writes frames, paint records a display list, and a backend draws it.](/pipeline-light.svg){.light-only}
+![The pipeline: scene builds a tree, layout writes frames, paint records a display list, and a backend draws it.](/pipeline-dark.svg){.dark-only}
 
 Each stage reads only the one before it. Layout knows nothing about painting,
 painting knows nothing about nodes, and a backend knows nothing about themes.

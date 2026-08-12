@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 892 160" width="892" height="160" role="img" aria-label="The pipeline: scene builds a tree, layout writes frames, paint records a display list, a backend draws it.">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6e7781"/></marker>
+</defs>
+<rect x="8" y="28" width="192" height="104" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+<text x="104.0" y="60" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="14" font-weight="600" fill="#0969da">scene</text>
+<text x="104.0" y="88" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="14" fill="#1f2328">Arena + Ui</text>
+<text x="104.0" y="112" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6e7781">build</text>
+<line x1="206" y1="80.0" x2="230" y2="80.0" stroke="#6e7781" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="236" y="28" width="192" height="104" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+<text x="332.0" y="60" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="14" font-weight="600" fill="#0969da">layout</text>
+<text x="332.0" y="88" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="14" fill="#1f2328">flexbox</text>
+<text x="332.0" y="112" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6e7781">frames</text>
+<line x1="434" y1="80.0" x2="458" y2="80.0" stroke="#6e7781" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="464" y="28" width="192" height="104" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+<text x="560.0" y="60" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="14" font-weight="600" fill="#0969da">paint</text>
+<text x="560.0" y="88" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="14" fill="#1f2328">DisplayList</text>
+<text x="560.0" y="112" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6e7781">commands</text>
+<line x1="662" y1="80.0" x2="686" y2="80.0" stroke="#6e7781" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="692" y="28" width="192" height="104" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+<text x="788.0" y="60" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="14" font-weight="600" fill="#0969da">backend</text>
+<text x="788.0" y="88" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="14" fill="#1f2328">Canvas · SVG · yours</text>
+<text x="788.0" y="112" text-anchor="middle" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="12" fill="#6e7781">pixels</text>
+</svg>

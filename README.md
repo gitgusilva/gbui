@@ -19,12 +19,12 @@ standard library.
 
 ---
 
-```
-┌── scene ─────┐   ┌── layout ───┐   ┌── paint ─────┐   ┌── backend ──┐
-│ Arena + Ui   │ → │ flexbox     │ → │ DisplayList  │ → │ Canvas      │
-│ (build)      │   │ (frames)    │   │ (commands)   │   │ SVG …yours  │
-└──────────────┘   └─────────────┘   └──────────────┘   └─────────────┘
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/public/pipeline-dark.svg">
+    <img alt="The pipeline: scene builds a tree, layout writes frames, paint records a display list, and a backend draws it." src="docs/public/pipeline-light.svg" width="880">
+  </picture>
+</p>
 
 Each stage reads only the one before it, which is why layout is arithmetic you
 can assert without a window and painting is a list of commands you can inspect

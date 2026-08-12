@@ -1,0 +1,16 @@
+/* A drawing per theme, and the theme picks.
+ *
+ * No single palette is readable on both a white and a near-black page: 4.5:1
+ * against one of them costs you the other. So the diagrams ship as a pair —
+ * tools/generate_diagram.py writes both from one description — and this hides
+ * whichever one is wrong.
+ *
+ * Keyed off the class VitePress puts on <html>, not off prefers-color-scheme,
+ * so it follows the site's own toggle rather than the operating system's. */
+html:not(.dark) .dark-only {
+  display: none;
+}
+
+html.dark .light-only {
+  display: none;
+}
