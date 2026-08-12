@@ -1,0 +1,325 @@
+name: CI
+
+# Build, test, lint and render, on every push and pull request.
+#
+# The library is deliberately dependency-free above `platform/`, so nothing here
+# installs a package manager or a toolchain beyond the compiler the runner ships
+# with. SDL2 is the one optional dependency and only Linux installs it: the
+# macOS and Windows jobs build *without* a window backend on purpose, which is
+# what proves the claim that the library and its tests do not need one.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# One run per ref: a new push to a pull request supersedes the one still going.
+# Runs on main are left alone, so the history of what passed stays complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build and test everywhere
+  # ---------------------------------------------------------------------------
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing should not hide what the others would have said.
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux · GCC · SDL2
+            os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+            sdl2: true
+            werror: ON
+          - name: Linux · Clang · SDL2
+            os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+            sdl2: true
+            werror: ON
+          - name: macOS · AppleClang
+            os: macos-latest
+            cc: clang
+            cxx: clang++
+            sdl2: false
+            # AppleClang and MSVC have never compiled this code, and a first run
+            # that fails on a warning says nothing useful about whether it
+            # *works* there. Warnings become errors on these two once their
+            # first clean build has landed.
+            werror: OFF
+          # No CC/CXX here on purpose: the Visual Studio generator finds its own
+          # toolchain, and pointing it at `cl` from a bash step only breaks the
+          # lookup.
+          - name: Windows · MSVC
+            os: windows-latest
+            sdl2: false
+            werror: OFF
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SDL2
+        if: matrix.sdl2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev
+
+      - name: Configure
+        shell: bash
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGBUI_WERROR=${{ matrix.werror }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build --build-config Release --output-on-failure
+
+      # Rendering without a display is a property worth checking, not a nicety:
+      # it is what lets a build machine produce a frame, and it is how every
+      # screenshot in the documentation is made. `gbui_app --shot` opens no
+      # window even where SDL2 is present.
+      - name: Render a frame with no display
+        if: runner.os == 'Linux'
+        run: |
+          ./build/examples/gbui_app --shot frame.ppm
+          ./build/examples/gbui_panel out/
+          test -s frame.ppm && test -s out/panel-wide.svg
+
+      - name: Keep the frame, for looking at when something changed
+        if: runner.os == 'Linux' && matrix.cc == 'gcc'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame
+          path: |
+            frame.ppm
+            out/*.svg
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Sanitizers
+  # ---------------------------------------------------------------------------
+  sanitizers:
+    name: ASan + UBSan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Examples are off: the suite is what has assertions, and an example that
+      # opens a window has nothing to say under a sanitizer.
+      - name: Configure
+        env:
+          CC: clang
+          CXX: clang++
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DGBUI_BUILD_EXAMPLES=OFF \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer -g" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      # -fno-sanitize-recover above turns an undefined-behaviour report into a
+      # non-zero exit, so a test that quietly signed-overflows fails the job
+      # instead of printing a warning nobody reads.
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1
+        run: ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Formatting — on the lines this change touched
+  # ---------------------------------------------------------------------------
+  #
+  # The existing tree is not clang-format-clean, and reformatting eighteen
+  # thousand lines to make a gate go green would bury every future `git blame`
+  # under one commit. So the gate is on the diff: code you write or change has
+  # to be formatted, code you did not touch is left alone. The backlog shrinks
+  # as files are worked on.
+  #
+  # clang-format is pinned through pip rather than taken from the runner image,
+  # because two versions of clang-format disagree about enough to fail a check
+  # that would pass on a contributor's machine.
+  format:
+    name: clang-format (changed lines)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format
+        run: pipx install clang-format==18.1.8 || pip install --break-system-packages clang-format==18.1.8
+
+      - name: Check the diff
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          # The commit this change is measured against: the pull request's base,
+          # or the previous commit on a push. A first push has no previous
+          # commit, and a repository with one commit has nothing to compare.
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          elif git rev-parse --verify --quiet HEAD^ > /dev/null; then
+            base="$(git rev-parse HEAD^)"
+          else
+            echo "Nothing to compare against — skipping."
+            exit 0
+          fi
+
+          files=$(git diff --name-only --diff-filter=ACM "$base" HEAD -- '*.cpp' '*.hpp')
+          if [ -z "$files" ]; then
+            echo "No C++ files changed."
+            exit 0
+          fi
+
+          status=0
+          for file in $files; do
+            # Every hunk of the diff, as a --lines=start:end argument. A hunk
+            # that only deletes lines has a length of zero and no lines to
+            # format, so it is skipped rather than passed as an empty range.
+            ranges=$(git diff -U0 "$base" HEAD -- "$file" | awk '
+              /^@@/ {
+                split($3, a, ",")
+                start = substr(a[1], 2)
+                len = (a[2] == "" ? 1 : a[2])
+                if (len > 0) printf " --lines=%d:%d", start, start + len - 1
+              }')
+            [ -z "$ranges" ] && continue
+
+            if ! diff -u "$file" <(clang-format $ranges "$file") > /tmp/format.diff; then
+              echo "::error file=$file::not clang-formatted — run: clang-format -i $file"
+              sed 's/^/  /' /tmp/format.diff
+              status=1
+            fi
+          done
+          exit $status
+
+  # ---------------------------------------------------------------------------
+  # clang-tidy — a report, not a gate
+  # ---------------------------------------------------------------------------
+  #
+  # Deliberately not blocking, and worth saying why rather than leaving it to be
+  # discovered: the tree has a backlog of findings under the current check list,
+  # and a gate that is red before anybody has touched anything teaches everyone
+  # to ignore it. It runs on the files a change touched, prints what it finds
+  # into the job summary, and keeps the log as an artifact.
+  #
+  # Turn `WarningsAsErrors` on in .clang-tidy the day the backlog is empty.
+  tidy:
+    name: clang-tidy (report)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy libsdl2-dev
+
+      # Configured with clang so the compile database carries flags clang-tidy
+      # can actually parse. A database written by GCC sends it into errors that
+      # are about the flags rather than about the code.
+      - name: Configure
+        env:
+          CC: clang
+          CXX: clang++
+        run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          elif git rev-parse --verify --quiet HEAD^ > /dev/null; then
+            base="$(git rev-parse HEAD^)"
+          else
+            base=""
+          fi
+
+          if [ -n "$base" ]; then
+            files=$(git diff --name-only --diff-filter=ACM "$base" HEAD -- 'src/*.cpp')
+          else
+            files=$(find src -name '*.cpp')
+          fi
+
+          if [ -z "$files" ]; then
+            echo "No sources changed." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Sequential, so two files cannot interleave their findings in the log.
+          : > tidy.log
+          for file in $files; do
+            clang-tidy -p build --quiet "$file" >> tidy.log 2>/dev/null || true
+          done
+
+          {
+            echo "### clang-tidy"
+            echo
+            count=$(grep -c "warning:" tidy.log || true)
+            echo "$count finding(s) in the files this change touches."
+            echo
+            echo '```'
+            grep -oP "\[[a-z-]+\]$" tidy.log | sort | uniq -c | sort -rn || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clang-tidy-log
+          path: tidy.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Documentation
+  # ---------------------------------------------------------------------------
+  #
+  # VitePress fails its build on a dead internal link, so this is a link check
+  # as much as a build: a reference page renamed without its links being fixed
+  # stops the job.
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run docs:build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: docs/.vitepress/dist
+          retention-days: 7

@@ -1,15 +1,53 @@
 ---
-# Naming and correctness only: this library has no exceptions, no RTTI-heavy
-# hierarchies and no third-party headers, so the noisy checks earn nothing.
+# Correctness and naming. This library has no exceptions, no RTTI-heavy
+# hierarchies and no third-party headers above `platform/`, so the noisy checks
+# earn nothing.
+#
+# The disabled list below is not a backlog: each of those checks argues with a
+# style decision this project made on purpose, and leaving them on would bury
+# the findings that are worth reading. CI reports what is left — see
+# .github/workflows/ci.yml, and CONTRIBUTING.md for why it does not yet fail on
+# it.
 Checks: >
   bugprone-*,
   performance-*,
   modernize-*,
   readability-*,
+  -bugprone-easily-swappable-parameters,
+  -modernize-avoid-c-arrays,
+  -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
+  -performance-enum-size,
+  -readability-avoid-nested-conditional-operator,
+  -readability-braces-around-statements,
+  -readability-function-cognitive-complexity,
   -readability-identifier-length,
+  -readability-implicit-bool-conversion,
   -readability-magic-numbers,
-  -bugprone-easily-swappable-parameters
+  -readability-math-missing-parentheses,
+  -readability-redundant-member-init,
+  -readability-uppercase-literal-suffix,
+  -readability-use-concise-preprocessor-directives
+
+# Why each of those is off:
+#
+#   easily-swappable-parameters  every geometry call takes two floats
+#   avoid-c-arrays               the icon table and the token array are arrays
+#   use-nodiscard                [[nodiscard]] is applied where ignoring the
+#                                result is a bug, not everywhere it is possible
+#   use-trailing-return-type     not this codebase's style
+#   enum-size                    enums are int on purpose; they sit in structs
+#                                that are already padded
+#   braces-around-statements     `if (!ui_) return;` is the house style
+#   cognitive-complexity         the flex algorithm is as complex as the spec
+#   identifier-length            `x`, `y`, `a`, `b` are the vocabulary here
+#   implicit-bool-conversion     pointers and counts read fine as conditions
+#   magic-numbers                a layout is made of numbers
+#   math-missing-parentheses     `a * b + c` needs no help
+#   redundant-member-init        `Fill color{}` documents the default
+#   uppercase-literal-suffix     the codebase writes `1.0f`, and so do the docs
+#   concise-preprocessor         `#elifdef` is C++23; this is C++20
+
 WarningsAsErrors: ''
 HeaderFilterRegex: 'include/gbui/.*'
 CheckOptions:

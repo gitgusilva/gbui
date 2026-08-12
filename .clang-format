@@ -4,7 +4,10 @@ BasedOnStyle: Google
 ColumnLimit: 100
 IndentWidth: 4
 AccessModifierOffset: -4
-AllowShortFunctionsOnASingleLine: Inline
+# `All`, not `Inline`: the house style keeps a one-line free function on one
+# line — `inline bool isAuto(float v) { return std::isnan(v); }` — and a config
+# that expanded those would fight every accessor in core/.
+AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: WithoutElse
 DerivePointerAlignment: false
 PointerAlignment: Left
