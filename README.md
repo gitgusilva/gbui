@@ -7,9 +7,12 @@ and a painter interface that a backend implements.
 
 Written from scratch: the only dependency is the standard library.
 
+[![CI](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml/badge.svg)](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml)
+
 [Guide](docs/guide/introduction.md) ·
 [Reference](docs/reference/overview.md) ·
 [Writing a component](docs/guide/writing-a-component.md) ·
+[Contributing](CONTRIBUTING.md) ·
 LGPL-3.0-or-later
 
 </div>
@@ -131,6 +134,13 @@ npm run docs:build
 
 Start at **Guide → Introduction**. The tutorial for adding a component of your
 own is **Guide → Writing a component**.
+
+## Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md) has the rules that decide reviews, how the
+tests are written, and what CI runs — build and test on Linux, macOS and
+Windows, the suite again under ASan and UBSan, a clang-format check on the lines
+a change touches, a clang-tidy report, and the documentation build.
 
 ## Memory
 
