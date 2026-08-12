@@ -131,6 +131,12 @@ jobs:
   # installs it, and then compiles a project that knows nothing about this
   # repository — find_package, one target, the `gbui::` namespace.
   #
+  # Examples and demos are both off: neither is installed, so building them
+  # here proves nothing this job is about and only adds ways for it to fail.
+  # It already did — the Windows runner sat in `WINDOWS_EXPORT_ALL_SYMBOLS`
+  # over the demo library for forty minutes while the static MSVC job compiled
+  # the same sources in under three.
+  #
   # It is here for Windows more than for the other two: a DLL exports nothing
   # unless it is told to, and the failure is at the consumer's link step, long
   # after every job that only builds the library has gone green.
@@ -158,6 +164,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
             -DGBUI_BUILD_EXAMPLES=OFF \
+            -DGBUI_BUILD_DEMOS=OFF \
             -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
           cmake --build build --config Release --parallel
           ctest --test-dir build --build-config Release --output-on-failure
