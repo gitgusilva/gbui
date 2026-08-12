@@ -93,7 +93,13 @@ what 0.2 said after 0.3 has shipped. The current version lives at the root and
 the older ones in a directory each, which is the convention the Vite and Vue
 sites use — VitePress has no versioning of its own.
 
-Cutting one is three edits in `docs/.vitepress/versions.ts` and a tag:
+The current version is published twice: at the root, and at `/v<current>/`, so
+its address exists from the day it ships rather than from the day it is
+replaced. It is built twice rather than copied — a copy would carry the root's
+base, and every link inside it would walk back out to whatever the latest docs
+happen to be by then.
+
+Cutting a release is three edits in `docs/.vitepress/versions.ts` and a tag:
 
 1. move the outgoing version into `archived`;
 2. set `current` to the new one, in step with `CMakeLists.txt`;

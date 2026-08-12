@@ -34,6 +34,11 @@ command -v npm >/dev/null || { echo "npm is required" >&2; exit 1; }
 
 # Without arguments the versions to keep are the ones the site advertises, so
 # the script and the version dropdown cannot disagree about what exists.
+current=$(node --input-type=module -e '
+    import { current } from "./docs/.vitepress/versions.ts";
+    console.log(current);
+' 2>/dev/null || true)
+
 versions=("$@")
 if [ ${#versions[@]} -eq 0 ]; then
     # Loudly, not quietly: a failure here would otherwise publish a dropdown
@@ -53,6 +58,25 @@ fi
 echo "==> current (base ${SITE_BASE})"
 GBUI_DOCS_BASE="$SITE_BASE" npx vitepress build docs
 mkdir -p "$OUT"
+
+# The current version gets its permanent address on the day it ships, not on
+# the day it is replaced. Built rather than copied: a copy would still carry the
+# root's base, so every link inside /v0.2/ would quietly walk back out to
+# whatever the latest docs happen to be by then.
+#
+# When the next release moves this version into `archived`, the same directory
+# is rebuilt from its tag — the URL does not change, and neither does what it
+# says.
+if [ -n "$current" ]; then
+    echo "==> v${current} (current, pinned)"
+    tmp=$(mktemp -d)
+    GBUI_DOCS_VERSION="$current" GBUI_DOCS_BASE="${SITE_BASE}v${current}/" \
+        npx vitepress build docs --outDir "$tmp"
+    rm -rf "${OUT:?}/v${current}"
+    mkdir -p "$OUT/v${current}"
+    cp -r "$tmp/." "$OUT/v${current}/"
+    rm -rf "$tmp"
+fi
 
 # Older versions are built from their tags into a worktree, so the content is
 # whatever that release actually said rather than today's text with a label.
