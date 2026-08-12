@@ -80,7 +80,30 @@ the guide page too.
 npm install
 npm run docs:dev        # http://localhost:5173
 npm run docs:build      # also a dead-link check: VitePress fails the build on one
+tools/build_docs.sh     # the whole site, every version, as CI publishes it
 ```
+
+The site at [gitgusilva.github.io/gbui](https://gitgusilva.github.io/gbui/) is
+published on every push that touches `docs/`.
+
+### Releasing a version of the documentation
+
+Every release keeps its own copy, so a link to `/v0.2/guide/layout` still says
+what 0.2 said after 0.3 has shipped. The current version lives at the root and
+the older ones in a directory each, which is the convention the Vite and Vue
+sites use — VitePress has no versioning of its own.
+
+Cutting one is three edits in `docs/.vitepress/versions.ts` and a tag:
+
+1. move the outgoing version into `archived`;
+2. set `current` to the new one, in step with `CMakeLists.txt`;
+3. `git tag v0.3 && git push --tags`.
+
+The archived copy is built **from its tag**, in a worktree, so it is what that
+release actually said rather than today's text wearing an old label — and it is
+also why a version leaves `archived` only when its directory is deleted, never
+before. A dropdown entry that 404s is worse than a page saying it is out of
+date.
 
 ## Style
 

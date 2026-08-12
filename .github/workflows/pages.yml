@@ -17,9 +17,13 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "tools/build_docs.sh"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pages.yml"
+    # A release rebuilds the whole site: the new version at the root, and the
+    # one it replaced from its own tag into its own directory.
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
@@ -38,11 +42,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Full history and every tag: an archived version is built from its tag,
+      # in a worktree, so a shallow clone would silently publish a version
+      # dropdown whose older entries lead nowhere.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # 24, not 20: the build script reads the archived list straight out of
+      # versions.ts, and stripping types from TypeScript needs a node that can.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - uses: actions/configure-pages@v5
@@ -60,10 +71,15 @@ jobs:
           [ -z "$path" ] && path="/${GITHUB_REPOSITORY#*/}"
           echo "value=${path%/}/" >> "$GITHUB_OUTPUT"
 
-      - name: Build
+      # Not `npm run docs:build`: that builds the current version alone. This
+      # also rebuilds everything in `archived`, each from its tag into its own
+      # directory. The absolute URL is what the links between versions use —
+      # see docs/.vitepress/versions.ts for why they cannot be relative.
+      - name: Build every version
         env:
           GBUI_DOCS_BASE: ${{ steps.base.outputs.value }}
-        run: npm run docs:build
+          GBUI_DOCS_SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: tools/build_docs.sh
 
       - uses: actions/upload-pages-artifact@v3
         with:

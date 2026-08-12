@@ -1,38 +1,85 @@
 #!/usr/bin/env bash
 # Builds the documentation, one directory per version.
 #
-#   tools/build_docs.sh                 build the working tree as the current version
-#   tools/build_docs.sh 0.1 0.2         also build those tags into /v0.1/ and /v0.2/
+#   tools/build_docs.sh              build the current version, plus every
+#                                    version listed in docs/.vitepress/versions.ts
+#   tools/build_docs.sh 0.1 0.2      build those versions instead of that list
 #
-# The newest build lands at the root of docs/.vitepress/dist and every version
-# also gets its own directory, so a link to /v0.2/guide/layout keeps working
+# The current version lands at the root of docs/.vitepress/dist and every older
+# one also gets its own directory, so a link to /v0.2/guide/layout keeps working
 # after 0.3 ships. VitePress has no versioning of its own; this convention is
 # what the Vite and Vue sites use.
+#
+# Two environment variables, both set by the Pages workflow and both optional
+# here:
+#
+#   GBUI_DOCS_BASE      where the site is served from — "/" locally, "/gbui/" on
+#                       a GitHub project page. An archived version is built at
+#                       that base plus its own directory.
+#   GBUI_DOCS_SITE_URL  absolute URL of the site root, for the links that point
+#                       from one version to another. See versions.ts for why
+#                       those cannot be relative.
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$HERE"
 OUT=docs/.vitepress/dist
+SITE_BASE=${GBUI_DOCS_BASE:-/}
+# A base VitePress accepts: leading and trailing slash, no doubles.
+SITE_BASE="/${SITE_BASE#/}"
+SITE_BASE="${SITE_BASE%/}/"
 
 command -v npm >/dev/null || { echo "npm is required" >&2; exit 1; }
 [ -d node_modules ] || npm install
 
-echo "==> current"
-npx vitepress build docs
+# Without arguments the versions to keep are the ones the site advertises, so
+# the script and the version dropdown cannot disagree about what exists.
+versions=("$@")
+if [ ${#versions[@]} -eq 0 ]; then
+    # Loudly, not quietly: a failure here would otherwise publish a dropdown
+    # advertising versions whose directories were never built.
+    if ! listing=$(node --input-type=module -e '
+        import { archived } from "./docs/.vitepress/versions.ts";
+        for (const v of archived) console.log(v);
+    ' 2>/dev/null); then
+        echo 'cannot read the archived list from docs/.vitepress/versions.ts' >&2
+        echo "node 22.6+ reads TypeScript directly; on an older one, name the" >&2
+        echo "versions instead: tools/build_docs.sh 0.2" >&2
+        exit 1
+    fi
+    mapfile -t versions <<< "$listing"
+fi
+
+echo "==> current (base ${SITE_BASE})"
+GBUI_DOCS_BASE="$SITE_BASE" npx vitepress build docs
 mkdir -p "$OUT"
 
 # Older versions are built from their tags into a worktree, so the content is
 # whatever that release actually said rather than today's text with a label.
-for version in "$@"; do
+for version in "${versions[@]:-}"; do
+    [ -z "$version" ] && continue
+
+    # `v0.2` is the tag this expects, but a release tagged `v0.2.0` is the same
+    # release and skipping it silently would leave a dead entry in the dropdown.
     tag="v${version}"
-    git rev-parse "$tag" >/dev/null 2>&1 || { echo "no tag $tag, skipping"; continue; }
+    if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+        tag=$(git tag --list "v${version}.*" --sort=-v:refname | head -n 1)
+    fi
+    if [ -z "$tag" ]; then
+        echo "no tag for $version, skipping" >&2
+        continue
+    fi
+
     echo "==> $tag"
     worktree=$(mktemp -d)
     git worktree add --detach "$worktree" "$tag" >/dev/null
     (
         cd "$worktree"
         ln -s "$HERE/node_modules" node_modules
-        GBUI_DOCS_VERSION="$version" GBUI_DOCS_BASE="/v${version}/" npx vitepress build docs
+        GBUI_DOCS_VERSION="$version" \
+        GBUI_DOCS_BASE="${SITE_BASE}v${version}/" \
+        GBUI_DOCS_SITE_URL="${GBUI_DOCS_SITE_URL:-}" \
+            npx vitepress build docs
     )
     rm -rf "${OUT:?}/v${version}"
     mkdir -p "$OUT/v${version}"

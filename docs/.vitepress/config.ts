@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { current, isArchived, versionMenu } from './versions'
+import { current, isArchived, versionLink, versionMenu } from './versions'
 
 // Each version is built with its own base path and deployed to its own
 // directory; the newest is copied to the root. See versions.ts.
@@ -90,8 +90,10 @@ export default defineConfig({
     },
 
     footer: {
+      // Raw HTML, so this link is not rewritten with the base the way a nav
+      // link is — which is exactly why it goes through versionLink().
       message: isArchived
-        ? `Documentation for v${version} — <a href="/">the latest release is v${current}</a>.`
+        ? `Documentation for v${version} — <a href="${versionLink()}">the latest release is v${current}</a>.`
         : 'Released under the LGPL-3.0-or-later licence.',
       copyright: 'Icons by Lucide (ISC).',
     },
