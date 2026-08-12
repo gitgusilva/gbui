@@ -86,6 +86,10 @@ else()
     list(APPEND GBUI_SOURCES src/platform/nullWindow.cpp)
 endif()
 
+# Static by default, shared when the caller asks — `-DBUILD_SHARED_LIBS=ON`,
+# which is the switch every other CMake project uses and therefore the one a
+# distribution already passes to all of them. Nothing else in this file has an
+# opinion about which it is.
 add_library(gbui ${GBUI_SOURCES})
 add_library(gbui::gbui ALIAS gbui)
 
@@ -127,10 +131,22 @@ else()
 endif()
 
 set_target_properties(gbui PROPERTIES
+    # libgbui.so.0.2.0 with an SONAME of libgbui.so.0, so a consumer keeps
+    # working across a patch release and is asked to relink across a major one.
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     CXX_EXTENSIONS OFF
-    POSITION_INDEPENDENT_CODE ON)
+    POSITION_INDEPENDENT_CODE ON
+    # MSVC exports nothing from a DLL unless each symbol says so, and this
+    # library's surface is several hundred free functions across sixty headers.
+    # The linker can work them out instead.
+    #
+    # It covers functions and not data, which is the one thing to know before
+    # adding a public constant: every one here is `inline constexpr` in a
+    # header — `kAuto`, `kMenuItemHeight` — so nothing crosses the boundary as
+    # a data symbol. A `extern const` in a source file would link on Linux and
+    # fail on Windows, which is the worst way to find out.
+    WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(GBUI_BUILD_TESTS)
     enable_testing()
@@ -141,7 +157,12 @@ if(GBUI_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-message(STATUS "gbui ${PROJECT_VERSION}: SDL2 backend ${GBUI_HAVE_SDL2}")
+if(BUILD_SHARED_LIBS)
+    set(GBUI_LIBRARY_KIND shared)
+else()
+    set(GBUI_LIBRARY_KIND static)
+endif()
+message(STATUS "gbui ${PROJECT_VERSION}: ${GBUI_LIBRARY_KIND} library, SDL2 backend ${GBUI_HAVE_SDL2}")
 
 # ---- install ---------------------------------------------------------------
 include(GNUInstallDirs)
@@ -162,8 +183,21 @@ write_basic_package_version_file(
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion)
 
+# The installed package has to declare what it needs. `gbui::gbui` links
+# SDL2::SDL2 when the backend was built, and CMake will not invent that target
+# for whoever calls find_package(gbui) — without this the consumer fails on a
+# missing target, in a message that names SDL2 and not the reason.
+if(GBUI_HAVE_SDL2)
+    set(GBUI_CONFIG_DEPENDENCIES
+"include(CMakeFindDependencyMacro)
+find_dependency(SDL2)
+")
+else()
+    set(GBUI_CONFIG_DEPENDENCIES "")
+endif()
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfig.cmake"
-"include(\"\${CMAKE_CURRENT_LIST_DIR}/gbuiTargets.cmake\")\n")
+"${GBUI_CONFIG_DEPENDENCIES}include(\"\${CMAKE_CURRENT_LIST_DIR}/gbuiTargets.cmake\")\n")
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/gbuiConfig.cmake"

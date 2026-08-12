@@ -110,6 +110,66 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
+  # Shared library, installed and consumed from outside
+  # ---------------------------------------------------------------------------
+  #
+  # Everything above builds the library in place. This one builds it *shared*,
+  # installs it, and then compiles a project that knows nothing about this
+  # repository — find_package, one target, the `gbui::` namespace.
+  #
+  # It is here for Windows more than for the other two: a DLL exports nothing
+  # unless it is told to, and the failure is at the consumer's link step, long
+  # after every job that only builds the library has gone green.
+  shared:
+    name: Shared library · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SDL2
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev
+
+      - name: Build and install
+        shell: bash
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGBUI_BUILD_EXAMPLES=OFF \
+            -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
+          cmake --build build --config Release --parallel
+          ctest --test-dir build --build-config Release --output-on-failure
+          cmake --install build --config Release
+
+      - name: Consume it
+        shell: bash
+        run: |
+          cmake -S tools/consumer -B build/consumer \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$PWD/prefix"
+          cmake --build build/consumer --config Release --parallel
+
+      # Windows finds a DLL on PATH, where the other two use the RPATH the
+      # linker already wrote — so only one of these needs help.
+      - name: Run it
+        shell: bash
+        run: |
+          export PATH="$PWD/prefix/bin:$PATH"
+          if [ -x build/consumer/Release/gbui_consumer.exe ]; then
+            build/consumer/Release/gbui_consumer.exe
+          else
+            build/consumer/gbui_consumer
+          fi
+
+  # ---------------------------------------------------------------------------
   # Sanitizers
   # ---------------------------------------------------------------------------
   sanitizers:
