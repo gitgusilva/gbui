@@ -28,10 +28,15 @@ on:
       - "include/**"
       - "src/**"
       - "CMakeLists.txt"
-    # A release rebuilds the whole site: the new version at the root, and the
-    # one it replaced from its own tag into its own directory.
-    tags: ["v*"]
   workflow_dispatch:
+
+# Deliberately **not** triggered by tags, though a release is exactly when the
+# whole site is rebuilt. A tag push checks out that tag, and `build_docs.sh`
+# would then publish *its* `current` at the root — so pushing an old tag would
+# quietly replace the live site with an old release's documentation. A release
+# already touches `versions.ts`, so the commit on `main` triggers this anyway,
+# and by then the tags it archives from are pushed. See the recipe at the top
+# of docs/.vitepress/versions.ts.
 
 permissions:
   contents: read

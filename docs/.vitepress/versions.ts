@@ -9,22 +9,28 @@
 // `tools/build_docs.sh` does the building and the Pages workflow runs it.
 // Cutting a release is three edits and a tag:
 //
-//   1. move the outgoing version into `archived` below;
-//   2. set `current` to the new one, in step with CMakeLists.txt;
-//   3. tag it — `git tag v0.3 && git push --tags`.
+//   1. tag the outgoing version and **push the tag first** — an archived
+//      version is built from its tag, so listing it in `archived` before the
+//      tag exists publishes a dropdown entry that 404s. It has happened;
+//      build_docs.sh prints "no tag for 0.2, skipping" and carries on;
+//   2. move that version into `archived` below;
+//   3. set `current` to the new one, in step with CMakeLists.txt;
+//   4. tag the new one and push it, then push the commit — the Pages workflow
+//      deploys from `main`, and by then every tag it has to build from is
+//      already there.
 //
 // The archived build comes from the tag, in a worktree, so it says what that
 // release actually said rather than today's text wearing an old label.
 
 /** The version this checkout documents. Kept in step with CMakeLists.txt. */
-export const current = '0.3'
+export const current = '0.2'
 
 /**
  * Older versions that are still deployed, newest first. A version leaves this
  * list when its directory is deleted, not before — a link that 404s is worse
  * than a page that says it is out of date.
  */
-export const archived: string[] = ['0.2']
+export const archived: string[] = []
 
 /** True while building a version that is not the current one. */
 export const isArchived = process.env.GBUI_DOCS_VERSION
