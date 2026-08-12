@@ -4,10 +4,18 @@ Six application screens built with nothing but the public library, and three
 thin shells that run them: a native window, a headless renderer and a
 WebAssembly module.
 
-They are separate from `examples/` on purpose. The examples share a header and
-exist to prove the pipeline; these are ordinary consumers — they include
-`<gbui/…>`, link `gbui::gbui`, and would build unchanged against an installed
-copy of the toolkit.
+**These are here to be looked at, not to be used.** Nothing outside this
+directory links them, they are not installed, they have no API stability, and
+they carry no `gbui::` alias — that alias is the signal that something is part
+of the product, and these are not. Copy a screen into your own application if
+it is useful; do not depend on this one. `examples/` follows the same rule.
+
+What they *do* prove is why they are separate from `examples/`, which shares a
+header and demonstrates the pipeline. These are ordinary consumers: they
+include `<gbui/…>`, link `gbui::gbui`, and would build unchanged against an
+installed copy of the toolkit. A change that makes them awkward has made the
+library awkward — which is the whole reason they exist as a target rather than
+as six loose files.
 
 ```
 demos/

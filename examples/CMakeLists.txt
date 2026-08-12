@@ -1,3 +1,10 @@
+# The examples.
+#
+# **Demonstration material, not a library** — the same rule the demos follow.
+# Nothing here is installed and nothing outside this directory links it; the
+# interface target below is plumbing so that four executables can share one
+# header, not an artefact anyone is meant to consume.
+#
 # Every example shares the screen in examples/shared, so the windowed
 # application and the SVG sweeps are provably the same UI.
 add_library(gbui_example_screen INTERFACE)

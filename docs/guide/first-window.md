@@ -88,6 +88,41 @@ add_executable(hello main.cpp)
 target_link_libraries(hello PRIVATE gbui::gbui)
 ```
 
+## A note on `using namespace gbui`
+
+The file above is a `main.cpp` that does nothing except build a UI, so the
+directive is fine there and every example in this repository uses it.
+
+**An application is not that file.** Once there is a model, a repository layer
+and two other libraries in the same translation unit, pulling four hundred
+names — including `text`, `table`, `select`, `label`, `icon` and `progress` —
+into the global namespace is a habit that will cost something eventually. The
+library has one flat namespace on purpose (see below); it does not follow that
+you should open it.
+
+A namespace alias is the two-line answer, and the name is yours to pick:
+
+```cpp
+namespace gb = gbui;
+
+void commitBox(gb::Ui& u, const gb::Interaction& in) {
+    auto panel = gb::beginPanel(u, {.direction = gb::Direction::Column});
+    gb::sectionHeading(u, "COMMIT MESSAGE");
+    gb::button(u, in, "COMMIT", {.variant = gb::ButtonVariant::Primary, .block = true});
+}
+```
+
+`gb` rather than `ui`, because `Ui ui(arena)` is the conventional variable name
+and an alias that shadows it is a confusing hour.
+
+**Why the namespace is flat.** `gbui::input::Interaction` and
+`gbui::paint::DisplayList` would appear in the signature of nearly every
+component, and the include path — `gbui/widgets/button.hpp` — already says
+where a name lives without repeating it at each use. Sub-namespaces are kept
+for modules with a vocabulary of their own that nobody uses while building a
+tree: `gbui::json` and `gbui::meta` are the two, and a text shaper or an
+accessibility bridge would be the next.
+
 ## What each step is doing
 
 **Input.** `Interaction` is resolved against the tree that is still in the

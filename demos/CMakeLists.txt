@@ -1,14 +1,19 @@
 # The demo screens.
 #
-# A library of its own that links `gbui::gbui` and nothing else — it reaches
-# into no source directory, includes no header by path, and would build
-# unchanged against an installed copy of the toolkit. That is the point of
-# keeping it separate from `examples/`: the examples share a header and prove
-# the pipeline, and these prove that an ordinary consumer can build a real
-# application screen with the public surface alone.
+# **Demonstration material, not a library.** These screens exist to be looked
+# at — in a window, in a still, on the documentation site — and nothing outside
+# this directory links them. They are not installed, they have no API stability
+# and they carry no `gbui::` alias, because a `gbui::` alias is the signal that
+# something is part of the product and these are not.
 #
-# Two entry points sit on top of it — a native runner and a WebAssembly module —
-# and both are thin: everything either one does lives in `Host`.
+# What they *do* prove is worth the separation from `examples/`: they link
+# `gbui::gbui` and nothing else, reach into no source directory, include no
+# header by path, and would build unchanged against an installed copy. A change
+# that makes them awkward has made the library awkward, which is the only
+# reason they are built as a target rather than as six loose files.
+#
+# Two entry points sit on top — a native runner and a WebAssembly module — and
+# both are thin: everything either one does lives in `Host`.
 
 add_library(gbui_demos
     src/registry.cpp
@@ -19,8 +24,6 @@ add_library(gbui_demos
     src/production.cpp
     src/grid.cpp
     src/logistics.cpp)
-add_library(gbui::demos ALIAS gbui_demos)
-
 target_include_directories(gbui_demos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(gbui_demos PUBLIC gbui::gbui)
 target_compile_features(gbui_demos PUBLIC cxx_std_20)
@@ -50,7 +53,7 @@ if(EMSCRIPTEN)
     # handful of C entry points in runtime/wasm.cpp. See tools/build_wasm.sh,
     # which is what the documentation site calls.
     add_executable(gbui_demos_wasm runtime/wasm.cpp)
-    target_link_libraries(gbui_demos_wasm PRIVATE gbui::demos)
+    target_link_libraries(gbui_demos_wasm PRIVATE gbui_demos)
     set_target_properties(gbui_demos_wasm PROPERTIES OUTPUT_NAME "gbui-demos" SUFFIX ".js")
 
     # A font has to travel with the module: there is no /usr/share/fonts in a
@@ -90,7 +93,7 @@ if(EMSCRIPTEN)
 else()
     # ---- a window ----------------------------------------------------------
     add_executable(gbui_demo runtime/native.cpp)
-    target_link_libraries(gbui_demo PRIVATE gbui::demos)
+    target_link_libraries(gbui_demo PRIVATE gbui_demos)
 
     if(MSVC)
         target_compile_options(gbui_demo PRIVATE /W4 $<$<BOOL:${GBUI_WERROR}>:/WX>)
