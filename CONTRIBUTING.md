@@ -100,9 +100,14 @@ code, and a comment that restates it goes stale silently. Anything surprising �
 a workaround, a spec quirk, a bug that shipped once — is worth a sentence, and
 the bug that shipped once is worth naming so it does not come back.
 
-The library builds with `-Wall -Wextra -Wpedantic -Wconversion -Werror` on Linux
-(`GBUI_WERROR`, on by default for a standalone build). A warning that is wrong
-gets a narrow suppression and a comment saying why.
+The library builds with `-Wall -Wextra -Wpedantic -Wshadow -Wconversion
+-Wsign-conversion -Werror`, or `/W4 /WX` under MSVC — `GBUI_WERROR`, on by
+default for a standalone build and on in every CI job. `-Wconversion` is the one
+that earns its keep here: a float quietly becoming an int in the middle of a
+layout calculation is this codebase's most likely bug.
+
+A warning that is wrong gets the narrowest suppression that silences it and a
+comment saying why — per file in `CMakeLists.txt`, not per build.
 
 ### clang-format runs on the lines you touched
 
@@ -146,14 +151,9 @@ conversation worth having and a one-line change either way.
   branch is two reviews wearing one hat.
 
 CI runs on every push and pull request: build and test on Linux (GCC and Clang,
-with SDL2), macOS and Windows; the test suite again under ASan and UBSan; the
-format check above; the clang-tidy report; and the documentation build. The
-build, test, sanitizer and documentation jobs must be green.
-
-The macOS and Windows jobs currently build with warnings-as-errors **off**:
-neither compiler has ever seen this code, and a first run that fails on a
-warning says nothing about whether it works there. Making either of them clean
-enough to turn `GBUI_WERROR` back on is a genuinely useful contribution.
+with SDL2), macOS and Windows, all four with warnings as errors; the test suite
+again under ASan and UBSan; the format check above; the clang-tidy report; and
+the documentation build. Everything except the clang-tidy report must be green.
 
 ## Reporting something broken
 

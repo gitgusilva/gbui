@@ -1,9 +1,11 @@
 #include "gbui/platform/font.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #include "gbui/layout/textWrap.hpp"
 #include "stb_truetype.h"
@@ -279,14 +281,47 @@ TextMetrics Font::measure(std::string_view text) {
     return {width, lineHeight_, ascent_};
 }
 
+namespace {
+
+/**
+ * An environment variable's value, or empty.
+ *
+ * `std::getenv` is deprecated by MSVC's CRT: the pointer it hands back is
+ * invalidated by a `putenv` on another thread. Nothing here sets one, but a
+ * warning that has to be argued with on every build is a warning somebody
+ * eventually switches off wholesale — so each platform's own call is used
+ * instead, and the argument does not have to happen.
+ */
+std::string environmentVariable(const char* name) {
+#if defined(_WIN32)
+    char* value = nullptr;
+    std::size_t size = 0;
+    if (_dupenv_s(&value, &size, name) != 0 || value == nullptr) return {};
+    std::string out(value);
+    std::free(value);
+    return out;
+#else
+    const char* value = std::getenv(name);
+    return value != nullptr ? std::string(value) : std::string{};
+#endif
+}
+
+}  // namespace
+
 FontDatabase::FontDatabase() {
     addSearchPath("/usr/share/fonts");
     addSearchPath("/usr/local/share/fonts");
-    if (const char* home = std::getenv("HOME")) {
-        addSearchPath(std::string(home) + "/.local/share/fonts");
-        addSearchPath(std::string(home) + "/.fonts");
+    const std::string home = environmentVariable("HOME");
+    if (!home.empty()) {
+        addSearchPath(home + "/.local/share/fonts");
+        addSearchPath(home + "/.fonts");
     }
     addSearchPath("C:/Windows/Fonts");
+    // Where Windows puts a font installed for one user rather than for the
+    // machine — which is most of the fonts a person installs themselves, and
+    // therefore most of the ones a theme is likely to name.
+    const std::string localAppData = environmentVariable("LOCALAPPDATA");
+    if (!localAppData.empty()) addSearchPath(localAppData + "/Microsoft/Windows/Fonts");
     addSearchPath("/System/Library/Fonts");
     addSearchPath("/Library/Fonts");
 }

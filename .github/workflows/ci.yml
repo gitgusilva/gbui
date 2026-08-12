@@ -54,18 +54,14 @@ jobs:
             cc: clang
             cxx: clang++
             sdl2: false
-            # AppleClang and MSVC have never compiled this code, and a first run
-            # that fails on a warning says nothing useful about whether it
-            # *works* there. Warnings become errors on these two once their
-            # first clean build has landed.
-            werror: OFF
+            werror: ON
           # No CC/CXX here on purpose: the Visual Studio generator finds its own
           # toolchain, and pointing it at `cl` from a bash step only breaks the
           # lookup.
           - name: Windows · MSVC
             os: windows-latest
             sdl2: false
-            werror: OFF
+            werror: ON
 
     steps:
       - uses: actions/checkout@v4
