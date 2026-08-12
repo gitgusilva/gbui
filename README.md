@@ -8,8 +8,10 @@ standard library.
 
 [![CI](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml/badge.svg)](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml)
 
-[Guide](docs/guide/introduction.md) ·
-[Reference](docs/reference/overview.md) ·
+**[gitgusilva.github.io/gbui](https://gitgusilva.github.io/gbui/)**
+
+[Guide](https://gitgusilva.github.io/gbui/guide/introduction) ·
+[Reference](https://gitgusilva.github.io/gbui/reference/overview) ·
 [Contributing](CONTRIBUTING.md) ·
 LGPL-3.0-or-later
 
@@ -87,7 +89,8 @@ painter.paint(list);
 
 ## Documentation
 
-The site in `docs/` is built with VitePress — `npm install && npm run docs:dev`.
+**[gitgusilva.github.io/gbui](https://gitgusilva.github.io/gbui/)** — published
+from `docs/` on every push. Locally: `npm install && npm run docs:dev`.
 
 | | |
 | --- | --- |
