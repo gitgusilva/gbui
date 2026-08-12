@@ -127,6 +127,19 @@ The gallery is the review tool: the same screen in every theme it finds, at
 1600, 1180, 900 and 680 px, where a layout regression or a theme with a bad
 token shows up in one glance.
 
+## What CI runs
+
+Every push and pull request builds and tests on Linux (GCC and Clang, with
+SDL2), macOS and Windows, all four with warnings as errors, then runs the suite
+again under ASan and UBSan. The Linux job also renders a frame with no display,
+because that path is how every picture in this documentation is made and it
+breaks quietly.
+
+Two things worth knowing before a first contribution: clang-format is checked on
+**the lines a change touches** rather than on the tree, and clang-tidy is a
+report rather than a gate. Both are explained in
+[CONTRIBUTING.md](https://github.com/gitgusilva/gbui/blob/main/CONTRIBUTING.md).
+
 `gbui_controls --shot` is worth knowing in detail, because photographing a UI
 that has no state of its own takes some care: `--pointer x y` parks the pointer
 so a hover can be captured, `--tab n` presses Tab that many times so a focus ring

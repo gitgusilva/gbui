@@ -67,6 +67,14 @@ TextMetrics metrics = font->measure("Local Changes");
 const Glyph* glyph = font->glyph(U'L');             // rasterised and cached
 ```
 
+The directories searched by default are each platform's own — `/usr/share/fonts`
+and `~/.local/share/fonts` on Linux, `C:/Windows/Fonts` and
+`%LOCALAPPDATA%/Microsoft/Windows/Fonts` on Windows, `/System/Library/Fonts` and
+`/Library/Fonts` on macOS — and the per-user ones matter as much as the system
+ones, since a font somebody installed for themselves is exactly the font their
+theme is likely to name. `addSearchPath` adds to that list;
+`clearSearchPaths` empties it, including the platform's own.
+
 `FontDatabase` resolves a family the theme asks for against the files on the
 machine, ranking candidates by family, then by weight and slant distance, then
 by how much name the file has left over, and walking down the list until one

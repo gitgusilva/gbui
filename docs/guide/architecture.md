@@ -103,8 +103,10 @@ a class: the public surface is free functions, and a reader looking for
 Directories stay lowercase.
 
 `.clang-format` and `.clang-tidy` at the repository root enforce the mechanical
-half. The library builds with `-Wall -Wextra -Wpedantic -Wconversion -Werror`;
-a warning that is wrong gets a narrow suppression and a comment saying why.
+half. The library builds with `-Wall -Wextra -Wpedantic -Wshadow -Wconversion
+-Wsign-conversion -Werror`, or `/W4 /WX` under MSVC, on all four of the
+compilers CI runs. A warning that is wrong gets the narrowest suppression that
+silences it and a comment saying why.
 
 ## Errors
 

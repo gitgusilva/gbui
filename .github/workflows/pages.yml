@@ -1,0 +1,80 @@
+name: Documentation
+
+# Publishes docs/ to GitHub Pages, at https://gitgusilva.github.io/gbui/
+#
+# The site is a project page, not a user one, so it is served from a
+# subdirectory — which VitePress has to be told about at build time, because it
+# writes the base into every asset URL and internal link. That is `base`, and
+# getting it wrong produces a site whose CSS 404s and whose links all land one
+# level too high.
+#
+# CI already builds the site on every push (as a dead-link check, since
+# VitePress fails on one). This workflow is the deploy, and it only runs for
+# main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and a newer one wins: cancel-in-progress here is safe in
+# a way it is not for a release, because nothing is uploaded incrementally —
+# the artifact is published whole or not at all.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      - run: npm ci
+
+      # `base` comes from the Pages configuration rather than being hardcoded,
+      # so renaming the repository does not silently break every asset URL.
+      # VitePress wants the trailing slash that base_path does not carry.
+      - name: Resolve the base path
+        id: base
+        run: |
+          path="${{ steps.pages.outputs.base_path }}"
+          [ -z "$path" ] && path="/${GITHUB_REPOSITORY#*/}"
+          echo "value=${path%/}/" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          GBUI_DOCS_BASE: ${{ steps.base.outputs.value }}
+        run: npm run docs:build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
