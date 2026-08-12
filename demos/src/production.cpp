@@ -387,6 +387,9 @@ DemoInfo productionDemo() {
                 "state bars, a downtime Pareto and a defect heatmap.",
             .highlights = {"Stacked bars", "Horizontal lollipops", "Defect heatmap",
                            "Meters inside table cells"},
+            .tryThis =
+                "Hover a cell in the defect grid, and a lollipop in the Pareto beside it. "
+                "The Takt column is a meter drawn inside a table cell.",
             .design = {1400.0f, 860.0f},
             .palette = Palette::Dark,
             .create = [] { return std::unique_ptr<Demo>(new Production()); }};

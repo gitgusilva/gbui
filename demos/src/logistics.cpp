@@ -385,6 +385,9 @@ DemoInfo logisticsDemo() {
                 "A warehouse and fleet desk: a bubble scatter of lateness against "
                 "distance, zone occupancy meters, the dock schedule and the fleet.",
             .highlights = {"Bubble scatter", "Two continuous axes", "Dock schedule", "Fleet table"},
+            .tryThis =
+                "Hover a bubble out on the right of the scatter: far from the depot, well "
+                "past its window, and a big load.",
             .design = {1400.0f, 812.0f},
             .palette = Palette::Follow,
             .create = [] { return std::unique_ptr<Demo>(new Logistics()); }};

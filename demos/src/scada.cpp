@@ -191,12 +191,14 @@ void Scada::dials(Ui& ui) {
           .label = "FIT-101 FLOW",
           .unit = "m³/h",
           .tone = kit::toneBelow(flow_.latest(), 400.0, 380.0),
+          .id = "scada.dial.flow",
           .size = 118.0f});
     dial({.value = pressure_.latest(),
           .maximum = 6.0,
           .label = "PIT-204 PRESSURE",
           .unit = "bar",
           .tone = kit::toneFor(pressure_.latest(), 4.0, 4.5),
+          .id = "scada.dial.pressure",
           .size = 118.0f,
           .valueFormat = "%.2f"});
     dial({.value = turbidity_.latest(),
@@ -204,6 +206,7 @@ void Scada::dials(Ui& ui) {
           .label = "AIT-301 TURBIDITY",
           .unit = "NTU",
           .tone = kit::toneFor(turbidity_.latest(), 0.25, 0.30),
+          .id = "scada.dial.turbidity",
           .size = 118.0f,
           .valueFormat = "%.2f"});
     dial({.value = ph_.latest(),
@@ -211,6 +214,7 @@ void Scada::dials(Ui& ui) {
           .maximum = 9.0,
           .label = "AIT-302 pH",
           .tone = kit::Tone::Ok,
+          .id = "scada.dial.ph",
           .size = 118.0f,
           .valueFormat = "%.2f"});
     dial({.value = chlorine_.latest(),
@@ -218,6 +222,7 @@ void Scada::dials(Ui& ui) {
           .label = "AIT-604 FREE CL",
           .unit = "mg/L",
           .tone = kit::toneBelow(chlorine_.latest(), 0.7, 0.5),
+          .id = "scada.dial.chlorine",
           .size = 118.0f,
           .valueFormat = "%.2f"});
 }
@@ -233,19 +238,23 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
         kit::meter(ui, {.label = "TK-410 Clearwell",
                         .value = clearwell_.latest(),
                         .unit = "%",
-                        .tone = kit::toneFor(clearwell_.latest(), 85.0, 92.0)});
+                        .tone = kit::toneFor(clearwell_.latest(), 85.0, 92.0),
+                        .id = "scada.tank.clearwell"});
         kit::meter(ui, {.label = "TK-420 Backwash",
                         .value = backwash_.latest(),
                         .unit = "%",
-                        .tone = kit::toneBelow(backwash_.latest(), 25.0, 15.0)});
+                        .tone = kit::toneBelow(backwash_.latest(), 25.0, 15.0),
+                        .id = "scada.tank.backwash"});
         kit::meter(ui, {.label = "TK-320 Sludge",
                         .value = sludge_.latest(),
                         .unit = "%",
-                        .tone = kit::toneFor(sludge_.latest(), 75.0, 85.0)});
+                        .tone = kit::toneFor(sludge_.latest(), 75.0, 85.0),
+                        .id = "scada.tank.sludge"});
         kit::meter(ui, {.label = "TK-210 Coagulant",
                         .value = chemical_.latest(),
                         .unit = "%",
-                        .tone = kit::toneBelow(chemical_.latest(), 20.0, 12.0)});
+                        .tone = kit::toneBelow(chemical_.latest(), 20.0, 12.0),
+                        .id = "scada.tank.chemical"});
     }
     {
         auto card =
@@ -412,6 +421,7 @@ void Scada::alarms(Ui& ui, const Interaction& input) {
         if (!alarm.acknowledged) row.background = Fill{kit::toneToken(alarm.tone), 0.14f};
         auto rowScope = ui.begin(row);
 
+        kit::beacon(ui, alarm.tone, !alarm.acknowledged, 7.0f);
         text(ui, kit::format("P%.0f", static_cast<double>(alarm.priority)),
              {.color = kit::toneToken(alarm.tone),
               .weight = FontWeight::SemiBold,
@@ -561,6 +571,9 @@ DemoInfo scadaDemo() {
             "A plant supervisory screen: process dials against their setpoints, tank "
             "meters, pump switches and an alarm list you can acknowledge.",
         .highlights = {"Always dark", "Live dials", "Working switches", "Acknowledgeable alarms"},
+        .tryThis =
+            "Switch a pump off, drag the flow setpoint and watch the orange line in the "
+            "trend follow it, then acknowledge one of the alarms on the right.",
         .design = {1360.0f, 800.0f},
         .palette = Palette::Dark,
         .create = [] { return std::unique_ptr<Demo>(new Scada()); }};

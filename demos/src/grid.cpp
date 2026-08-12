@@ -380,6 +380,9 @@ DemoInfo gridDemo() {
                 "settlement, the generation mix and a live feeder table.",
             .highlights = {"Candlesticks", "Signed readings", "Feeder loading meters",
                            "Generation donut"},
+            .tryThis =
+                "Hover a candle in the day-ahead settlement, then click a wedge of the "
+                "generation donut to single it out.",
             .design = {1440.0f, 840.0f},
             .palette = Palette::Dark,
             .create = [] { return std::unique_ptr<Demo>(new Grid()); }};

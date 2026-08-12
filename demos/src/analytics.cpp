@@ -109,8 +109,12 @@ void Analytics::kpis(Ui& ui) {
     row.shrink = 0.0f;
     auto scope = ui.begin(row);
 
+    // The headline tile carries a wash of its own tone; the three beside it do
+    // not. A row where every tile is tinted has no headline.
     kit::statTile(ui, {.label = "MRR",
-                       .value = "$" + kit::compact(revenue_.latest() * 30.0),
+                       .value = "$" + kit::compact(kit::eased(ui, "analytics.mrr", "v",
+                                                              revenue_.latest() * 30.0)),
+                       .tint = true,
                        .trend = kit::signedPercent(revenue_.trend()),
                        .trendTone = revenue_.trend() >= 0.0 ? kit::Tone::Ok : kit::Tone::Alarm,
                        .tone = kit::Tone::Info,
@@ -132,7 +136,8 @@ void Analytics::kpis(Ui& ui) {
                        .tone = kit::toneFor(churn_.latest(), 1.6, 2.1),
                        .history = &churn_.values()});
     kit::statTile(ui, {.label = "API P95",
-                       .value = kit::format("%.0f", latency_.latest()),
+                       .value = kit::format(
+                           "%.0f", kit::eased(ui, "analytics.latency", "v", latency_.latest())),
                        .unit = "ms",
                        .trend = kit::signedPercent(latency_.trend()),
                        .trendTone = latency_.trend() <= 0.0 ? kit::Tone::Ok : kit::Tone::Alarm,
@@ -405,6 +410,10 @@ DemoInfo analyticsDemo() {
             "A revenue dashboard: KPI tiles with sparklines, a pannable line chart "
             "over a brush, a channel donut and a sortable account table.",
         .highlights = {"Pan and zoom", "Sortable table", "Donut with legend", "Live sparklines"},
+        .tryThis =
+            "Drag inside the revenue chart to pan it, hold Ctrl and scroll to zoom, "
+            "drag the window along the strip underneath, and click ARR twice to sort by "
+            "it.",
         .design = {1280.0f, 824.0f},
         .palette = Palette::Follow,
         .create = [] { return std::unique_ptr<Demo>(new Analytics()); }};

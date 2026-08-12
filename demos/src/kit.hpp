@@ -72,6 +72,59 @@ inline Tone toneBelow(double value, double warn, double alarm) {
     return Tone::Ok;
 }
 
+/**
+ * A wash of one tone, fading.
+ *
+ * Two stops of the *same* `Fill` at different alphas, which is the only kind of
+ * gradient a themed screen can write without naming a colour: the token stays
+ * the token, and a theme swap moves both ends together. A gradient between two
+ * literal colours would look identical here and survive exactly one re-theme.
+ */
+inline Gradient wash(Token token, float from, float to, float angle = 160.0f) {
+    return Gradient::linear(Fill{token, from}, Fill{token, to}, angle);
+}
+
+/** The same, named by meaning rather than by token. */
+inline Gradient toneWash(Tone tone, float from, float to, float angle = 160.0f) {
+    return wash(toneToken(tone), from, to, angle);
+}
+
+// ---------------------------------------------------------------------------
+// Motion
+// ---------------------------------------------------------------------------
+
+/**
+ * A number on its way to `target`, remembered across frames by `id`.
+ *
+ * The whole of what the animator is for, at a call site: a component never says
+ * "animate from here to there", it says where the value should be *now* and
+ * asks what it currently is. Wrapped here because a readout that snaps between
+ * two values reads as a glitch, and one that travels reads as an instrument.
+ */
+inline double eased(const Ui& ui, std::string_view id, std::string_view property, double target,
+                    float seconds = 0.45f) {
+    return static_cast<double>(ui.animate(id, property, static_cast<float>(target),
+                                          {.duration = seconds, .easing = Easing::CubicOut}));
+}
+
+/**
+ * A dot that breathes while something is wrong, and sits still when it is not.
+ *
+ * Read off `ui.now()` rather than travelled to a target, because it never
+ * arrives: an alarm beacon is a loop, and `animate` is for values that finish.
+ */
+inline NodeId beacon(Ui& ui, Tone tone, bool active, float size = 9.0f) {
+    const float phase = active ? 0.5f + 0.5f * std::sin(ui.now() * 4.2f) : 1.0f;
+    Style style;
+    style.width = size;
+    style.height = size;
+    style.radius = size / 2.0f;
+    style.shrink = 0.0f;
+    style.alignSelf = Align::Center;
+    style.background = Fill{toneToken(tone), active ? 0.35f + 0.65f * phase : 1.0f};
+    return ui.add(style);
+}
+
 // ---------------------------------------------------------------------------
 // Numbers
 // ---------------------------------------------------------------------------
@@ -231,6 +284,8 @@ struct CardOptions {
     float height = kAuto;
     float minWidth = kAuto;
     Token background = Token::BgElevated;
+    /** Painted instead of `background` when it has two or more stops. */
+    Gradient backgroundGradient{};
     bool border = true;
 };
 
@@ -242,6 +297,7 @@ inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
     outer.gap = options.title.empty() ? 0.0f : 10.0f;
     outer.padding = options.padding;
     outer.background = Fill{options.background};
+    outer.backgroundGradient = options.backgroundGradient;
     if (options.border) outer.border = Border{1.0f, Fill{Token::Border}};
     outer.grow = options.grow;
     outer.shrink = 1.0f;
@@ -306,6 +362,10 @@ inline NodeId pill(Ui& ui, std::string_view value, const PillOptions& options = 
     style.radius = (options.size + 10.0f) / 2.0f;
     style.shrink = 0.0f;
     style.background = options.solid ? Fill{token} : Fill{token, 0.18f};
+    // The solid form is the loudest thing on its screen, so it gets the depth
+    // a flat fill does not have. The washed form stays flat: forty quiet chips
+    // with gradients in them is a screen that shimmers.
+    if (options.solid) style.backgroundGradient = wash(token, 1.0f, 0.72f, 160.0f);
 
     auto scope = ui.begin(style);
     text(ui, value,
@@ -407,8 +467,12 @@ inline NodeId sparkline(Ui& ui, const std::vector<double>& values,
 }
 
 struct StatOptions {
-    std::string_view label;
-    std::string value;
+    std::string_view label{};
+    std::string value{};
+    /** Washes the tile in its own tone, corner to corner. Off by default:
+     *  eight tinted tiles in a row is a paint chart, and the tint earns its
+     *  place on the one or two that carry the screen's headline. */
+    bool tint = false;
     /** Drawn small beside the value: "ms", "kW", "%". */
     std::string_view unit{};
     /** Empty draws no trend line. */
@@ -434,6 +498,9 @@ inline NodeId statTile(Ui& ui, const StatOptions& options) {
     tile.gap = 6.0f;
     tile.padding = Edges::all(12.0f);
     tile.background = Fill{Token::BgElevated};
+    if (options.tint && options.tone != Tone::Neutral) {
+        tile.backgroundGradient = toneWash(options.tone, 0.16f, 0.02f, 145.0f);
+    }
     tile.border = Border{1.0f, Fill{Token::Border}};
     tile.grow = options.grow;
     tile.basis = 0.0f;
@@ -503,6 +570,10 @@ struct MeterOptions {
     double maximum = 100.0;
     std::string_view unit{};
     Tone tone = Tone::Info;
+    /** Names the bar to the animator, so it slides to a new reading. Empty
+     *  leaves it instant, which is what a bar inside a table row wants — fifty
+     *  of them travelling at once is a shimmer, not information. */
+    std::string_view id{};
     /** Draws the reading on the right of the label row. */
     bool showValue = true;
     float height = 8.0f;
@@ -526,6 +597,9 @@ struct MeterOptions {
  * loading bar exactly none.
  */
 inline NodeId meter(Ui& ui, const MeterOptions& options) {
+    const double reading =
+        options.id.empty() ? options.value : eased(ui, options.id, "value", options.value);
+
     Style column;
     column.direction = Direction::Column;
     column.gap = 5.0f;
@@ -545,7 +619,7 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
         auto rowScope = ui.begin(row);
         text(ui, options.label, {.color = Token::Text, .size = 11.5f, .grow = 1.0f});
         if (options.showValue) {
-            text(ui, format(options.valueFormat, options.value),
+            text(ui, format(options.valueFormat, reading),
                  {.color = Token::TextStrong,
                   .weight = FontWeight::Medium,
                   .role = FontRole::Mono,
@@ -558,9 +632,8 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
 
     const double span = options.maximum - options.minimum;
     const float fraction =
-        span > 1e-9
-            ? static_cast<float>(std::clamp((options.value - options.minimum) / span, 0.0, 1.0))
-            : 0.0f;
+        span > 1e-9 ? static_cast<float>(std::clamp((reading - options.minimum) / span, 0.0, 1.0))
+                    : 0.0f;
     {
         Style track;
         track.height = options.height;
@@ -572,7 +645,10 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
         Style fill;
         fill.width = Length::percent(fraction * 100.0f);
         fill.radius = options.height / 2.0f;
+        // Along the bar rather than down it, so the eye lands on the reading
+        // at the end instead of on the middle of a flat block.
         fill.background = Fill{toneToken(options.tone)};
+        fill.backgroundGradient = toneWash(options.tone, 0.55f, 1.0f, 90.0f);
         ui.add(fill);
     }
     return scope.id();
@@ -585,6 +661,9 @@ struct GaugeOptions {
     std::string_view label{};
     std::string_view unit{};
     Tone tone = Tone::Info;
+    /** Names the dial to the animator, so the needle travels to a new reading
+     *  instead of jumping to it. Empty leaves it instant. */
+    std::string_view id{};
     float size = 132.0f;
     float thickness = 10.0f;
     /** Where the arc starts and ends, in degrees clockwise from three o'clock.
@@ -603,11 +682,13 @@ struct GaugeOptions {
  * text in the middle is an ordinary column positioned over it.
  */
 inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
+    const double reading =
+        options.id.empty() ? options.value : eased(ui, options.id, "value", options.value);
+
     const double span = options.maximum - options.minimum;
     const float fraction =
-        span > 1e-9
-            ? static_cast<float>(std::clamp((options.value - options.minimum) / span, 0.0, 1.0))
-            : 0.0f;
+        span > 1e-9 ? static_cast<float>(std::clamp((reading - options.minimum) / span, 0.0, 1.0))
+                    : 0.0f;
 
     const float radius = (options.size - options.thickness) / 2.0f;
     const Vec2 centre{options.size / 2.0f, options.size / 2.0f};
@@ -619,9 +700,23 @@ inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
     shapes.push_back(Shape{track, Fill{Token::BgOverlay}, options.thickness});
 
     if (fraction > 0.001f) {
-        Path value;
-        arc(value, centre, radius, options.from, end);
-        shapes.push_back(Shape{value, Fill{toneToken(options.tone)}, options.thickness});
+        // The arc fades in along its own length, and it is a run of segments in
+        // order to do it. A `Shape` carries a `Fill`, not a `Gradient` —
+        // gradients belong to boxes and to text — so the ramp is made of parts.
+        // Varying the *alpha* of one token rather than travelling between two
+        // colours is what keeps it themeable: nothing here names a colour.
+        constexpr int kSegments = 14;
+        const Token token = toneToken(options.tone);
+        const float sweep = end - options.from;
+        for (int i = 0; i < kSegments; ++i) {
+            const float t0 = static_cast<float>(i) / static_cast<float>(kSegments);
+            const float t1 = static_cast<float>(i + 1) / static_cast<float>(kSegments);
+            Path segment;
+            // A hair of overlap, or the joins read as lighter seams.
+            arc(segment, centre, radius, options.from + sweep * t0,
+                options.from + sweep * std::min(1.0f, t1 + 0.02f));
+            shapes.push_back(Shape{segment, Fill{token, 0.42f + 0.58f * t1}, options.thickness});
+        }
     }
 
     Style stack;
@@ -656,7 +751,7 @@ inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
             row.align = Align::Center;
             row.gap = 2.0f;
             auto rowScope = ui.begin(row);
-            text(ui, format(options.valueFormat, options.value),
+            text(ui, format(options.valueFormat, reading),
                  {.color = Token::TextStrong,
                   .weight = FontWeight::SemiBold,
                   .size = options.size * 0.20f});
@@ -714,6 +809,7 @@ inline Ui::Scope beginHeader(Ui& ui, Icon glyph, std::string_view title,
         mark.align = Align::Center;
         mark.justify = Justify::Center;
         mark.background = Fill{Token::Accent, 0.18f};
+        mark.backgroundGradient = wash(Token::Accent, 0.30f, 0.10f, 145.0f);
         auto markScope = ui.begin(mark);
         icon(ui, glyph, {.color = Token::Accent, .size = 17.0f});
     }

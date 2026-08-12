@@ -52,8 +52,14 @@ system, `d` toggles light and dark, escape quits.
 
 ```sh
 tools/build_wasm.sh        # needs the Emscripten SDK
-npm run docs:dev           # the demo appears on /demos
+npm run docs:dev           # /demos gets a Run button that works
 ```
+
+The documentation page opens on the **source**, not on a running screen, and
+downloads nothing until the reader presses Run — the module is 1.7 MB and then
+rasterises every frame on the CPU, which is not a bill to hand someone who came
+to read. Without the bundle built, the page still works: the code view is
+highlighted at build time from these files and needs no WebAssembly at all.
 
 The script also finds three faces on the machine to travel with the module — a
 browser has no `/usr/share/fonts`, and a UI toolkit with no face draws no text
@@ -82,7 +88,12 @@ DemoInfo kioskDemo() {
 
 Declare it in `src/registry.hpp`, add it to the list in `src/registry.cpp` and
 to `CMakeLists.txt`, and it appears everywhere — the runner's `--list`, the
-gallery page and the browser picker all read the same catalogue.
+documentation's picker and the browser catalogue all read the same entry.
+
+Fill in `summary`, `highlights` and `tryThis` while you are there: the
+documentation site parses the `DemoInfo` out of this file at build time and
+shows it under the screen, so that prose is not written twice and cannot drift
+from what the screen actually does.
 
 Two rules worth keeping:
 

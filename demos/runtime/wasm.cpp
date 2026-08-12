@@ -201,6 +201,8 @@ EMSCRIPTEN_KEEPALIVE char* gbui_demos_catalogue() {
         appendJsonString(json, entry.sector);
         json += ",\"summary\":";
         appendJsonString(json, entry.summary);
+        json += ",\"tryThis\":";
+        appendJsonString(json, entry.tryThis);
         json += ",\"palette\":";
         appendJsonString(json, entry.palette == demos::Palette::Dark    ? "dark"
                                : entry.palette == demos::Palette::Light ? "light"

@@ -75,6 +75,14 @@ struct DemoInfo {
     std::string_view summary;
     /** What the screen is worth looking at for, three or four words each. */
     std::vector<std::string_view> highlights;
+    /**
+     * One sentence telling a reader what to actually *do* with it.
+     *
+     * Here rather than in the documentation because it is the one piece of
+     * prose that goes stale the moment the screen changes, and a field beside
+     * the screen's own definition is edited by whoever changes it. The
+     * documentation site reads this straight out of the source. */
+    std::string_view tryThis;
     /** The size it was designed at, in logical pixels. A host with less room
      *  scales down rather than reflowing, so the composition survives. */
     Vec2 design{1280.0f, 760.0f};
