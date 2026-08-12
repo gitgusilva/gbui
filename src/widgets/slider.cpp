@@ -34,10 +34,10 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
             // the usable travel is the track minus one knob. Mapping against
             // the full width made the value stick at both extremes.
             const float travel = trackFrame.width - knobSize;
-            const double ratio =
-                std::clamp((static_cast<double>(input.pointer().x - trackFrame.x) -
-                            knobSize / 2.0) / static_cast<double>(travel),
-                           0.0, 1.0);
+            const double ratio = std::clamp(
+                (static_cast<double>(input.pointer().x - trackFrame.x) - knobSize / 2.0) /
+                    static_cast<double>(travel),
+                0.0, 1.0);
             next = options.minimum + ratio * span;
         }
         if (focused) {
@@ -60,6 +60,11 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
     row.width = options.width;
     row.grow = options.grow;
     row.height = options.height;
+    // `grow` is main-axis, and a component cannot know which way its parent
+    // points. In a column it would take the leftover height and leave the rest
+    // of the card at the top; a ceiling costs nothing in a row, where the main
+    // axis is the one being grown, and makes that impossible in a column.
+    row.maxHeight = options.height;
     row.opacity = opacityFor(options.disabled);
 
     auto scope = ui.begin(row);
@@ -116,10 +121,10 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
             knob.width = knobSize;
             knob.height = knobSize;
             knob.radius = knobSize / 2.0f;
-            knob.background = options.disabled ? disabledPalette().background
-                                               : Fill{Token::AccentFg};
-            knob.border = Border{2.0f, Fill{options.disabled ? Token::BorderStrong
-                                                             : Token::Accent}};
+            knob.background =
+                options.disabled ? disabledPalette().background : Fill{Token::AccentFg};
+            knob.border =
+                Border{2.0f, Fill{options.disabled ? Token::BorderStrong : Token::Accent}};
             if (ring) knob.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
             ui.add(knob);
         }

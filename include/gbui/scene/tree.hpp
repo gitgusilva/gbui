@@ -78,6 +78,22 @@ struct Shape {
     Fill color{Token::Text};
     /** Zero fills the contours; anything else strokes them at that width. */
     float stroke = 0.0f;
+    /**
+     * Painted instead of `color` when it has two or more stops, exactly as
+     * `Style::backgroundGradient` is for a box.
+     *
+     * Measured across the path's own bounding box, so a stroked arc fades
+     * along the arc rather than along the node it sits in. Before this existed
+     * the only way to fade a dial was to emit a dozen segments at stepped
+     * alphas — a dozen paths where one will do.
+     *
+     * Last in the struct rather than beside `color`, where it belongs by
+     * meaning, because `Shape{path, colour, stroke}` is written positionally
+     * all over this library and in anyone else's charts. Field order is not a
+     * statement about anything; breaking every one of those call sites to make
+     * it read better would be.
+     */
+    Gradient gradient{};
 };
 
 struct Node {

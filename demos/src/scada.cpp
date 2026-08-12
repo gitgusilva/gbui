@@ -229,6 +229,11 @@ void Scada::dials(Ui& ui) {
 
 void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
     {
+        // Everything in this card is named `scada.tank.*`, and the prefix is
+        // written once. It was spelled out at each call site, which is four
+        // chances to typo a string that fails silently — a bar that stops
+        // animating, with nothing to say why.
+        auto ids = ui.beginIds("scada.tank");
         auto card = kit::beginCard(ui, {.title = "VESSEL LEVELS",
                                         .note = "% of working volume",
                                         .gap = 14.0f,
@@ -239,30 +244,31 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                         .value = clearwell_.latest(),
                         .unit = "%",
                         .tone = kit::toneFor(clearwell_.latest(), 85.0, 92.0),
-                        .id = "scada.tank.clearwell"});
+                        .id = ui.qualify("clearwell")});
         kit::meter(ui, {.label = "TK-420 Backwash",
                         .value = backwash_.latest(),
                         .unit = "%",
                         .tone = kit::toneBelow(backwash_.latest(), 25.0, 15.0),
-                        .id = "scada.tank.backwash"});
+                        .id = ui.qualify("backwash")});
         kit::meter(ui, {.label = "TK-320 Sludge",
                         .value = sludge_.latest(),
                         .unit = "%",
                         .tone = kit::toneFor(sludge_.latest(), 75.0, 85.0),
-                        .id = "scada.tank.sludge"});
+                        .id = ui.qualify("sludge")});
         kit::meter(ui, {.label = "TK-210 Coagulant",
                         .value = chemical_.latest(),
                         .unit = "%",
                         .tone = kit::toneBelow(chemical_.latest(), 20.0, 12.0),
-                        .id = "scada.tank.chemical"});
+                        .id = ui.qualify("chemical")});
     }
     {
+        auto ids = ui.beginIds("scada.pump");
         auto card =
             kit::beginCard(ui, {.title = "PUMPS AND SETPOINT", .gap = 8.0f, .width = 244.0f});
 
         for (std::size_t i = 0; i < pumpList_.size(); ++i) {
             const Pump& pump = pumpList_[i];
-            const std::string tag = "scada.pump." + std::string(pump.tag);
+            const std::string_view tag = ui.qualify(pump.tag);
             Style row;
             row.direction = Direction::Row;
             row.align = Align::Center;

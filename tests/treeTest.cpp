@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "gbui/widgets/components.hpp"
 #include "gbui/layout/layout.hpp"
 #include "gbui/paint/paint.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/widgets/components.hpp"
 #include "harness.hpp"
 
 using namespace gbui;
@@ -158,4 +158,48 @@ TEST("a transparent subtree costs no draw commands") {
 
     // Only the root's background: the hidden branch is skipped entirely.
     CHECK_EQ(list.size(), std::size_t{1});
+}
+
+TEST("a naming scope prefixes what qualify returns") {
+    Arena arena;
+    Ui ui(arena);
+
+    CHECK_EQ(ui.qualify("plain"), std::string_view("plain"));
+
+    {
+        auto outer = ui.beginIds("scada");
+        CHECK_EQ(ui.qualify("hold"), std::string_view("scada.hold"));
+        {
+            auto inner = ui.beginIds("tank");
+            CHECK_EQ(ui.qualify("clearwell"), std::string_view("scada.tank.clearwell"));
+            CHECK_EQ(ui.idPrefix(), std::string_view("scada.tank"));
+        }
+        // The inner scope is gone; the outer one is not.
+        CHECK_EQ(ui.qualify("auto"), std::string_view("scada.auto"));
+        (void)outer;
+    }
+    CHECK_EQ(ui.qualify("plain"), std::string_view("plain"));
+    CHECK(ui.idPrefix().empty());
+}
+
+TEST("a qualified name survives the call it was built in") {
+    Arena arena;
+    Ui ui(arena);
+    std::string_view held;
+    {
+        auto scope = ui.beginIds("outer");
+        held = ui.qualify("thing");
+        (void)scope;
+    }
+    // Interned into the arena rather than pointing at the prefix buffer, which
+    // the scope above has already shortened.
+    CHECK_EQ(held, std::string_view("outer.thing"));
+}
+
+TEST("an empty scope name changes nothing") {
+    Arena arena;
+    Ui ui(arena);
+    auto scope = ui.beginIds("");
+    CHECK_EQ(ui.qualify("a"), std::string_view("a"));
+    (void)scope;
 }

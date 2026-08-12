@@ -17,6 +17,8 @@ add_executable(gbui_tests
     richEditorTest.cpp
     chartTest.cpp
     tableTest.cpp
+    sliderTest.cpp
+    paintTest.cpp
     shellTest.cpp)
 
 target_link_libraries(gbui_tests PRIVATE gbui::gbui)

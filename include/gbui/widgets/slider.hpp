@@ -15,6 +15,15 @@ struct SliderOptions {
     double step = 0.0;
     bool disabled = false;
     float width = kAuto;
+    /**
+     * Takes the free space on the parent's main axis, which is what a slider
+     * in a row wants and the only thing `grow` can mean.
+     *
+     * In a *column* the main axis is vertical, so this used to make a slider
+     * eat the leftover height and sit alone at the bottom of its card. It no
+     * longer can: the control is clamped to `height` whichever way it is
+     * pointed, so growing is free horizontally and impossible vertically.
+     */
     float grow = 1.0f;
     float height = 20.0f;
     /** Shows the value at the right of the track. */
@@ -29,7 +38,7 @@ struct SliderResult {
 
 /** Follows the pointer while it is held, even when it wanders off the track —
  *  which is what `Interaction::dragging` is for. */
-[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, double value,
-                    const SliderOptions& options = {});
+[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id,
+                                  double value, const SliderOptions& options = {});
 
 }  // namespace gbui

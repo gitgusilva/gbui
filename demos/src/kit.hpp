@@ -700,23 +700,20 @@ inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
     shapes.push_back(Shape{track, Fill{Token::BgOverlay}, options.thickness});
 
     if (fraction > 0.001f) {
-        // The arc fades in along its own length, and it is a run of segments in
-        // order to do it. A `Shape` carries a `Fill`, not a `Gradient` —
-        // gradients belong to boxes and to text — so the ramp is made of parts.
-        // Varying the *alpha* of one token rather than travelling between two
-        // colours is what keeps it themeable: nothing here names a colour.
-        constexpr int kSegments = 14;
+        // One arc, and the fade is the shape's own gradient — measured across
+        // the path's bounding box, so it runs up the dial rather than across
+        // the node. This was fourteen segments at stepped alphas until `Shape`
+        // could carry a `Gradient`; fourteen paths a frame, per dial, to say
+        // what one now says.
+        //
+        // Two stops of the *same* token at different alphas, which is the only
+        // kind of gradient a themed screen can write: nothing here names a
+        // colour, so a theme swap moves both ends together.
         const Token token = toneToken(options.tone);
-        const float sweep = end - options.from;
-        for (int i = 0; i < kSegments; ++i) {
-            const float t0 = static_cast<float>(i) / static_cast<float>(kSegments);
-            const float t1 = static_cast<float>(i + 1) / static_cast<float>(kSegments);
-            Path segment;
-            // A hair of overlap, or the joins read as lighter seams.
-            arc(segment, centre, radius, options.from + sweep * t0,
-                options.from + sweep * std::min(1.0f, t1 + 0.02f));
-            shapes.push_back(Shape{segment, Fill{token, 0.42f + 0.58f * t1}, options.thickness});
-        }
+        Path value;
+        arc(value, centre, radius, options.from, end);
+        shapes.push_back(
+            Shape{value, Fill{token}, options.thickness, wash(token, 0.40f, 1.0f, 0.0f)});
     }
 
     Style stack;

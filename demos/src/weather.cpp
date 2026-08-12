@@ -165,18 +165,15 @@ void sunArc(Ui& ui, float clock) {
     skyArc(track, centre, rx, ry, 180.0f, 360.0f);
     shapes.push_back(Shape{track, Fill{Token::TextMuted, 0.30f}, 1.5f});
 
-    // The day already spent, brightening towards the sun. A run of segments
-    // rather than one stroke, because a `Shape` carries a `Fill` and not a
-    // `Gradient` — gradients belong to boxes and to text.
-    constexpr int kSegments = 18;
-    for (int i = 0; i < kSegments; ++i) {
-        const float a = static_cast<float>(i) / static_cast<float>(kSegments);
-        const float b = static_cast<float>(i + 1) / static_cast<float>(kSegments);
-        if (a >= t) break;
+    // The day already spent, brightening towards the sun — one stroke with a
+    // gradient along it, left to right, which is the direction the sun walks.
+    // It was eighteen segments at stepped alphas before `Shape` could carry a
+    // `Gradient`.
+    if (t > 0.01f) {
         Path walked;
-        skyArc(walked, centre, rx, ry, 180.0f + 180.0f * a,
-               180.0f + 180.0f * std::min(t, b + 0.01f));
-        shapes.push_back(Shape{walked, Fill{Token::Modified, 0.20f + 0.80f * b}, 2.5f});
+        skyArc(walked, centre, rx, ry, 180.0f, 180.0f + 180.0f * t);
+        shapes.push_back(Shape{walked, Fill{Token::Modified}, 2.5f,
+                               kit::wash(Token::Modified, 0.20f, 1.0f, 90.0f)});
     }
 
     const float angle = (180.0f + 180.0f * t) * kPi / 180.0f;

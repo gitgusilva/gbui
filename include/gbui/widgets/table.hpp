@@ -40,6 +40,19 @@ struct Column {
     float width = 1.0f;
     /** The widest value this column expects, for `FitContent`. */
     std::string_view fitSample{};
+    /**
+     * The style `fitSample` is measured in. Set it to whatever the cells
+     * actually draw.
+     *
+     * It matters more than it sounds. A column of numbers is almost always
+     * drawn in the mono face, which is wider per character than the UI face —
+     * so a sample measured in the default came out several pixels short and
+     * the column ellipsised the very value it had been sized for. There is no
+     * way for this widget to find out on its own: a cell is a callback that
+     * builds arbitrary UI, and asking it how it would like to be measured
+     * means building the whole table twice.
+     */
+    TextStyle fitStyle{};
     float minWidth = 48.0f;
     float maxWidth = kAuto;
     TextAlign align = TextAlign::Start;

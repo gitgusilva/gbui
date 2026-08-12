@@ -212,30 +212,35 @@ void Analytics::accountsPanel(Ui& ui, const Interaction& input) {
                             .grow = 1.0f,
                             .height = 296.0f});
 
-    // `fitSample` is measured in the table's own text style, and these cells
-    // draw in the mono face — which is wider per character. So each sample is
-    // a couple of characters longer than the widest value it stands for; a
-    // sample that matches exactly comes out one glyph short and ellipsises the
-    // number it was sized for.
+    // `fitStyle` is what the cell actually draws in. Without it the sample is
+    // measured in the UI face and the column comes out a glyph short of the
+    // mono numbers it was sized for — which is a column that ellipsises the
+    // one value it exists to show.
     const std::vector<Column> columns = {
         {.title = "Account", .width = 1.6f, .sortable = true},
         {.title = "Owner", .width = 1.0f},
         {.title = "Plan", .sizing = ColumnSize::FitContent, .fitSample = "Enterprise"},
         {.title = "ARR",
          .sizing = ColumnSize::FitContent,
-         .fitSample = "$9 999.9kMM",
+         .fitSample = "$9 999.9k",
+         .fitStyle = {.role = FontRole::Mono},
          .align = TextAlign::End,
          .sortable = true},
         {.title = "Growth",
          .sizing = ColumnSize::FitContent,
-         .fitSample = "-99.9%MM",
+         .fitSample = "-99.9%",
+         .fitStyle = {.role = FontRole::Mono},
          .align = TextAlign::End,
          .sortable = true},
         {.title = "Seats",
          .sizing = ColumnSize::FitContent,
-         .fitSample = "9 999MM",
+         .fitSample = "9 999",
+         .fitStyle = {.role = FontRole::Mono},
          .align = TextAlign::End},
-        {.title = "Renews", .sizing = ColumnSize::FitContent, .fitSample = "99 MmmMM"},
+        {.title = "Renews",
+         .sizing = ColumnSize::FitContent,
+         .fitSample = "99 Mmm",
+         .fitStyle = {.role = FontRole::Mono}},
     };
 
     const TableResult result = table(

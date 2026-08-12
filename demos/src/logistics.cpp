@@ -191,14 +191,18 @@ void Logistics::fleet(Ui& ui, const Interaction& input) {
                                     .minWidth = 460.0f});
 
     const std::vector<Column> columns = {
-        {.title = "Vehicle", .sizing = ColumnSize::FitContent, .fitSample = "TR-9999MM"},
+        {.title = "Vehicle",
+         .sizing = ColumnSize::FitContent,
+         .fitSample = "TR-9999",
+         .fitStyle = {.role = FontRole::Mono}},
         {.title = "Driver", .width = 1.2f},
         {.title = "Route", .width = 1.4f},
         {.title = "Status", .sizing = ColumnSize::FitContent, .fitSample = "MAINTENANCE"},
         {.title = "Stops", .width = 1.0f},
         {.title = "ETA",
          .sizing = ColumnSize::FitContent,
-         .fitSample = "+99 minMM",
+         .fitSample = "+99 min",
+         .fitStyle = {.role = FontRole::Mono},
          .align = TextAlign::End},
         {.title = "Fuel", .width = 0.9f},
     };

@@ -62,6 +62,27 @@ Ui& Ui::tag(std::string_view id) {
     return *this;
 }
 
+Ui::IdScope Ui::beginIds(std::string_view name) {
+    const std::size_t restoreTo = idPrefix_.size();
+    if (!name.empty()) {
+        if (!idPrefix_.empty()) idPrefix_ += '.';
+        idPrefix_ += name;
+    }
+    return IdScope(*this, restoreTo);
+}
+
+std::string_view Ui::qualify(std::string_view name) {
+    if (idPrefix_.empty()) return arena_.intern(name);
+    if (name.empty()) return arena_.intern(idPrefix_);
+
+    std::string full;
+    full.reserve(idPrefix_.size() + 1 + name.size());
+    full += idPrefix_;
+    full += '.';
+    full += name;
+    return arena_.intern(full);
+}
+
 Ui& Ui::focusable(bool value) {
     if (last_.valid()) arena_[last_].focusable = value;
     return *this;

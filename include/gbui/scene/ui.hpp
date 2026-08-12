@@ -18,13 +18,14 @@
 #pragma once
 
 #include <limits>
+#include <string>
 #include <string_view>
 #include <utility>
 
 #include "gbui/anim/animator.hpp"
-#include "gbui/style/design.hpp"
 #include "gbui/layout/layout.hpp"
 #include "gbui/scene/tree.hpp"
+#include "gbui/style/design.hpp"
 
 namespace gbui {
 
@@ -135,6 +136,61 @@ public:
     /** Tags the most recently added node, for hit testing and tests. */
     Ui& tag(std::string_view id);
 
+    /**
+     * Opens a naming scope: `qualify` prefixes with it until the scope dies.
+     *
+     * Identity here is a string, because the tree is rebuilt every frame and a
+     * string is the only thing that survives that. The cost lands on the
+     * caller, who ends up writing `"scada.tank.clearwell"` at one site and
+     * `"scada.tank.backwash"` at the next, and misspelling one of them is a
+     * control that silently stops responding.
+     *
+     *     auto ids = ui.beginIds("scada.tank");
+     *     meter(ui, ui.qualify("clearwell"), …);   // "scada.tank.clearwell"
+     *
+     * Scopes nest, and the separator is supplied here rather than by the
+     * caller, so a name cannot end up with two dots in it or none.
+     */
+    class [[nodiscard]] IdScope {
+    public:
+        IdScope(Ui& ui, std::size_t restoreTo) : ui_(&ui), restoreTo_(restoreTo) {}
+        IdScope(IdScope&& other) noexcept : ui_(other.ui_), restoreTo_(other.restoreTo_) {
+            other.ui_ = nullptr;
+        }
+        IdScope& operator=(IdScope&&) = delete;
+        IdScope(const IdScope&) = delete;
+        IdScope& operator=(const IdScope&) = delete;
+        ~IdScope() { close(); }
+
+        /** Ends the scope now rather than at the end of the block. */
+        void close() {
+            if (!ui_) return;
+            ui_->idPrefix_.resize(restoreTo_);
+            ui_ = nullptr;
+        }
+
+    private:
+        Ui* ui_;
+        std::size_t restoreTo_;
+    };
+
+    IdScope beginIds(std::string_view name);
+
+    /**
+     * `name` with the open naming scopes in front of it, interned so the view
+     * outlives the call.
+     *
+     * The *same* string goes to the component and to the `Interaction` the
+     * caller then asks about it — which is why this returns the qualified name
+     * rather than quietly prefixing inside `tag`. A component that was handed
+     * one name and registered another would be a control the application can
+     * build and never hear from again.
+     */
+    std::string_view qualify(std::string_view name);
+
+    /** Everything `qualify` would put in front of a name. Empty at the top. */
+    std::string_view idPrefix() const { return idPrefix_; }
+
     /** Marks the most recently added node as a place Tab can land. */
     Ui& focusable(bool value = true);
 
@@ -240,7 +296,10 @@ private:
     NodeId attach(const Style& style);
     void pop();
 
+    friend class IdScope;
+
     Arena& arena_;
+    std::string idPrefix_;
     MeasureText measure_;
     Animator* animator_ = nullptr;
     Design design_ = Design::gitbox();

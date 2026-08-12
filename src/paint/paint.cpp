@@ -1,8 +1,8 @@
 #include "gbui/paint/paint.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
-#include <algorithm>
 #include <cstdio>
 #include <limits>
 #include <string>
@@ -32,12 +32,23 @@ std::string escapeXml(std::string_view text) {
     out.reserve(text.size());
     for (const char c : text) {
         switch (c) {
-            case '&': out += "&amp;"; break;
-            case '<': out += "&lt;"; break;
-            case '>': out += "&gt;"; break;
-            case '"': out += "&quot;"; break;
-            case '\'': out += "&apos;"; break;
-            default: out.push_back(c);
+            case '&':
+                out += "&amp;";
+                break;
+            case '<':
+                out += "&lt;";
+                break;
+            case '>':
+                out += "&gt;";
+                break;
+            case '"':
+                out += "&quot;";
+                break;
+            case '\'':
+                out += "&apos;";
+                break;
+            default:
+                out.push_back(c);
         }
     }
     return out;
@@ -89,13 +100,11 @@ void recordWrapped(const Node& node, const Typography& typography, const Measure
     // The same policy the measurer used. They must agree: a box sized by a
     // measure that broke anywhere, painted by one that only broke at spaces,
     // overflows the box it was given.
-    const WrappedText wrapped = wrapText(node.text, node.content.width,
-                                         node.textStyle.maxLines, lineWidth,
-                                         node.textStyle.wordBreak);
+    const WrappedText wrapped = wrapText(node.text, node.content.width, node.textStyle.maxLines,
+                                         lineWidth, node.textStyle.wordBreak);
     if (wrapped.lines.empty()) return;
 
-    const TextMetrics block =
-        measure(node.text, node.textStyle, typography, node.content.width);
+    const TextMetrics block = measure(node.text, node.textStyle, typography, node.content.width);
     const float step = block.height / static_cast<float>(wrapped.lines.size());
     // The block is centred in the content box; the lines then stack from there,
     // so a one-line run lands exactly where an unwrapped one would.
@@ -124,9 +133,12 @@ float fontSizeFor(const TextStyle& style, const Typography& typography) {
 
 std::string_view familyFor(const TextStyle& style, const Typography& typography) {
     switch (style.role) {
-        case FontRole::Mono: return typography.monoFont;
-        case FontRole::Editor: return typography.editorFont;
-        case FontRole::Ui: break;
+        case FontRole::Mono:
+            return typography.monoFont;
+        case FontRole::Editor:
+            return typography.editorFont;
+        case FontRole::Ui:
+            break;
     }
     return typography.uiFont;
 }
@@ -217,12 +229,18 @@ void Painter::paint(const DisplayList& list) {
         std::visit(
             [this](const auto& c) {
                 using T = std::decay_t<decltype(c)>;
-                if constexpr (std::is_same_v<T, FillRect>) fillRect(c);
-                else if constexpr (std::is_same_v<T, StrokeRect>) strokeRect(c);
-                else if constexpr (std::is_same_v<T, DrawText>) drawText(c);
-                else if constexpr (std::is_same_v<T, DrawPath>) drawPath(c);
-                else if constexpr (std::is_same_v<T, PushClip>) pushClip(c);
-                else if constexpr (std::is_same_v<T, PopClip>) popClip();
+                if constexpr (std::is_same_v<T, FillRect>)
+                    fillRect(c);
+                else if constexpr (std::is_same_v<T, StrokeRect>)
+                    strokeRect(c);
+                else if constexpr (std::is_same_v<T, DrawText>)
+                    drawText(c);
+                else if constexpr (std::is_same_v<T, DrawPath>)
+                    drawPath(c);
+                else if constexpr (std::is_same_v<T, PushClip>)
+                    pushClip(c);
+                else if constexpr (std::is_same_v<T, PopClip>)
+                    popClip();
             },
             command);
     }
@@ -318,7 +336,7 @@ void recordLayer(const Arena& arena, NodeId root, const Theme& theme, DisplayLis
     for (std::uint32_t i = 0; i < node.shapeCount; ++i) {
         const Shape& shape = arena.shape(node.firstShape + i);
         if (shape.path.empty()) continue;
-        Paint paint{shape.color.resolve(theme)};
+        Paint paint{shape.color.resolve(theme), resolveGradient(shape.gradient, theme)};
         paint.scaleAlpha(style.opacity);
         out.add(DrawPath{shape.path.transformed(1.0f, Vec2{node.content.x, node.content.y}), paint,
                          shape.stroke});
@@ -458,9 +476,9 @@ std::string SvgPainter::paintReference(const Paint& paint, const Rect& box) {
         const float radians = (paint.gradient.angle - 90.0f) * 3.14159265f / 180.0f;
         const float dx = std::cos(radians) * 0.5f;
         const float dy = std::sin(radians) * 0.5f;
-        defs_ += "  <linearGradient id=\"" + name + "\" x1=\"" + number(0.5f - dx) +
-                 "\" y1=\"" + number(0.5f - dy) + "\" x2=\"" + number(0.5f + dx) +
-                 "\" y2=\"" + number(0.5f + dy) + "\">\n";
+        defs_ += "  <linearGradient id=\"" + name + "\" x1=\"" + number(0.5f - dx) + "\" y1=\"" +
+                 number(0.5f - dy) + "\" x2=\"" + number(0.5f + dx) + "\" y2=\"" +
+                 number(0.5f + dy) + "\">\n";
     }
     for (const auto& [position, color] : paint.gradient.stops) {
         defs_ += "    <stop offset=\"" + number(position) + "\" stop-color=\"" + color.hex() +
@@ -513,12 +531,12 @@ void SvgPainter::drawText(const DrawText& c) {
         x = c.box.right();
         anchor = "end";
     }
-    body_ += "  <text x=\"" + number(x) + "\" y=\"" + number(c.box.y + c.baseline) +
-             "\" font-family=\"" + escapeXml(c.family) + "\" font-size=\"" + number(c.size) +
-             "\" font-weight=\"" + std::to_string(static_cast<int>(c.weight)) +
-             (c.slant == FontSlant::Italic ? std::string("\" font-style=\"italic")
-                                           : std::string()) +
-             "\" text-anchor=\"" + anchor + "\" fill=\"" + paintReference(c.paint, c.box) + "\"";
+    body_ +=
+        "  <text x=\"" + number(x) + "\" y=\"" + number(c.box.y + c.baseline) +
+        "\" font-family=\"" + escapeXml(c.family) + "\" font-size=\"" + number(c.size) +
+        "\" font-weight=\"" + std::to_string(static_cast<int>(c.weight)) +
+        (c.slant == FontSlant::Italic ? std::string("\" font-style=\"italic") : std::string()) +
+        "\" text-anchor=\"" + anchor + "\" fill=\"" + paintReference(c.paint, c.box) + "\"";
     if (!c.paint.isGradient() && c.paint.color.a < 1.0f) {
         body_ += " fill-opacity=\"" + number(c.paint.color.a) + "\"";
     }

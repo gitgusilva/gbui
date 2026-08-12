@@ -33,12 +33,12 @@ Sheet run(const std::vector<Column>& columns, const std::vector<float>& widths,
         Ui ui(arena);
         {
             auto root = ui.beginColumn({.width = tableWidth, .height = 300.0f});
-            sheet.result = table(ui, input, "t", columns, 12, sheet.state,
-                                 [](Ui& cellUi, std::size_t row, std::size_t column) {
-                                     text(cellUi, std::to_string(row) + ":" +
-                                                      std::to_string(column));
-                                 },
-                                 {.grow = 1.0f});
+            sheet.result =
+                table(ui, input, "t", columns, 12, sheet.state,
+                      [](Ui& cellUi, std::size_t row, std::size_t column) {
+                          text(cellUi, std::to_string(row) + ":" + std::to_string(column));
+                      },
+                      {.grow = 1.0f});
             (void)root;
         }
         LayoutContext context;
@@ -113,4 +113,57 @@ TEST("a column never goes below its minimum") {
     CHECK(sheet.result.columnWidths[0] >= 150.0f);
     CHECK(sheet.result.columnWidths[1] >= 150.0f);
     CHECK(sheet.state.columns.scrollable());
+}
+
+TEST("a column fits its sample in the style the cell draws it in") {
+    // A measurer that knows only one thing: the mono face is wider. That is the
+    // whole of what this is about — a column of numbers drawn in mono, fitted
+    // against a sample measured in the UI face, comes out short and ellipsises
+    // the value it was sized for.
+    const auto measure = [](std::string_view text, const TextStyle& style, const Typography&,
+                            float) {
+        const float perGlyph = style.role == FontRole::Mono ? 10.0f : 6.0f;
+        return TextMetrics{static_cast<float>(text.size()) * perGlyph, 14.0f, 11.0f};
+    };
+
+    const auto widthOf = [&](const TextStyle& fitStyle) {
+        Theme theme = Theme::dark();
+        Interaction input;
+        TableState state;
+        std::vector<Column> columns = {
+            {.title = "n",
+             .sizing = ColumnSize::FitContent,
+             .fitSample = "12345",
+             .fitStyle = fitStyle},
+            {.title = "rest"},
+        };
+        float width = 0.0f;
+        for (int pass = 0; pass < 3; ++pass) {
+            Arena arena;
+            Ui ui(arena);
+            ui.setMeasure(measure, theme.typography());
+            {
+                auto root = ui.beginColumn({.width = 400.0f, .height = 200.0f});
+                const TableResult result =
+                    table(ui, input, "f", columns, 3, state,
+                          [](Ui& cellUi, std::size_t, std::size_t) { text(cellUi, "x"); },
+                          {.grow = 1.0f});
+                if (!result.columnWidths.empty()) width = result.columnWidths.front();
+                (void)root;
+            }
+            LayoutContext context;
+            context.theme = &theme;
+            context.measure = measure;
+            layout(arena, ui.root(), Rect{0, 0, 400, 200}, context);
+            input.update(arena, ui.root(), InputFrame{});
+        }
+        return width;
+    };
+
+    const float asUi = widthOf({});
+    const float asMono = widthOf({.role = FontRole::Mono});
+    // Five glyphs at ten pixels instead of six: the mono column is wider, and
+    // by the amount the faces actually differ rather than by a guess.
+    CHECK(asMono > asUi);
+    CHECK_NEAR(asMono - asUi, 5.0f * (10.0f - 6.0f));
 }

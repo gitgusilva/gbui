@@ -75,9 +75,14 @@ std::vector<float> resolveWidths(const Ui& ui, const std::vector<Column>& column
             // arrow is part of the header's cost, not an afterthought.
             const float title =
                 ui.canMeasure() ? ui.measure(column.title, heading).width + 18.0f : 60.0f;
+            // Measured in the style the *cell* draws in, not the table's:
+            // see `Column::fitStyle`. Unset, it is the table's own, which is
+            // what a column of prose wants.
+            TextStyle sampleStyle = column.fitStyle;
+            if (isAuto(sampleStyle.size)) sampleStyle.size = body.size;
             const float sample = column.fitSample.empty() || !ui.canMeasure()
                                      ? 0.0f
-                                     : ui.measure(column.fitSample, body).width;
+                                     : ui.measure(column.fitSample, sampleStyle).width;
             widths[i] = std::max(title, sample) + padding.horizontal();
             frozen[i] = true;
         } else {
@@ -147,8 +152,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
     // pixels on a table whose columns fit perfectly.
     constexpr float kBorder = 1.0f;
     const float available = std::max(0.0f, frame.width - bar - kBorder * 2.0f);
-    result.columnWidths =
-        resolveWidths(ui, columns, state.widths, available, options.cellPadding);
+    result.columnWidths = resolveWidths(ui, columns, state.widths, available, options.cellPadding);
 
     // ---- dragging a divider ------------------------------------------------
     state.widths.resize(columns.size(), kAuto);
@@ -171,9 +175,8 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                 state.selected =
                     state.selected == kNoRow ? 0 : std::min(rowCount - 1, state.selected + 1);
             } else if (event.key == Key::Up) {
-                state.selected = state.selected == kNoRow || state.selected == 0
-                                     ? 0
-                                     : state.selected - 1;
+                state.selected =
+                    state.selected == kNoRow || state.selected == 0 ? 0 : state.selected - 1;
             } else if (event.key == Key::Home) {
                 state.selected = 0;
             } else if (event.key == Key::End) {
@@ -240,7 +243,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                 head.padding = options.cellPadding;
                 head.justify = column.align == TextAlign::End      ? Justify::End
                                : column.align == TextAlign::Center ? Justify::Center
-                                                                  : Justify::Start;
+                                                                   : Justify::Start;
                 if (column.sortable && input.isHovered(cellId)) {
                     head.background = Fill{Token::SurfaceHover};
                 }
@@ -250,7 +253,8 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
 
                 text(ui, column.title,
                      {.color = sorted ? Token::TextStrong : Token::TextMuted,
-                      .weight = FontWeight::SemiBold, .size = 11.0f});
+                      .weight = FontWeight::SemiBold,
+                      .size = 11.0f});
                 // Every sortable column carries its arrow, not just the sorted
                 // one. Two reasons, and the second is the one that bites: a
                 // column that only shows its arrow once clicked never tells the
@@ -266,7 +270,8 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                     // next to the sorted column's solid accent.
                     icon(ui, up ? Icon::ChevronUp : Icon::ChevronDown,
                          {.color = sorted ? Token::Accent : Token::TextMuted,
-                          .size = sorted ? 12.0f : 11.0f, .stroke = sorted ? 2.0f : 1.5f});
+                          .size = sorted ? 12.0f : 11.0f,
+                          .stroke = sorted ? 2.0f : 1.5f});
                 }
                 (void)headScope;
             }
@@ -350,9 +355,12 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         line.align = Align::Center;
         line.height = options.rowHeight;
         line.shrink = 0.0f;
-        if (chosen) line.background = Fill{Token::Accent, 0.18f};
-        else if (input.isHovered(rowId)) line.background = Fill{Token::SurfaceHover};
-        else if (options.zebra && row % 2 == 1) line.background = Fill{Token::BgElevated, 0.45f};
+        if (chosen)
+            line.background = Fill{Token::Accent, 0.18f};
+        else if (input.isHovered(rowId))
+            line.background = Fill{Token::SurfaceHover};
+        else if (options.zebra && row % 2 == 1)
+            line.background = Fill{Token::BgElevated, 0.45f};
         line.cursorHint = Cursor::Pointer;
         auto lineScope = rowUi.begin(line);
         rowUi.tag(rowId).cursor(Cursor::Pointer);
@@ -367,7 +375,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
             box.overflow = Overflow::Hidden;
             box.justify = columns[i].align == TextAlign::End      ? Justify::End
                           : columns[i].align == TextAlign::Center ? Justify::Center
-                                                                 : Justify::Start;
+                                                                  : Justify::Start;
             auto boxScope = rowUi.begin(box);
             cell(rowUi, row, i);
             (void)boxScope;
