@@ -10,7 +10,7 @@
 # `gbui::gbui` and nothing else, reach into no source directory, include no
 # header by path, and would build unchanged against an installed copy. A change
 # that makes them awkward has made the library awkward, which is the only
-# reason they are built as a target rather than as six loose files.
+# reason they are built as a target rather than as seven loose files.
 #
 # Two entry points sit on top — a native runner and a WebAssembly module — and
 # both are thin: everything either one does lives in `Host`.
@@ -23,9 +23,18 @@ add_library(gbui_demos
     src/scada.cpp
     src/production.cpp
     src/grid.cpp
-    src/logistics.cpp)
+    src/logistics.cpp
+    src/markets.cpp
+    # The component catalogue: one live example per entry in `gbui::meta`.
+    # `gbui_demo --coverage` is what keeps the two in step.
+    src/catalog/registry.cpp
+    src/catalog/components.cpp
+    src/catalog/containers.cpp
+    src/catalog/controls.cpp
+    src/catalog/overlays.cpp
+    src/catalog/charts.cpp)
 target_include_directories(gbui_demos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(gbui_demos PUBLIC gbui::gbui)
+target_link_libraries(gbui_demos PUBLIC gbui::gbui gbui::meta)
 target_compile_features(gbui_demos PUBLIC cxx_std_20)
 
 # `-DBUILD_SHARED_LIBS=ON` makes this a DLL too, and MSVC exports nothing from
@@ -53,7 +62,7 @@ if(EMSCRIPTEN)
     # handful of C entry points in runtime/wasm.cpp. See tools/build_wasm.sh,
     # which is what the documentation site calls.
     add_executable(gbui_demos_wasm runtime/wasm.cpp)
-    target_link_libraries(gbui_demos_wasm PRIVATE gbui_demos)
+    target_link_libraries(gbui_demos_wasm PRIVATE gbui_demos gbui::meta)
     set_target_properties(gbui_demos_wasm PROPERTIES OUTPUT_NAME "gbui-demos" SUFFIX ".js")
 
     # A font has to travel with the module: there is no /usr/share/fonts in a

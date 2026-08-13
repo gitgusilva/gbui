@@ -5,6 +5,7 @@
 #include <cstdio>
 
 #include "detail.hpp"
+#include "gbui/widgets/button.hpp"
 #include "gbui/widgets/text.hpp"
 
 namespace gbui {
@@ -66,47 +67,27 @@ void arcTo(Path& path, Vec2 centre, float radius, float from, float to) {
 }
 
 /**
- * Draws a chart's readout beside the sample under the pointer.
+ * Draws a readout beside a mark, from lines that are already written.
+ *
+ * The half every chart shares, and the reason there is one of it: what differs
+ * between a line, a bubble and a wedge is *which* mark the pointer found and
+ * what there is to say about it. Where the panel goes, how it is flipped away
+ * from an edge and what it looks like do not differ at all.
  *
  * Absolutely positioned inside the plot and flipped to whichever side has room,
  * so a readout for the last sample does not hang off the right edge. Placed
  * from *last* frame's plot geometry like everything else here.
+ *
+ * `atY` unset pins the panel to the top of the plot, which is right where the
+ * mark is a whole column — a line's crosshair or a bar spans the height, and a
+ * panel chasing the pointer up and down beside it only flickers. A mark that is
+ * a *point* passes its own y, and the panel sits beside that instead.
  */
-void drawReadout(Ui& ui, const Interaction& input, const std::string& plotId,
-                 const Rect& plotFrame, std::size_t index, float atX,
-                 const std::vector<Series>& series, const ChartOptions& options,
-                 const ChartStyle& style) {
-    const ChartTooltip& config = options.tooltip;
-    const ChartTooltipStyle& base = style.tooltip;
+void drawReadoutPanel(Ui& ui, const Rect& plotFrame, float atX, std::optional<float> atY,
+                      const std::string& heading, const std::vector<TooltipRow>& rows,
+                      const ChartTooltip& config, const ChartTooltipStyle& base,
+                      const TooltipContext& context) {
     if (plotFrame.empty()) return;
-
-    const TooltipContext context{index, &series};
-
-    std::string heading;
-    if (config.title) {
-        heading = config.title(context);
-    } else if (index < options.categories.size()) {
-        heading = options.categories[index];
-    } else {
-        heading = "#" + std::to_string(index);
-    }
-
-    std::vector<TooltipRow> rows;
-    if (config.rows) {
-        rows = config.rows(context);
-    } else {
-        for (std::size_t s = 0; s < series.size(); ++s) {
-            const Series& one = series[s];
-            if (index >= one.values.size()) continue;
-            char value[48];
-            std::snprintf(value, sizeof(value), std::string(options.valueFormat).c_str(),
-                          one.values[index]);
-            rows.push_back({one.color.value_or(style.palette.empty()
-                                                   ? Token::Accent
-                                                   : style.palette[s % style.palette.size()]),
-                            std::string(one.name), value});
-        }
-    }
     if (rows.empty() && !config.body) return;
 
     const float radius = config.radius.value_or(base.radius);
@@ -133,10 +114,23 @@ void drawReadout(Ui& ui, const Interaction& input, const std::string& plotId,
     if (left + panelWidth > plotFrame.width) left = atX - kGap - panelWidth;
     left = std::clamp(left, 0.0f, std::max(0.0f, plotFrame.width - panelWidth));
 
+    // The height is guessed rather than measured: a row is one line of text and
+    // the gap under it, and the only thing the guess decides is whether the
+    // panel is nudged up off the bottom edge. Being a few pixels out costs
+    // nothing; not clamping at all costs a readout drawn past the plot.
+    float top = 6.0f;
+    if (atY) {
+        const float line = base.fontSize + 5.0f;
+        const float guess = base.padding * 2.0f + (showTitle ? line : 0.0f) +
+                            line * static_cast<float>(rows.size());
+        top = std::clamp(*atY - guess / 2.0f, 4.0f,
+                         std::max(4.0f, plotFrame.height - guess - 4.0f));
+    }
+
     Style panel;
     panel.position = Position::Absolute;
     panel.left = left;
-    panel.top = 6.0f;
+    panel.top = top;
     panel.width = panelWidth;
     panel.direction = Direction::Column;
     panel.gap = 3.0f;
@@ -182,8 +176,179 @@ void drawReadout(Ui& ui, const Interaction& input, const std::string& plotId,
         }
     }
     (void)panelScope;
-    (void)input;
-    (void)plotId;
+}
+
+/** The heading a readout carries when the caller has not written one: the
+ *  category's name where there is one, and the mark's number where there is
+ *  not. */
+std::string headingFor(const TooltipContext& context, const ChartTooltip& config,
+                       const std::vector<std::string>& categories) {
+    if (config.title) return config.title(context);
+    if (context.index < categories.size()) return categories[context.index];
+    return "#" + std::to_string(context.index);
+}
+
+/** One row per series at `index`, which is what a chart drawn from `Series`
+ *  says when nobody has said otherwise. Shared by the line and the bars. */
+std::vector<TooltipRow> seriesRows(const std::vector<Series>& series, std::size_t index,
+                                   std::string_view valueFormat, const ChartStyle& style) {
+    std::vector<TooltipRow> rows;
+    for (std::size_t s = 0; s < series.size(); ++s) {
+        const Series& one = series[s];
+        if (index >= one.values.size()) continue;
+        char value[48];
+        std::snprintf(value, sizeof(value), std::string(valueFormat).c_str(), one.values[index]);
+        rows.push_back({one.color.value_or(style.palette.empty()
+                                               ? Token::Accent
+                                               : style.palette[s % style.palette.size()]),
+                        std::string(one.name), value});
+    }
+    return rows;
+}
+
+/** The readout for the two charts drawn from `Series`: a line and a bar. */
+void drawSeriesReadout(Ui& ui, const Rect& plotFrame, float atX, std::optional<float> atY,
+                       std::size_t index, const std::vector<Series>& series,
+                       const std::vector<std::string>& categories,
+                       std::string_view valueFormat, const ChartTooltip& config,
+                       const ChartStyle& style) {
+    TooltipContext context;
+    context.index = index;
+    context.series = &series;
+    const std::vector<TooltipRow> rows =
+        config.rows ? config.rows(context) : seriesRows(series, index, valueFormat, style);
+    drawReadoutPanel(ui, plotFrame, atX, atY, headingFor(context, config, categories), rows,
+                     config, style.tooltip, context);
+}
+
+/** One entry of a chart's key. */
+struct LegendEntry {
+    std::string_view name;
+    Token color = Token::Accent;
+};
+
+/**
+ * Draws the key under a chart and reports which series is singled out.
+ *
+ * Its own function because four charts want the identical thing, and because
+ * what it *is* — a row of clickable labels — has nothing to do with any of
+ * them: it never sees a value, a scale or a plot. The click is read after the
+ * entries are built, so the tag it is matched against is this frame's.
+ */
+int drawLegend(Ui& ui, const Interaction& input, std::string_view id,
+               const std::vector<LegendEntry>& entries, const ChartLegend& legend) {
+    int focused = legend.focused ? *legend.focused : -1;
+    if (focused >= static_cast<int>(entries.size())) focused = -1;
+
+    bool named = false;
+    for (const LegendEntry& entry : entries) named = named || !entry.name.empty();
+    if (!legend.show || !named) return focused;
+
+    Style row;
+    row.direction = Direction::Row;
+    row.align = Align::Center;
+    row.justify = Justify::Center;
+    row.gap = 14.0f;
+    row.height = legend.height;
+    row.shrink = 0.0f;
+    row.wrap = true;
+    auto scope = ui.begin(row);
+
+    for (std::size_t i = 0; i < entries.size(); ++i) {
+        if (entries[i].name.empty()) continue;
+        const std::string entryId = std::string(id) + ".legend." + std::to_string(i);
+        const bool picked = focused == static_cast<int>(i);
+
+        Style key;
+        key.direction = Direction::Row;
+        key.align = Align::Center;
+        key.gap = 6.0f;
+        key.shrink = 0.0f;
+        key.padding = Edges::symmetric(2.0f, 6.0f);
+        key.radius = 4.0f;
+        // Only where a click means something: without somewhere to remember the
+        // answer the legend is a key, and a key that lights up under the
+        // pointer is promising something it cannot do.
+        if (legend.focused) {
+            key.cursorHint = Cursor::Pointer;
+            if (picked) key.background = Fill{Token::SurfaceHover};
+            else if (input.isHovered(entryId)) key.background = Fill{Token::SurfaceHover, 0.5f};
+            key.opacity = focused < 0 || picked ? 1.0f : 0.55f;
+        }
+        auto keyScope = ui.begin(key);
+        if (legend.focused) ui.tag(entryId).cursor(Cursor::Pointer);
+
+        Style swatch;
+        swatch.width = 9.0f;
+        swatch.height = 9.0f;
+        swatch.shrink = 0.0f;
+        swatch.radius = 2.0f;
+        swatch.background = Fill{entries[i].color};
+        ui.add(swatch);
+
+        text(ui, entries[i].name,
+             {.color = picked ? Token::TextStrong : Token::TextMuted, .size = 11.0f});
+        (void)keyScope;
+    }
+    (void)scope;
+
+    if (legend.focused) {
+        for (std::size_t i = 0; i < entries.size(); ++i) {
+            if (!input.clicked(std::string(id) + ".legend." + std::to_string(i))) continue;
+            // Clicking the one already singled out puts everything back, which
+            // is the way out a reader looks for first.
+            *legend.focused = focused == static_cast<int>(i) ? -1 : static_cast<int>(i);
+            focused = *legend.focused;
+        }
+    }
+    return focused;
+}
+
+/**
+ * Whether the mark under the pointer should be picked out this frame.
+ *
+ * A hovered readout lives only as long as the pointer is over the plot; a
+ * click-triggered one is remembered until the next click elsewhere, which is
+ * what a reader on a touchscreen needs and what lets a long readout be read
+ * without holding the pointer still.
+ *
+ * `None` still tracks. The caller asked for no *panel*, not to be told nothing:
+ * a chart whose readout is drawn somewhere else on the page still needs to know
+ * what is under the pointer, and its marks still highlight.
+ */
+bool marksTracked(Ui& ui, const Interaction& input, std::string_view id,
+                  const std::string& plotId, ChartTrigger trigger) {
+    if (trigger != ChartTrigger::Click) return input.isHovered(plotId);
+    return ui.latch(id, "readout", 1.0f, input.clicked(plotId)) > 0.0f &&
+           input.focused() == plotId;
+}
+
+/**
+ * Reconciles what this chart found under its own pointer with what the rest of
+ * its group found under theirs.
+ *
+ * Three cases, and the third is the whole feature: the chart being pointed at
+ * publishes and keeps its own answer; the chart that published last time and is
+ * no longer pointed at withdraws it, so a group goes quiet together; and a
+ * chart pointed at by nobody adopts whatever the group is showing.
+ *
+ * `samples` is what the linked index is clamped against — a group whose charts
+ * hold different numbers of samples still agrees where it can and says nothing
+ * where it cannot, rather than reading off the end of the shorter one.
+ */
+int linkedIndex(ChartLink* link, std::string_view id, int mine, std::size_t samples) {
+    if (!link) return mine;
+    if (mine >= 0) {
+        link->index = mine;
+        link->source = std::string(id);
+        return mine;
+    }
+    if (link->source == id) {
+        link->index = -1;
+        link->source.clear();
+        return -1;
+    }
+    return link->index < static_cast<int>(samples) ? link->index : -1;
 }
 
 /** A full circle, as a path.
@@ -313,8 +478,106 @@ std::vector<double> Scale::ticks(int targetTicks) const {
     return out;
 }
 
-ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
-                      const std::vector<Series>& series, const ChartOptions& options) {
+namespace {
+
+/**
+ * The rubber band a plot draws over itself while a range is being swept out.
+ *
+ * In fractions of the *visible* window rather than of the whole series: by the
+ * time it reaches the drawing it is a rectangle, and the plot it is drawn on
+ * knows nothing about views.
+ */
+struct Band {
+    /** The plot takes a sweep at all, which is what the cursor tells the
+     *  reader before they press anything. */
+    bool offered = false;
+    bool active = false;
+    float from = 0.0f;
+    float to = 0.0f;
+};
+
+/**
+ * What the windowed overload knows and a bare plot does not.
+ *
+ * Default-constructed it says "this *is* the whole series, and nothing is being
+ * swept" — which is the plain chart, and why the plain chart passes nothing.
+ */
+struct Windowed {
+    /** Where the drawn window starts in the caller's data. */
+    std::size_t first = 0;
+    /** The caller's whole data, when what is being drawn is a slice of it — one
+     *  of these, whichever kind the chart takes. The readout reads from it and
+     *  reports indices into it, so a zoomed chart still names the sample and
+     *  the category a reader would find in their own data rather than the one
+     *  at that offset into the window. */
+    const std::vector<Series>* wholeSeries = nullptr;
+    const std::vector<Candle>* wholeCandles = nullptr;
+    Band sweep{};
+    /**
+     * The plot should claim the wheel *this frame*, so it declares
+     * `Overflow::Scroll`.
+     *
+     * That is how a node says it consumes the wheel — see the enum, which names
+     * "a chart that zooms" as the third thing in the stack competing for one
+     * scroll. Without the declaration the pointer never resolves the plot as
+     * the wheel's target and `ChartZoom::wheel` does nothing at all, which is
+     * exactly what it did.
+     *
+     * Per frame rather than once, because the claim is conditional: a chart
+     * wanting Ctrl and the wheel must *not* hold the wheel the rest of the
+     * time, or it becomes a hole in the middle of a page that scrolls. So it
+     * claims only while the modifier is actually down. The tree is rebuilt
+     * every frame and hit testing reads the previous one, so the claim lands a
+     * frame after the reader presses Ctrl — a modifier is held for far longer
+     * than that.
+     */
+    bool takesWheel = false;
+};
+
+/** The rubber band, over everything it covers. Its edges are drawn as well as
+ *  its fill: the fill alone is too faint at the width a careful reader picks. */
+void appendSweep(std::vector<Shape>& shapes, const Band& band, float width, float height) {
+    if (!band.active) return;
+    const float left = std::min(band.from, band.to) * width;
+    const float right = std::max(band.from, band.to) * width;
+    Path box;
+    box.moveTo({left, 0.0f});
+    box.lineTo({right, 0.0f});
+    box.lineTo({right, height});
+    box.lineTo({left, height});
+    box.close();
+    shapes.push_back({std::move(box), Fill{Token::Accent, 0.16f}, 0.0f});
+    for (const float x : {left, right}) {
+        Path edge;
+        edge.moveTo({x, 0.0f});
+        edge.lineTo({x, height});
+        shapes.push_back({std::move(edge), Fill{Token::Accent}, 1.0f});
+    }
+}
+
+/**
+ * The vertical rule through the mark under the pointer.
+ *
+ * One line, in one token, in every chart that indexes its samples — which is
+ * what lets two of them stacked over the same axis read as a single crosshair
+ * running down the pair instead of as two unrelated highlights. A bar chart
+ * shades its slot as well, because a category is a *width* and the reader is
+ * pointing at all of it; the rule is what says exactly where.
+ */
+void appendCrosshair(std::vector<Shape>& shapes, float x, float height) {
+    Path rule;
+    rule.moveTo({x, 0.0f});
+    rule.lineTo({x, height});
+    shapes.push_back({std::move(rule), Fill{Token::BorderStrong}, 1.0f});
+}
+
+/**
+ * `series` is what the plot draws, which is a window of the caller's data when
+ * there is a view over it — see `Windowed` for the rest.
+ */
+ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
+                          const std::vector<Series>& series, const ChartOptions& options,
+                          const Windowed& window) {
     ChartResult result;
     // Anything the caller left unset comes from the design, so a dashboard
     // configures its charts in one place.
@@ -351,25 +614,69 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
     // Turned back into a *sample number*, not a pixel: that is what lets the
     // readout name the right point.
     const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
-    // A click-triggered readout is remembered until the next click; a hovered
-    // one lives only as long as the pointer is over the plot.
-    const bool showing = trigger == ChartTrigger::Click
-                             ? ui.latch(id, "readout", 1.0f, input.clicked(plotId)) > 0.0f &&
-                                   input.focused() == plotId
-                             : input.isHovered(plotId);
+    // A reader drawing a range is not pointing at a sample, so the chart says
+    // nothing is under the pointer until they let go — and because the answer
+    // travels through the group, the crosshair, the readouts and the bridge
+    // between two charts all fall quiet together rather than one at a time.
+    const bool showing = !window.sweep.active && marksTracked(ui, input, id, plotId, trigger);
     if (options.hover && samples > 1 && !plotFrame.empty() && showing) {
         const float across =
             std::clamp((input.pointer().x - plotFrame.x) / plotFrame.width, 0.0f, 1.0f);
         result.hoveredIndex =
             static_cast<int>(std::lround(across * static_cast<float>(samples - 1)));
     }
+    if (options.hover && samples > 0) {
+        // The group speaks in whole-series samples, so a windowed chart hands
+        // over `window.first + local` and takes back one it has to subtract
+        // again — and reports nothing at all when the group is pointing at a
+        // sample this chart has scrolled off.
+        const int mine = result.hoveredIndex >= 0
+                             ? result.hoveredIndex + static_cast<int>(window.first)
+                             : -1;
+        const int shared = linkedIndex(options.link, id, mine, window.first + samples);
+        const int local = shared >= 0 ? shared - static_cast<int>(window.first) : -1;
+        result.hoveredIndex = local >= 0 && local < static_cast<int>(samples) ? local : -1;
+    }
+
+    // The key, and which series it is singling out. Read before the marks are
+    // drawn, because it decides what they look like.
+    std::vector<LegendEntry> keys;
+    for (std::size_t s = 0; s < series.size(); ++s) {
+        keys.push_back({series[s].name,
+                        series[s].color.value_or(style.palette.empty()
+                                                     ? Token::Accent
+                                                     : style.palette[s % style.palette.size()])});
+    }
+    const bool showLegend = options.legend.show && !series.empty();
+    const int focused = options.legend.focused ? *options.legend.focused : -1;
+    const auto shade = [&](std::size_t s, float alpha) {
+        return focused >= 0 && focused != static_cast<int>(s) ? alpha * options.legend.dimAlpha
+                                                              : alpha;
+    };
+
+    // A column only when there is a key to put under the plot: a chart with one
+    // unnamed line should be the same node it always was.
+    std::optional<Ui::Scope> outer;
+    if (showLegend) {
+        Style column;
+        column.direction = Direction::Column;
+        column.height = options.height + options.legend.height;
+        column.gap = 2.0f;
+        outer.emplace(ui.begin(column));
+        ui.tag(id);
+    }
 
     Style frame;
     frame.direction = Direction::Row;
-    frame.height = options.height;
     frame.gap = 6.0f;
+    if (showLegend) {
+        frame.grow = 1.0f;
+        frame.basis = 0.0f;
+    } else {
+        frame.height = options.height;
+    }
     auto scope = ui.begin(frame);
-    ui.tag(id);
+    if (!showLegend) ui.tag(id);
 
     // ---- the axis ----------------------------------------------------------
     const std::vector<double> ticks = scale.ticks(tickCount);
@@ -435,7 +742,7 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
                 }
                 area.lineTo({xAt(one.values.size() - 1), height});
                 area.close();
-                shapes.push_back({std::move(area), Fill{colour, fillAlpha}, 0.0f});
+                shapes.push_back({std::move(area), Fill{colour, shade(s, fillAlpha)}, 0.0f});
             }
 
             Path line;
@@ -443,17 +750,14 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
             for (std::size_t i = 1; i < one.values.size(); ++i) {
                 line.lineTo({xAt(i), yAt(one.values[i])});
             }
-            shapes.push_back({std::move(line), Fill{colour}, thickness});
+            shapes.push_back({std::move(line), Fill{colour, shade(s, 1.0f)}, thickness});
         }
 
         // The crosshair, and a dot on each series at the sample under it.
         if (result.hoveredIndex >= 0) {
             const auto index = static_cast<std::size_t>(result.hoveredIndex);
             const float x = xAt(index);
-            Path rule;
-            rule.moveTo({x, 0.0f});
-            rule.lineTo({x, height});
-            shapes.push_back({std::move(rule), Fill{Token::BorderStrong}, 1.0f});
+            appendCrosshair(shapes, x, height);
             for (std::size_t s = 0; s < series.size(); ++s) {
                 const Series& one = series[s];
                 if (index >= one.values.size()) continue;
@@ -469,6 +773,11 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
                 shapes.push_back({std::move(dot), Fill{colour}, 6.0f});
             }
         }
+
+        // The sweep, last, so it lies over everything it covers — a band that
+        // went under the lines would be read as a series rather than as a
+        // selection.
+        appendSweep(shapes, window.sweep, width, height);
     }
 
     // The plot is a box holding two things: the marks, and the readout. It has
@@ -478,6 +787,11 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
     Style plot;
     plot.grow = 1.0f;
     plot.basis = 0.0f;
+    // A crosshair over a plot that can be swept, for the same reason a resize
+    // handle shows a resize cursor: the gesture is invisible until it is
+    // offered, and nobody drags at a chart to find out.
+    if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
+    if (window.takesWheel) plot.overflow = Overflow::Scroll;
     auto plotScope = ui.begin(plot);
     ui.tag(plotId);
 
@@ -491,14 +805,30 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
     ui.draw(marks, std::move(shapes));
 
     if (result.hoveredIndex >= 0 && trigger != ChartTrigger::None) {
-        drawReadout(ui, input, plotId, plotFrame,
-                    static_cast<std::size_t>(result.hoveredIndex),
-                    xAt(static_cast<std::size_t>(result.hoveredIndex)), series, options, style);
+        const auto index = static_cast<std::size_t>(result.hoveredIndex);
+        drawSeriesReadout(ui, plotFrame, xAt(index), std::nullopt, window.first + index,
+                          window.wholeSeries ? *window.wholeSeries : series,
+                          options.categories,
+                          options.valueFormat, options.tooltip, style);
     }
-    (void)plotScope;
-    (void)scope;
+    // Closed by hand and in order — the plot is inside the frame, and the frame
+    // inside the column the key goes in. Left to their destructors they would
+    // all close after it, and the key would be laid out beside the plot rather
+    // than under the chart.
+    plotScope.close();
+    scope.close();
+
+    if (showLegend) drawLegend(ui, input, id, keys, options.legend);
+    if (outer) outer->close();
 
     return result;
+}
+
+}  // namespace
+
+ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
+                      const std::vector<Series>& series, const ChartOptions& options) {
+    return drawLineChart(ui, input, id, series, options, {});
 }
 
 void ChartView::normalise(double minSpan) {
@@ -556,9 +886,55 @@ Gestures driveView(const Interaction& input, std::string_view plotId, const Rect
         out.wheelTaken = true;
     }
 
-    // Dragging slides the view by however far the pointer moved, converted back
-    // into data space so the data tracks the pointer exactly.
-    if (zoom.drag && input.dragging() == plotId && !view.whole()) {
+    // Where the pointer is, as a fraction of the whole series — the units the
+    // view and the sweep are both kept in, so neither depends on a pixel.
+    const auto atPointer = [&] {
+        const double across =
+            std::clamp<double>((input.pointer().x - plotFrame.x) / plotFrame.width, 0.0, 1.0);
+        return view.from + view.span() * across;
+    };
+
+    // ---- sweeping out a range ---------------------------------------------
+    // The press anchors it, every frame after it moves the loose end, and the
+    // release commits. Nothing is applied to the view in between: rescaling
+    // the plot mid-gesture would slide the data out from under the pointer
+    // that is aiming at it.
+    // Only the plot the press landed on drives the sweep. Every other chart
+    // sharing this view draws the band and keeps its hands off the gesture.
+    const bool mine = view.sweep.on == plotId;
+    if (zoom.drag == ChartDrag::Select) {
+        if (input.dragging() == plotId) {
+            if (input.pressStarted(plotId)) {
+                // Shift means pan, decided once at the press: a modifier read
+                // every frame would turn one gesture into two halfway through.
+                if (!input.modifiers().shift) {
+                    view.sweep = {true, atPointer(), atPointer(), std::string(plotId)};
+                }
+            } else if (view.sweep.active && mine) {
+                view.sweep.to = atPointer();
+            }
+        } else if (view.sweep.active && mine) {
+            const double from = std::min(view.sweep.from, view.sweep.to);
+            const double to = std::max(view.sweep.from, view.sweep.to);
+            const double least = static_cast<double>(std::max(0.0f, zoom.dragThreshold)) /
+                                 plotFrame.width * view.span();
+            view.sweep = {};
+            if (to - from > least) {
+                view.from = from;
+                view.to = to;
+                view.normalise(zoom.minSpan);
+                out.changed = true;
+            }
+        }
+    }
+
+    // ---- panning -----------------------------------------------------------
+    // Slides the view by however far the pointer moved, converted back into
+    // data space so the data tracks the pointer exactly. In `Select` this is
+    // the Shift half of the gesture, which is the drag that started no sweep.
+    const bool panning = zoom.drag == ChartDrag::Pan ||
+                         (zoom.drag == ChartDrag::Select && !view.sweep.active);
+    if (panning && input.dragging() == plotId && !view.whole()) {
         const float moved = input.pointerDelta().x;
         if (moved != 0.0f) {
             const double shift = -static_cast<double>(moved) / plotFrame.width * view.span();
@@ -567,6 +943,27 @@ Gestures driveView(const Interaction& input, std::string_view plotId, const Rect
             view.normalise(zoom.minSpan);
             out.changed = true;
         }
+    }
+    return out;
+}
+
+/**
+ * What a windowed chart hands down to the plot: where the window starts, and
+ * the sweep in the window's own fractions.
+ *
+ * The sweep is carried in fractions of the whole series and drawn in fractions
+ * of the window, and this is the one place the two meet.
+ */
+Windowed windowedFor(const Interaction& input, const ChartView& view, const ChartZoom& zoom,
+                     const Window& window) {
+    Windowed out;
+    out.first = window.first;
+    out.takesWheel = zoom.wheel && (!zoom.wheelModifier || input.modifiers().command());
+    out.sweep.offered = zoom.drag == ChartDrag::Select;
+    out.sweep.active = view.sweep.active;
+    if (out.sweep.active && view.span() > 0.0) {
+        out.sweep.from = static_cast<float>((view.sweep.from - view.from) / view.span());
+        out.sweep.to = static_cast<float>((view.sweep.to - view.from) / view.span());
     }
     return out;
 }
@@ -598,7 +995,9 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
         sliced.push_back(std::move(cut));
     }
 
-    ChartResult result = lineChart(ui, input, id, sliced, options);
+    Windowed windowed = windowedFor(input, view, zoom, window);
+    windowed.wholeSeries = &series;
+    ChartResult result = drawLineChart(ui, input, id, sliced, options, windowed);
     // Reported in the *whole* series' terms, so a caller can name the sample
     // without knowing the view exists.
     if (result.hoveredIndex >= 0) {
@@ -607,6 +1006,70 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
     result.viewChanged = gestures.changed;
     result.wheelTaken = gestures.wheelTaken;
     return result;
+}
+
+bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartView& view,
+                  const ChartToolbarOptions& options) {
+    bool changed = false;
+
+    Style row;
+    row.direction = Direction::Row;
+    row.align = Align::Center;
+    row.gap = 2.0f;
+    row.shrink = 0.0f;
+    auto scope = ui.begin(row);
+
+    // Zooming about the *middle*, where the wheel zooms about the pointer.
+    // There is no pointer in a button press — the reader is looking at the
+    // chart, not at where their cursor happens to be resting — and the middle
+    // is the only part of the window they can be sure stays.
+    const auto scale = [&](double factor) {
+        const double middle = (view.from + view.to) / 2.0;
+        const double span = std::clamp(view.span() * factor, options.minSpan, 1.0);
+        view.from = middle - span / 2.0;
+        view.to = middle + span / 2.0;
+        view.normalise(options.minSpan);
+        changed = true;
+    };
+
+    const double step = std::clamp(options.step, 0.05, 0.9);
+    const std::string base = std::string(id);
+    if (options.zoomIn) {
+        button(ui, input, "",
+               {.variant = ButtonVariant::Ghost,
+                .leading = Icon::Plus,
+                .disabled = view.span() <= options.minSpan,
+                .height = options.height,
+                .iconSize = options.iconSize,
+                .id = base + ".in"});
+        if (input.clicked(base + ".in")) scale(1.0 - step);
+    }
+    if (options.zoomOut) {
+        button(ui, input, "",
+               {.variant = ButtonVariant::Ghost,
+                .leading = Icon::Minus,
+                .disabled = view.whole(),
+                .height = options.height,
+                .iconSize = options.iconSize,
+                .id = base + ".out"});
+        if (input.clicked(base + ".out")) scale(1.0 / (1.0 - step));
+    }
+    if (options.reset) {
+        button(ui, input, "",
+               {.variant = ButtonVariant::Ghost,
+                .leading = Icon::RotateCcw,
+                .disabled = view.whole(),
+                .height = options.height,
+                .iconSize = options.iconSize,
+                .id = base + ".reset"});
+        if (input.clicked(base + ".reset")) {
+            view.reset();
+            changed = true;
+        }
+    }
+
+    (void)scope;
+    return changed;
 }
 
 bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
@@ -786,8 +1249,11 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
     return changed;
 }
 
-ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
-                     const std::vector<Series>& series, const BarChartOptions& options) {
+namespace {
+
+ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
+                         const std::vector<Series>& series, const BarChartOptions& options,
+                         const Windowed& window) {
     ChartResult result;
     const ChartStyle& style = ui.design().chart;
     const int tickCount = options.tickCount.value_or(style.tickCount);
@@ -832,12 +1298,22 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
     // ---- what the pointer is over ------------------------------------------
     // A whole category, not a nearest point: a bar chart's unit of meaning is
     // the slot, and a reader pointing anywhere in it means that one.
-    if (options.hover && samples > 0 && !plotFrame.empty() && input.isHovered(plotId)) {
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
+    if (options.hover && samples > 0 && !plotFrame.empty() && !window.sweep.active &&
+        marksTracked(ui, input, id, plotId, trigger)) {
         const float along = flat ? (input.pointer().y - plotFrame.y) / plotFrame.height
                                  : (input.pointer().x - plotFrame.x) / plotFrame.width;
         const auto slot = static_cast<int>(std::floor(std::clamp(along, 0.0f, 0.9999f) *
                                                       static_cast<float>(samples)));
         result.hoveredIndex = std::clamp(slot, 0, static_cast<int>(samples) - 1);
+    }
+    if (options.hover) {
+        const int mine = result.hoveredIndex >= 0
+                             ? result.hoveredIndex + static_cast<int>(window.first)
+                             : -1;
+        const int shared = linkedIndex(options.link, id, mine, window.first + samples);
+        const int local = shared >= 0 ? shared - static_cast<int>(window.first) : -1;
+        result.hoveredIndex = local >= 0 && local < static_cast<int>(samples) ? local : -1;
     }
 
     const std::vector<double> ticks = scale.ticks(tickCount);
@@ -846,14 +1322,32 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
     const float sideWidth = flat ? options.categoryAxis : axisWidth;
     const float bottomHeight = flat ? 18.0f : options.categoryAxis;
 
+    // Offset into the *caller's* categories: `series` may be a window over their
+    // data, and a label read at the window's own index is the wrong label by
+    // exactly however far the reader has scrolled.
     const auto categoryLabel = [&](std::size_t i) -> std::string_view {
-        return i < options.categories.size() ? std::string_view(options.categories[i])
-                                             : std::string_view{};
+        const std::size_t at = window.first + i;
+        return at < options.categories.size() ? std::string_view(options.categories[at])
+                                              : std::string_view{};
+    };
+
+    std::vector<LegendEntry> keys;
+    for (std::size_t s = 0; s < series.size(); ++s) {
+        keys.push_back({series[s].name,
+                        series[s].color.value_or(style.palette.empty()
+                                                     ? Token::Accent
+                                                     : style.palette[s % style.palette.size()])});
+    }
+    const bool showLegend = options.legend.show && !series.empty();
+    const int focused = options.legend.focused ? *options.legend.focused : -1;
+    const auto shade = [&](std::size_t s, float alpha) {
+        return focused >= 0 && focused != static_cast<int>(s) ? alpha * options.legend.dimAlpha
+                                                              : alpha;
     };
 
     Style outer;
     outer.direction = Direction::Column;
-    outer.height = options.height;
+    outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
     auto outerScope = ui.begin(outer);
     ui.tag(id);
@@ -896,7 +1390,13 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                         Style slot;
                         slot.position = Position::Absolute;
                         slot.left = 0.0f;
-                        slot.top = (1.0f - scale.fraction(at)) * plotFrame.height - 7.0f;
+                        // Clamped inside the plot. A label sits half its height above
+                // its own gridline, so the bottom tick's used to hang seven
+                // pixels below the plot and land on whatever was under it —
+                // which, for a price chart with its volume beneath, was the
+                // volume's own top label.
+                slot.top = std::clamp((1.0f - scale.fraction(at)) * plotFrame.height - 7.0f,
+                                      0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                         slot.width = sideWidth;
                         slot.justify = Justify::End;
                         auto slotScope = ui.begin(slot);
@@ -951,6 +1451,9 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                 band.lineTo({box.x, box.bottom()});
                 band.close();
                 shapes.push_back({std::move(band), Fill{Token::SurfaceHover, 0.5f}, 0.0f});
+                // And the rule down its middle, which is the part that lines up
+                // with the chart above or below it.
+                if (!flat) appendCrosshair(shapes, at + slot / 2.0f, height);
             }
 
             const float inner = slot * (1.0f - std::clamp(options.categoryPadding, 0.0f, 0.9f));
@@ -1003,14 +1506,15 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                             stem.moveTo({centre, from});
                             stem.lineTo({centre, to});
                         }
-                        shapes.push_back({std::move(stem), Fill{colour, 0.55f}, 2.0f});
+                        shapes.push_back({std::move(stem), Fill{colour, shade(sIndex, 0.55f)},
+                                          2.0f});
 
                         Path dot;
                         const Vec2 head = flat ? Vec2{to, centre} : Vec2{centre, to};
                         dot.moveTo({head.x - 0.1f, head.y});
                         dot.lineTo({head.x + 0.1f, head.y});
                         shapes.push_back(
-                            {std::move(dot), Fill{colour},
+                            {std::move(dot), Fill{colour, shade(sIndex, 1.0f)},
                              std::min(lane, style.lineThickness * 4.0f + 4.0f)});
                         continue;
                     }
@@ -1024,17 +1528,49 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                     const bool dim =
                         result.hoveredIndex >= 0 && static_cast<std::size_t>(result.hoveredIndex) != i;
                     shapes.push_back({barPath(box, options.radius, side),
-                                      Fill{colour, dim ? 0.55f : 1.0f}, 0.0f});
+                                      Fill{colour, shade(sIndex, dim ? 0.55f : 1.0f)}, 0.0f});
                 }
             }
         }
 
+        // A container holding the marks rather than the drawn node itself, so
+        // the readout can be positioned inside it — the shape the line chart
+        // uses, and for the same reason: absolute is measured from the parent,
+        // and a panel put beside the plot would be offset by the axis.
         Style plot;
         plot.grow = 1.0f;
         plot.basis = 0.0f;
-        plot.overflow = Overflow::Hidden;
-        ui.draw(plot, std::move(shapes));
+        if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
+        if (window.takesWheel) plot.overflow = Overflow::Scroll;
+        auto plotScope = ui.begin(plot);
         ui.tag(plotId);
+
+        Style marks;
+        marks.position = Position::Absolute;
+        marks.left = 0.0f;
+        marks.top = 0.0f;
+        marks.width = Length::percent(100);
+        marks.height = Length::percent(100);
+        marks.overflow = Overflow::Hidden;
+        appendSweep(shapes, window.sweep, plotFrame.width, plotFrame.height);
+        ui.draw(marks, std::move(shapes));
+
+        if (result.hoveredIndex >= 0 && trigger != ChartTrigger::None) {
+            const auto index = static_cast<std::size_t>(result.hoveredIndex);
+            const float slot = (flat ? plotFrame.height : plotFrame.width) /
+                               static_cast<float>(std::max<std::size_t>(samples, 1));
+            const float centre = (static_cast<float>(index) + 0.5f) * slot;
+            // A column's slot spans the plot's height, so the panel pins to the
+            // top beside it. A horizontal bar's spans the width instead, and
+            // there the panel follows the row the pointer is on.
+            drawSeriesReadout(ui, plotFrame,
+                              flat ? input.pointer().x - plotFrame.x : centre,
+                              flat ? std::optional<float>(centre) : std::nullopt,
+                              window.first + index,
+                              window.wholeSeries ? *window.wholeSeries : series,
+                              options.categories, options.valueFormat, options.tooltip, style);
+        }
+        (void)plotScope;
         (void)topScope;
     }
 
@@ -1078,17 +1614,52 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                 plotFrame.width / static_cast<float>(std::max<std::size_t>(samples, 1));
             for (std::size_t i = 0; i < samples; ++i) {
                 if (categoryLabel(i).empty()) continue;
+                // A label may spill into the empty slots on either side of it.
+                //
+                // Which is what makes a *sparse* axis work: a chart with forty
+                // bars and a label every eighth has 21 pixels per slot and a
+                // timestamp needs fifty, so every one of them used to ellipsise
+                // to "09…". A dense axis has no empty neighbours to borrow and
+                // is left exactly as it was.
+                std::size_t before = 0;
+                while (before < i && categoryLabel(i - before - 1).empty()) ++before;
+                std::size_t after = 0;
+                while (i + after + 1 < samples && categoryLabel(i + after + 1).empty()) ++after;
+
+                // Centred over its own bar while both sides have room, and
+                // pushed off the end it is against when only one does — which
+                // is the first and last label of every sparse axis, and the two
+                // a reader looks at first.
+                const std::size_t both = std::min(before, after);
+                float room = slot;
+                float left = static_cast<float>(i) * slot;
+                Justify justify = Justify::Center;
+                TextAlign align = TextAlign::Center;
+                if (both > 0) {
+                    room = slot * static_cast<float>(both * 2 + 1);
+                    left -= (room - slot) / 2.0f;
+                } else if (after > 0) {
+                    room = slot * static_cast<float>(after + 1);
+                    justify = Justify::Start;
+                    align = TextAlign::Start;
+                } else if (before > 0) {
+                    room = slot * static_cast<float>(before + 1);
+                    left -= room - slot;
+                    justify = Justify::End;
+                    align = TextAlign::End;
+                }
+
                 Style cell;
                 cell.position = Position::Absolute;
-                cell.left = static_cast<float>(i) * slot;
+                cell.left = left;
                 cell.top = 0.0f;
-                cell.width = slot;
-                cell.justify = Justify::Center;
+                cell.width = room;
+                cell.justify = justify;
                 auto cellScope = ui.begin(cell);
                 text(ui, categoryLabel(i),
                      {.color = result.hoveredIndex == static_cast<int>(i) ? Token::Text
                                                                          : Token::TextMuted,
-                      .size = 10.0f, .align = TextAlign::Center,
+                      .size = 10.0f, .align = align,
                       .overflow = TextOverflow::Ellipsis});
                 (void)cellScope;
             }
@@ -1097,13 +1668,56 @@ ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
         (void)bottomScope;
     }
 
+    if (showLegend) drawLegend(ui, input, id, keys, options.legend);
+
     (void)outerScope;
     return result;
 }
 
-ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id,
-                             const std::vector<Candle>& candles,
-                             const CandlestickOptions& options) {
+}  // namespace
+
+ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
+                     const std::vector<Series>& series, const BarChartOptions& options) {
+    return drawBarChart(ui, input, id, series, options, {});
+}
+
+ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
+                     const std::vector<Series>& series, ChartView& view,
+                     const BarChartOptions& options, const ChartZoom& zoom) {
+    const std::string plotId = std::string(id) + ".plot";
+    const Rect plotFrame = input.frameOf(plotId);
+    view.normalise(zoom.minSpan);
+    const Gestures gestures = driveView(input, plotId, plotFrame, view, zoom);
+
+    std::size_t samples = 0;
+    for (const Series& one : series) samples = std::max(samples, one.values.size());
+    const Window window = windowOf(samples, view);
+
+    std::vector<Series> sliced;
+    sliced.reserve(series.size());
+    for (const Series& one : series) {
+        Series cut = one;
+        cut.values.clear();
+        for (std::size_t i = window.first; i < window.last && i < one.values.size(); ++i) {
+            cut.values.push_back(one.values[i]);
+        }
+        sliced.push_back(std::move(cut));
+    }
+
+    Windowed windowed = windowedFor(input, view, zoom, window);
+    windowed.wholeSeries = &series;
+    ChartResult result = drawBarChart(ui, input, id, sliced, options, windowed);
+    if (result.hoveredIndex >= 0) result.hoveredIndex += static_cast<int>(window.first);
+    result.viewChanged = gestures.changed;
+    result.wheelTaken = gestures.wheelTaken;
+    return result;
+}
+
+namespace {
+
+ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_view id,
+                                 const std::vector<Candle>& candles,
+                                 const CandlestickOptions& options, const Windowed& window) {
     ChartResult result;
     const ChartStyle& style = ui.design().chart;
     const int tickCount = options.tickCount.value_or(style.tickCount);
@@ -1137,11 +1751,21 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
         }
     }
 
-    if (options.hover && samples > 0 && !plotFrame.empty() && input.isHovered(plotId)) {
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
+    if (options.hover && samples > 0 && !plotFrame.empty() && !window.sweep.active &&
+        marksTracked(ui, input, id, plotId, trigger)) {
         const float along = (input.pointer().x - plotFrame.x) / plotFrame.width;
         const auto slot = static_cast<int>(std::floor(std::clamp(along, 0.0f, 0.9999f) *
                                                       static_cast<float>(samples)));
         result.hoveredIndex = std::clamp(slot, 0, static_cast<int>(samples) - 1);
+    }
+    if (options.hover) {
+        const int mine = result.hoveredIndex >= 0
+                             ? result.hoveredIndex + static_cast<int>(window.first)
+                             : -1;
+        const int shared = linkedIndex(options.link, id, mine, window.first + samples);
+        const int local = shared >= 0 ? shared - static_cast<int>(window.first) : -1;
+        result.hoveredIndex = local >= 0 && local < static_cast<int>(samples) ? local : -1;
     }
 
     const std::vector<double> ticks = scale.ticks(tickCount);
@@ -1172,7 +1796,13 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
                 Style slot;
                 slot.position = Position::Absolute;
                 slot.left = 0.0f;
-                slot.top = (1.0f - scale.fraction(at)) * plotFrame.height - 7.0f;
+                // Clamped inside the plot. A label sits half its height above
+                // its own gridline, so the bottom tick's used to hang seven
+                // pixels below the plot and land on whatever was under it —
+                // which, for a price chart with its volume beneath, was the
+                // volume's own top label.
+                slot.top = std::clamp((1.0f - scale.fraction(at)) * plotFrame.height - 7.0f,
+                                      0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                 slot.width = axisWidth;
                 slot.justify = Justify::End;
                 auto slotScope = ui.begin(slot);
@@ -1209,10 +1839,14 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
                 band.lineTo({at, height});
                 band.close();
                 shapes.push_back({std::move(band), Fill{Token::SurfaceHover, 0.5f}, 0.0f});
+                // The rule down its middle, which is what lines up with the
+                // volume chart or the line chart stacked under it.
+                appendCrosshair(shapes, at + slot / 2.0f, height);
             }
 
-            const float body =
+            float body =
                 std::max(1.0f, slot * (1.0f - std::clamp(options.categoryPadding, 0.0f, 0.9f)));
+            if (options.maxBodyWidth > 0.0f) body = std::min(body, options.maxBodyWidth);
 
             for (std::size_t i = 0; i < samples; ++i) {
                 const Candle& candle = candles[i];
@@ -1248,9 +1882,63 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
         Style plot;
         plot.grow = 1.0f;
         plot.basis = 0.0f;
-        plot.overflow = Overflow::Hidden;
-        ui.draw(plot, std::move(shapes));
+        if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
+        if (window.takesWheel) plot.overflow = Overflow::Scroll;
+        auto plotScope = ui.begin(plot);
         ui.tag(plotId);
+
+        Style marks;
+        marks.position = Position::Absolute;
+        marks.left = 0.0f;
+        marks.top = 0.0f;
+        marks.width = Length::percent(100);
+        marks.height = Length::percent(100);
+        marks.overflow = Overflow::Hidden;
+        appendSweep(shapes, window.sweep, plotFrame.width, plotFrame.height);
+        ui.draw(marks, std::move(shapes));
+
+        if (result.hoveredIndex >= 0 && trigger != ChartTrigger::None) {
+            const auto index = static_cast<std::size_t>(result.hoveredIndex);
+            const std::vector<Candle>& whole =
+                window.wholeCandles ? *window.wholeCandles : candles;
+            TooltipContext context;
+            context.index = window.first + index;
+            context.candles = &whole;
+
+            std::vector<TooltipRow> rows;
+            if (options.tooltip.rows) {
+                rows = options.tooltip.rows(context);
+            } else {
+                // The four numbers the period is, in the order the name says
+                // them. No swatches: the colour is the candle's direction, and
+                // repeating it four times down the panel says nothing.
+                const Candle& candle = whole[context.index];
+                const std::pair<const char*, double> lines[] = {{"open", candle.open},
+                                                                {"high", candle.high},
+                                                                {"low", candle.low},
+                                                                {"close", candle.close}};
+                for (std::size_t line = 0; line < std::size(lines); ++line) {
+                    char printed[48];
+                    std::snprintf(printed, sizeof(printed),
+                                  std::string(options.valueFormat).c_str(), lines[line].second);
+                    // Only the close carries a swatch, and it carries the one
+                    // the candle is drawn in: the direction is the reason the
+                    // reader is looking, and saying it four times says nothing.
+                    const std::optional<Token> swatch =
+                        line + 1 == std::size(lines)
+                            ? std::optional<Token>(candle.rising()
+                                                       ? options.rising.value_or(Token::Added)
+                                                       : options.falling.value_or(Token::Removed))
+                            : std::nullopt;
+                    rows.push_back({swatch, lines[line].first, printed});
+                }
+            }
+            const float slot = plotFrame.width / static_cast<float>(samples);
+            drawReadoutPanel(ui, plotFrame, (static_cast<float>(index) + 0.5f) * slot,
+                             std::nullopt, headingFor(context, options.tooltip, options.categories),
+                             rows, options.tooltip, style.tooltip, context);
+        }
+        (void)plotScope;
         (void)topScope;
     }
 
@@ -1273,7 +1961,10 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
         auto stripScope = ui.begin(strip);
         const float slot = plotFrame.width / static_cast<float>(samples);
         for (std::size_t i = 0; i < samples; ++i) {
-            if (i >= options.categories.size() || options.categories[i].empty()) continue;
+            // The caller's categories, at the caller's index: `candles` may be
+            // a window over their data.
+            const std::size_t at = window.first + i;
+            if (at >= options.categories.size() || options.categories[at].empty()) continue;
             Style cell;
             cell.position = Position::Absolute;
             cell.left = static_cast<float>(i) * slot;
@@ -1281,7 +1972,7 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
             cell.width = slot;
             cell.justify = Justify::Center;
             auto cellScope = ui.begin(cell);
-            text(ui, options.categories[i],
+            text(ui, options.categories[at],
                  {.color = result.hoveredIndex == static_cast<int>(i) ? Token::Text
                                                                       : Token::TextMuted,
                   .size = 10.0f, .align = TextAlign::Center,
@@ -1296,6 +1987,38 @@ ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view 
     return result;
 }
 
+}  // namespace
+
+ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id,
+                             const std::vector<Candle>& candles,
+                             const CandlestickOptions& options) {
+    return drawCandlestickChart(ui, input, id, candles, options, {});
+}
+
+ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id,
+                             const std::vector<Candle>& candles, ChartView& view,
+                             const CandlestickOptions& options, const ChartZoom& zoom) {
+    const std::string plotId = std::string(id) + ".plot";
+    const Rect plotFrame = input.frameOf(plotId);
+    view.normalise(zoom.minSpan);
+    const Gestures gestures = driveView(input, plotId, plotFrame, view, zoom);
+
+    const Window window = windowOf(candles.size(), view);
+    std::vector<Candle> sliced;
+    sliced.reserve(window.count());
+    for (std::size_t i = window.first; i < window.last && i < candles.size(); ++i) {
+        sliced.push_back(candles[i]);
+    }
+
+    Windowed windowed = windowedFor(input, view, zoom, window);
+    windowed.wholeCandles = &candles;
+    ChartResult result = drawCandlestickChart(ui, input, id, sliced, options, windowed);
+    if (result.hoveredIndex >= 0) result.hoveredIndex += static_cast<int>(window.first);
+    result.viewChanged = gestures.changed;
+    result.wheelTaken = gestures.wheelTaken;
+    return result;
+}
+
 ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id,
                            const std::vector<PointSeries>& series,
                            const ScatterOptions& options) {
@@ -1307,6 +2030,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
 
     const std::string plotId = std::string(id) + ".plot";
     const Rect plotFrame = input.frameOf(plotId);
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
 
     // ---- the scales --------------------------------------------------------
     // Both from the data, and neither forced to zero: a correlation between two
@@ -1343,9 +2067,19 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
     const std::vector<double> yTicks = yScale.ticks(tickCount);
     const std::vector<double> xTicks = xScale.ticks(tickCount);
 
+    std::vector<LegendEntry> keys;
+    for (std::size_t s = 0; s < series.size(); ++s) {
+        keys.push_back({series[s].name,
+                        series[s].color.value_or(style.palette.empty()
+                                                     ? Token::Accent
+                                                     : style.palette[s % style.palette.size()])});
+    }
+    const bool showLegend = options.legend.show && !series.empty();
+    const int focused = options.legend.focused ? *options.legend.focused : -1;
+
     Style outer;
     outer.direction = Direction::Column;
-    outer.height = options.height;
+    outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
     auto outerScope = ui.begin(outer);
     ui.tag(id);
@@ -1369,7 +2103,8 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
                 Style slot;
                 slot.position = Position::Absolute;
                 slot.left = 0.0f;
-                slot.top = (1.0f - yScale.fraction(at)) * plotFrame.height - 7.0f;
+                slot.top = std::clamp((1.0f - yScale.fraction(at)) * plotFrame.height - 7.0f,
+                                      0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                 slot.width = axisWidth;
                 slot.justify = Justify::End;
                 auto slotScope = ui.begin(slot);
@@ -1389,7 +2124,8 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         // ---- what the pointer is over --------------------------------------
         // Nearest dot, not nearest column: a scatter has no columns, and two
         // points may share an x while meaning different things.
-        if (options.hover && !plotFrame.empty() && input.isHovered(plotId) && width > 0.0f) {
+        if (options.hover && !plotFrame.empty() && width > 0.0f &&
+            marksTracked(ui, input, id, plotId, trigger)) {
             const Vec2 at{input.pointer().x - plotFrame.x, input.pointer().y - plotFrame.y};
             float nearest = options.hitRadius * options.hitRadius;
             for (std::size_t s = 0; s < series.size(); ++s) {
@@ -1446,7 +2182,8 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
 
                     const bool picked = result.hoveredSeries == static_cast<int>(s) &&
                                         result.hoveredIndex == static_cast<int>(i);
-                    const bool dimmed = result.hoveredIndex >= 0 && !picked;
+                    const bool dimmed = (result.hoveredIndex >= 0 && !picked) ||
+                                        (focused >= 0 && focused != static_cast<int>(s));
 
                     shapes.push_back({circlePath(centre, radius),
                                       Fill{colour, options.fillAlpha * (dimmed ? 0.4f : 1.0f)},
@@ -1475,6 +2212,54 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         marks.height = Length::percent(100);
         marks.overflow = Overflow::Hidden;
         ui.draw(marks, std::move(shapes));
+
+        // ---- the readout ---------------------------------------------------
+        // Beside the dot rather than pinned to the top: a point is a place on
+        // both axes, and a panel at the top of the plot would leave the reader
+        // matching a number to one of forty circles by eye.
+        if (result.hoveredSeries >= 0 && result.hoveredIndex >= 0 &&
+            trigger != ChartTrigger::None) {
+            const auto s = static_cast<std::size_t>(result.hoveredSeries);
+            const auto i = static_cast<std::size_t>(result.hoveredIndex);
+            const PointSeries& one = series[s];
+            const Point& point = one.points[i];
+            const Token colour = one.color.value_or(
+                style.palette.empty() ? Token::Accent
+                                      : style.palette[s % style.palette.size()]);
+
+            TooltipContext context;
+            context.index = i;
+            context.seriesIndex = s;
+            context.points = &series;
+
+            std::vector<TooltipRow> rows;
+            if (options.tooltip.rows) {
+                rows = options.tooltip.rows(context);
+            } else {
+                // Both coordinates, because on this chart neither is implied by
+                // where the pointer is — and the weight when there is one,
+                // which is the whole reason a bubble is the size it is.
+                char printed[48];
+                std::snprintf(printed, sizeof(printed), std::string(options.xFormat).c_str(),
+                              point.x);
+                rows.push_back({colour, "x", printed});
+                std::snprintf(printed, sizeof(printed), std::string(options.valueFormat).c_str(),
+                              point.y);
+                rows.push_back({std::nullopt, "y", printed});
+                if (heaviest > 0.0 && point.weight > 0.0) {
+                    std::snprintf(printed, sizeof(printed),
+                                  std::string(options.valueFormat).c_str(), point.weight);
+                    rows.push_back({std::nullopt, "weight", printed});
+                }
+            }
+
+            // The heading names the *series*: a dot has no category, and "#3"
+            // says less than "Enterprise" about which cloud it came from.
+            std::string heading = options.tooltip.title ? options.tooltip.title(context)
+                                                        : std::string(one.name);
+            drawReadoutPanel(ui, plotFrame, xAt(point.x), yAt(point.y), heading, rows,
+                             options.tooltip, style.tooltip, context);
+        }
         (void)plotScope;
         (void)topScope;
     }
@@ -1515,6 +2300,8 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         (void)bottomScope;
     }
 
+    if (showLegend) drawLegend(ui, input, id, keys, options.legend);
+
     (void)outerScope;
     return result;
 }
@@ -1524,6 +2311,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
                       const HeatmapOptions& options) {
     HeatmapResult result;
     const ChartStyle& style = ui.design().chart;
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
     const Token hue = options.color.value_or(
         style.palette.empty() ? Token::Accent : style.palette.front());
 
@@ -1642,7 +2430,8 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         }
 
         // What the pointer is over, in grid coordinates.
-        if (options.hover && !plotFrame.empty() && input.isHovered(plotId) && pitch > 0.0f) {
+        if (options.hover && !plotFrame.empty() && pitch > 0.0f &&
+            marksTracked(ui, input, id, plotId, trigger)) {
             const float x = input.pointer().x - plotFrame.x;
             const float y = input.pointer().y - plotFrame.y;
             const auto c = static_cast<int>(std::floor(x / pitch));
@@ -1691,8 +2480,53 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         plot.grow = 1.0f;
         plot.basis = 0.0f;
         plot.height = static_cast<float>(rowCount) * pitch - options.gap;
-        ui.draw(plot, std::move(shapes));
+        auto plotScope = ui.begin(plot);
         ui.tag(plotId);
+
+        Style marks;
+        marks.position = Position::Absolute;
+        marks.left = 0.0f;
+        marks.top = 0.0f;
+        marks.width = Length::percent(100);
+        marks.height = Length::percent(100);
+        ui.draw(marks, std::move(shapes));
+
+        // ---- the readout ---------------------------------------------------
+        // A grid's labels are along its edges, and on any grid worth drawing
+        // they have been ellipsised to fit. The readout is where a cell's row,
+        // column and value can actually be read.
+        if (result.hoveredRow >= 0 && result.hoveredColumn >= 0 &&
+            trigger != ChartTrigger::None) {
+            const auto r = static_cast<std::size_t>(result.hoveredRow);
+            const auto c = static_cast<std::size_t>(result.hoveredColumn);
+
+            TooltipContext context;
+            context.index = c;
+            context.seriesIndex = r;
+            context.cells = &values;
+
+            std::vector<TooltipRow> rows;
+            if (options.tooltip.rows) {
+                rows = options.tooltip.rows(context);
+            } else {
+                char printed[48];
+                std::snprintf(printed, sizeof(printed), std::string(options.valueFormat).c_str(),
+                              result.hoveredValue);
+                rows.push_back({hue,
+                                r < options.rows.size() ? options.rows[r] : "row " +
+                                                                                std::to_string(r),
+                                printed});
+            }
+
+            const std::string heading =
+                options.tooltip.title ? options.tooltip.title(context)
+                                      : (c < options.columns.size() ? options.columns[c]
+                                                                    : "#" + std::to_string(c));
+            drawReadoutPanel(ui, plotFrame, (static_cast<float>(c) + 0.5f) * pitch,
+                             (static_cast<float>(r) + 0.5f) * pitch, heading, rows,
+                             options.tooltip, style.tooltip, context);
+        }
+        (void)plotScope;
         (void)bodyScope;
     }
 
@@ -1714,6 +2548,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
 
     const std::string plotId = std::string(id) + ".plot";
     const Rect plotFrame = input.frameOf(plotId);
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
 
     double total = 0.0;
     for (const Slice& slice : slices) total += std::max(0.0, slice.value);
@@ -1721,7 +2556,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
     // ---- what the pointer is over ------------------------------------------
     // By angle and radius, not by rectangle: a wedge is not a box, and hit
     // testing it as one is what makes a chart's tooltip name the wrong thing.
-    if (total > 0.0 && !plotFrame.empty() && input.isHovered(plotId)) {
+    if (total > 0.0 && !plotFrame.empty() && marksTracked(ui, input, id, plotId, trigger)) {
         const Vec2 centre{plotFrame.x + plotFrame.width / 2.0f,
                           plotFrame.y + plotFrame.height / 2.0f};
         const float outer = std::min(plotFrame.width, plotFrame.height) / 2.0f;
@@ -1807,8 +2642,48 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
     plot.height = options.size;
     plot.shrink = 0.0f;
     plot.cursorHint = result.hoveredIndex >= 0 ? Cursor::Pointer : Cursor::Default;
-    ui.draw(plot, std::move(shapes));
+    auto plotScope = ui.begin(plot);
     ui.tag(plotId).cursor(plot.cursorHint);
+
+    Style marks;
+    marks.position = Position::Absolute;
+    marks.left = 0.0f;
+    marks.top = 0.0f;
+    marks.width = Length::percent(100);
+    marks.height = Length::percent(100);
+    ui.draw(marks, std::move(shapes));
+
+    // ---- the readout -------------------------------------------------------
+    // The legend already names every wedge; what it has no room for is the
+    // number behind the share, which is the thing a reader hovers a donut to
+    // find out. Placed at the pointer, since a wedge has no single point.
+    if (result.hoveredIndex >= 0 && trigger != ChartTrigger::None) {
+        const auto index = static_cast<std::size_t>(result.hoveredIndex);
+        TooltipContext context;
+        context.index = index;
+        context.slices = &slices;
+
+        std::vector<TooltipRow> rows;
+        if (options.tooltip.rows) {
+            rows = options.tooltip.rows(context);
+        } else {
+            char value[32];
+            std::snprintf(value, sizeof(value), "%.0f", slices[index].value);
+            rows.push_back({sliceColour(index), "value", value});
+            char share[16];
+            std::snprintf(share, sizeof(share), "%.1f%%",
+                          total > 0.0 ? slices[index].value / total * 100.0 : 0.0);
+            rows.push_back({std::nullopt, "share", share});
+        }
+
+        const std::string heading = options.tooltip.title
+                                        ? options.tooltip.title(context)
+                                        : std::string(slices[index].name);
+        drawReadoutPanel(ui, plotFrame, input.pointer().x - plotFrame.x,
+                         input.pointer().y - plotFrame.y, heading, rows, options.tooltip,
+                         style.tooltip, context);
+    }
+    plotScope.close();
 
     // Clicking a wedge singles it out; clicking it again, or clicking the hole,
     // puts everything back.
@@ -1882,6 +2757,235 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
         (void)keysScope;
     }
     (void)scope;
+
+    return result;
+}
+
+ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id,
+                       const std::vector<Series>& series, const RadarOptions& options) {
+    ChartResult result;
+    const ChartStyle& style = ui.design().chart;
+    const int tickCount = options.tickCount.value_or(style.tickCount);
+    const ChartTrigger trigger = options.tooltip.trigger.value_or(style.tooltip.trigger);
+
+    const std::string plotId = std::string(id) + ".plot";
+    const Rect plotFrame = input.frameOf(plotId);
+
+    std::size_t axes = 0;
+    for (const Series& one : series) axes = std::max(axes, one.values.size());
+
+    // ---- the scale ---------------------------------------------------------
+    // Always from zero, whatever the data says: a radar is read as an area, and
+    // an area measured from a floating baseline is the same lie a truncated bar
+    // tells — told about every axis at once.
+    Scale scale = options.scale;
+    if (options.autoScale) {
+        double high = 0.0;
+        for (const Series& one : series) {
+            for (const double value : one.values) {
+                if (std::isfinite(value)) high = std::max(high, value);
+            }
+        }
+        scale = high > 0.0 ? Scale::nice(0.0, high, tickCount) : Scale{0.0, 1.0};
+    }
+
+    // Twelve o'clock, going clockwise — where every reader starts, and the
+    // direction they read a clock, a compass and a pie in.
+    const auto angleOf = [&](std::size_t axis) {
+        return -90.0f + 360.0f * static_cast<float>(axis) / static_cast<float>(axes);
+    };
+
+    const Vec2 centre{plotFrame.width / 2.0f, plotFrame.height / 2.0f};
+    const float outerRadius =
+        std::max(0.0f, std::min(plotFrame.width, plotFrame.height) / 2.0f - options.labelRoom);
+    const auto vertexAt = [&](std::size_t axis, double value) {
+        return onCircle(centre, outerRadius * std::clamp(scale.fraction(value), 0.0f, 1.0f),
+                        angleOf(axis));
+    };
+
+    // ---- what the pointer is over ------------------------------------------
+    // By angle, not by distance to a vertex: a reader pointing anywhere along a
+    // spoke means that axis, which is the rule the bars use for a category and
+    // is what lets a radar be pointed at near the centre where every vertex is
+    // on top of every other.
+    if (options.hover && axes > 0 && outerRadius > 0.0f && !plotFrame.empty() &&
+        marksTracked(ui, input, id, plotId, trigger)) {
+        const Vec2 from{input.pointer().x - plotFrame.x - centre.x,
+                        input.pointer().y - plotFrame.y - centre.y};
+        if (std::hypot(from.x, from.y) <= outerRadius + options.labelRoom / 2.0f) {
+            const float step = 360.0f / static_cast<float>(axes);
+            float angle = std::atan2(from.y, from.x) * 180.0f / kPi + 90.0f;
+            while (angle < 0.0f) angle += 360.0f;
+            const auto nearest = static_cast<std::size_t>(std::llround(angle / step));
+            result.hoveredIndex = static_cast<int>(nearest % axes);
+        }
+    }
+
+    std::vector<LegendEntry> keys;
+    for (std::size_t s = 0; s < series.size(); ++s) {
+        keys.push_back({series[s].name,
+                        series[s].color.value_or(style.palette.empty()
+                                                     ? Token::Accent
+                                                     : style.palette[s % style.palette.size()])});
+    }
+    const bool showLegend = options.legend.show && series.size() > 1;
+    const int focused = options.legend.focused ? *options.legend.focused : -1;
+    const auto shade = [&](std::size_t s, float alpha) {
+        return focused >= 0 && focused != static_cast<int>(s) ? alpha * options.legend.dimAlpha
+                                                              : alpha;
+    };
+
+    std::vector<Shape> shapes;
+    if (axes > 0 && outerRadius > 0.0f) {
+        const std::vector<double> ticks = scale.ticks(tickCount);
+
+        // ---- the web -------------------------------------------------------
+        // Outermost first, so the shaded bands of a polygon grid stack the
+        // right way: each ring is a whole polygon, and an inner one drawn
+        // second covers the middle of the one before it.
+        if (options.grid != RadarGrid::None) {
+            for (std::size_t ring = ticks.size(); ring-- > 0;) {
+                const float fraction = std::clamp(scale.fraction(ticks[ring]), 0.0f, 1.0f);
+                if (fraction <= 0.0f) continue;
+                Path polygon;
+                for (std::size_t axis = 0; axis < axes; ++axis) {
+                    const Vec2 point = onCircle(centre, outerRadius * fraction, angleOf(axis));
+                    if (axis == 0) polygon.moveTo(point);
+                    else polygon.lineTo(point);
+                }
+                polygon.close();
+                if (options.grid == RadarGrid::Polygon) {
+                    // Alternating, and both steps faint: the bands are there to
+                    // be counted out of the corner of the eye, not read.
+                    shapes.push_back({std::move(polygon),
+                                      Fill{Token::Border, ring % 2 == 0 ? 0.5f : 0.28f}, 0.0f});
+                } else {
+                    shapes.push_back({std::move(polygon), Fill{Token::Border}, 1.0f});
+                }
+            }
+
+            // The spokes, over the rings either way: they are what a value is
+            // traced along, and a polygon fill would otherwise bury them.
+            for (std::size_t axis = 0; axis < axes; ++axis) {
+                const bool lit = result.hoveredIndex == static_cast<int>(axis);
+                Path spoke;
+                spoke.moveTo(centre);
+                spoke.lineTo(onCircle(centre, outerRadius, angleOf(axis)));
+                shapes.push_back({std::move(spoke),
+                                  Fill{lit ? Token::BorderStrong : Token::Border,
+                                       options.grid == RadarGrid::Polygon && !lit ? 0.6f : 1.0f},
+                                  1.0f});
+            }
+        }
+
+        // ---- the series ----------------------------------------------------
+        for (std::size_t s = 0; s < series.size(); ++s) {
+            const Series& one = series[s];
+            if (one.values.empty()) continue;
+            const Token colour = one.color.value_or(
+                style.palette.empty() ? Token::Accent : style.palette[s % style.palette.size()]);
+            const float fillAlpha = one.fillAlpha.value_or(options.fillAlpha);
+            const float thickness = one.thickness.value_or(style.lineThickness);
+
+            Path polygon;
+            for (std::size_t axis = 0; axis < axes; ++axis) {
+                // A series shorter than the widest sits at the centre on the
+                // axes it has nothing to say about, rather than closing early
+                // and drawing a shape it does not mean.
+                const double value = axis < one.values.size() && std::isfinite(one.values[axis])
+                                         ? one.values[axis]
+                                         : scale.low;
+                const Vec2 point = vertexAt(axis, value);
+                if (axis == 0) polygon.moveTo(point);
+                else polygon.lineTo(point);
+            }
+            polygon.close();
+
+            if (fillAlpha > 0.0f) {
+                Path filled = polygon;
+                shapes.push_back({std::move(filled), Fill{colour, shade(s, fillAlpha)}, 0.0f});
+            }
+            shapes.push_back({std::move(polygon), Fill{colour, shade(s, 1.0f)}, thickness});
+
+            if (options.markerRadius > 0.0f) {
+                for (std::size_t axis = 0; axis < axes && axis < one.values.size(); ++axis) {
+                    if (!std::isfinite(one.values[axis])) continue;
+                    const bool lit = result.hoveredIndex == static_cast<int>(axis);
+                    shapes.push_back({circlePath(vertexAt(axis, one.values[axis]),
+                                                 options.markerRadius * (lit ? 1.6f : 1.0f)),
+                                      Fill{colour, shade(s, 1.0f)}, 0.0f});
+                }
+            }
+        }
+    }
+
+    std::optional<Ui::Scope> outer;
+    if (showLegend) {
+        Style column;
+        column.direction = Direction::Column;
+        column.align = Align::Center;
+        column.gap = 2.0f;
+        column.shrink = 0.0f;
+        outer.emplace(ui.begin(column));
+    }
+
+    Style plot;
+    plot.width = options.size;
+    plot.height = options.size;
+    plot.shrink = 0.0f;
+    auto plotScope = ui.begin(plot);
+    ui.tag(plotId);
+
+    Style marks;
+    marks.position = Position::Absolute;
+    marks.left = 0.0f;
+    marks.top = 0.0f;
+    marks.width = Length::percent(100);
+    marks.height = Length::percent(100);
+    ui.draw(marks, std::move(shapes));
+
+    // ---- the names ---------------------------------------------------------
+    // Centred on a point pushed out past the last ring, in a box wide enough to
+    // hold a word: an axis label placed at the vertex itself sits on top of the
+    // data, and one aligned by quadrant needs six cases to get the corners
+    // right for the two it actually improves.
+    if (options.labelRoom > 0.0f && axes > 0 && outerRadius > 0.0f) {
+        constexpr float kLabelWidth = 76.0f;
+        for (std::size_t axis = 0; axis < axes && axis < options.categories.size(); ++axis) {
+            if (options.categories[axis].empty()) continue;
+            const Vec2 at = onCircle(centre, outerRadius + 16.0f, angleOf(axis));
+            Style slot;
+            slot.position = Position::Absolute;
+            slot.left = at.x - kLabelWidth / 2.0f;
+            slot.top = at.y - 7.0f;
+            slot.width = kLabelWidth;
+            slot.justify = Justify::Center;
+            auto slotScope = ui.begin(slot);
+            ui.ignoresPointer();
+            text(ui, options.categories[axis],
+                 {.color = result.hoveredIndex == static_cast<int>(axis) ? Token::Text
+                                                                         : Token::TextMuted,
+                  .size = 10.5f,
+                  .align = TextAlign::Center,
+                  .overflow = TextOverflow::Ellipsis});
+            (void)slotScope;
+        }
+    }
+
+    // ---- the readout -------------------------------------------------------
+    // Every series at the axis under the pointer, which is what makes the shapes
+    // comparable: the whole reason two profiles are drawn on one web is to be
+    // read against each other, one axis at a time.
+    if (result.hoveredIndex >= 0 && trigger != ChartTrigger::None && !plotFrame.empty()) {
+        const auto axis = static_cast<std::size_t>(result.hoveredIndex);
+        const Vec2 at = onCircle(centre, outerRadius, angleOf(axis));
+        drawSeriesReadout(ui, plotFrame, at.x, at.y, axis, series, options.categories,
+                          options.valueFormat, options.tooltip, style);
+    }
+    plotScope.close();
+
+    if (showLegend) drawLegend(ui, input, id, keys, options.legend);
+    if (outer) outer->close();
 
     return result;
 }

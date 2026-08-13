@@ -21,6 +21,10 @@ struct ButtonOptions {
     bool block = false;
     /** Zero takes the active design's control height. */
     float height = 0.0f;
+    /** The glyph's size. Zero matches the label's, which is what a button with
+     *  a label wants; one with only an icon in it usually wants more, since the
+     *  glyph is the whole button rather than a mark beside a word. */
+    float iconSize = 0.0f;
     std::string_view id{};
     /**
      * A circle of ink that grows from where the pointer went down.

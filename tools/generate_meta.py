@@ -23,6 +23,7 @@ trustworthy.
 `--check` regenerates into memory and exits non-zero if the file on disk
 differs, which is what CI runs.
 """
+import json
 import pathlib
 import re
 import sys
@@ -30,6 +31,12 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 WIDGETS = ROOT / "include" / "gbui" / "widgets"
 OUT = ROOT / "src" / "meta" / "components.cpp"
+# The same table as JSON, for the documentation site.
+#
+# Emitted from here rather than parsed again in TypeScript: two parsers over
+# the same headers is two things to keep in step, and the second one would be
+# discovered to have drifted by a reader rather than by a build.
+JSON_OUT = ROOT / "docs" / ".vitepress" / "theme" / "components.json"
 
 # The umbrella headers decide the groups, so the grouping in the documentation
 # and the grouping a developer already sees in the includes are the same one.
@@ -128,9 +135,35 @@ def kind_of(type_text, enums):
     return "Opaque", inner
 
 
+def header_doc(source):
+    """The first paragraph of the `//` block a header opens with.
+
+    Every file in `widgets/` starts with one sentence saying what the thing is,
+    and it is almost always a better summary than any single overload's doc —
+    which is per declaration and often explains a distinction rather than the
+    component. Only the first paragraph: the rest of these preambles argue
+    about design, which belongs in the header and not in a gallery card.
+    """
+    lines = []
+    for line in source.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            break
+        if not stripped.startswith("//"):
+            if lines:
+                break
+            continue
+        body = stripped[2:].strip()
+        if not body:  # a blank comment line ends the first paragraph
+            break
+        lines.append(body)
+    return re.sub(r"\s+", " ", " ".join(lines)).strip()
+
+
 def parse_header(path, enums):
     """Every options struct and component function in one header."""
     source = path.read_text()
+    fileDoc = header_doc(source)
 
     # Comments inside a member's default would confuse the member regex, and
     # block comments between members are documentation for the next one.
@@ -189,6 +222,7 @@ def parse_header(path, enums):
                 "name": name,
                 "header": f"gbui/widgets/{path.name}",
                 "summary": doc,
+                "headerDoc": fileDoc,
                 "options": options,
                 "properties": structs.get(options, []),
                 "container": returns.strip() == "Ui::Scope",
@@ -239,6 +273,7 @@ def render(entries):
         out.append(f"        {cpp_string(entry['group'])},")
         out.append(f"        {cpp_string(entry['header'])},")
         out.append(f"        {cpp_string(entry['summary'])},")
+        out.append(f"        {cpp_string(entry['headerDoc'])},")
         out.append(f"        {cpp_string(entry['options'])},")
         if entry["properties"]:
             out.append("        {")
@@ -295,6 +330,45 @@ def render(entries):
     return "\n".join(out)
 
 
+def merge_overloads(entries):
+    """One record per component, with the extra signatures listed.
+
+    C++ declares a component once per overload and the table above keeps them
+    apart, because a signature is a signature. A gallery wants one card per
+    component with both signatures on it, and doing that merge here rather than
+    in the page means every consumer gets the same answer.
+    """
+    merged = {}
+    order = []
+    for entry in entries:
+        record = merged.get(entry["name"])
+        if record is None:
+            record = {
+                "name": entry["name"],
+                "group": entry["group"],
+                "header": entry["header"],
+                "summary": entry["headerDoc"] or entry["summary"],
+                "signatures": [],
+                "notes": [],
+                "optionsType": entry["options"],
+                "container": entry["container"],
+                "interactive": entry["interactive"],
+                "properties": entry["properties"],
+            }
+            merged[entry["name"]] = record
+            order.append(entry["name"])
+        record["signatures"].append(entry["signature"])
+        if entry["summary"] and entry["summary"] not in record["notes"]:
+            record["notes"].append(entry["summary"])
+        # An overload that takes the options struct is the one that describes
+        # the component; the other may take none at all.
+        if entry["options"] and not record["optionsType"]:
+            record["optionsType"] = entry["options"]
+            record["properties"] = entry["properties"]
+        record["interactive"] = record["interactive"] or entry["interactive"]
+    return [merged[name] for name in order]
+
+
 def main():
     groups = group_map()
 
@@ -329,19 +403,29 @@ def main():
     entries.sort(key=lambda e: (order.get(e["group"], len(order)), e["header"], e["name"]))
 
     text = render(entries)
+    payload = json.dumps(merge_overloads(entries), indent=2) + "\n"
+
     if "--check" in sys.argv:
-        current = OUT.read_text() if OUT.exists() else ""
-        if current != text:
-            print(f"{OUT.relative_to(ROOT)} is stale — run tools/generate_meta.py",
-                  file=sys.stderr)
+        stale = []
+        if (OUT.read_text() if OUT.exists() else "") != text:
+            stale.append(OUT)
+        if (JSON_OUT.read_text() if JSON_OUT.exists() else "") != payload:
+            stale.append(JSON_OUT)
+        if stale:
+            for path in stale:
+                print(f"{path.relative_to(ROOT)} is stale", file=sys.stderr)
+            print("run tools/generate_meta.py", file=sys.stderr)
             return 1
-        print(f"{len(entries)} components, table is current")
+        print(f"{len(entries)} components, both tables are current")
         return 0
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text)
+    JSON_OUT.parent.mkdir(parents=True, exist_ok=True)
+    JSON_OUT.write_text(payload)
     print(f"{OUT.relative_to(ROOT)}: {len(entries)} components in "
           f"{len({e['group'] for e in entries})} groups")
+    print(f"{JSON_OUT.relative_to(ROOT)}: the same table, for the site")
     return 0
 
 

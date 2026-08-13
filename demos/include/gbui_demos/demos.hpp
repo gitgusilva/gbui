@@ -1,10 +1,10 @@
-// The demo catalogue: six application screens, built from nothing but the
+// The demo catalogue: seven application screens, built from nothing but the
 // public library.
 //
 // Each demo is a class with one method. It is handed a `Ui`, the frame's
 // `Interaction` and a clock, and it writes a tree — exactly what an application
 // does, and nothing more. It never sees a window, a canvas, a font or a theme,
-// which is why the same six screens run in a native window, in a headless
+// which is why the same screens run in a native window, in a headless
 // screenshot and in a browser through WebAssembly without one line of them
 // knowing which.
 //

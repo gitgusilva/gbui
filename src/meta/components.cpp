@@ -10,13 +10,14 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(52);
+    out.reserve(58);
 
     out.push_back(ComponentInfo{
         "badge",
         "Components",
         "gbui/widgets/badge.hpp",
         "",
+        "A pill — a branch name, a counter, a status chip.",
         "BadgeOptions",
         {
             PropertyInfo{"background", PropertyKind::Token, "Token", "Token::BgOverlay", {}, "", false},
@@ -31,6 +32,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/button.hpp",
         "Without an `Interaction` there is no pointer to start a ripple from, so this overload ignores `options.ripple`. Everything else is identical.",
+        "A button, in the four variants the design system has.",
         "ButtonOptions",
         {
             PropertyInfo{"variant", PropertyKind::Enum, "ButtonVariant", "ButtonVariant::Secondary", {"Primary", "Secondary", "Ghost", "Danger"}, "", false},
@@ -38,6 +40,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"block", PropertyKind::Bool, "bool", "false", {}, "Stretches to fill the row it is in, the way a COMMIT button does.", false},
             PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height.", false},
+            PropertyInfo{"iconSize", PropertyKind::Number, "float", "0.0f", {}, "The glyph's size. Zero matches the label's, which is what a button with a label wants; one with only an icon in it usually wants more, since the glyph is the whole button rather than a mark beside a word.", false},
             PropertyInfo{"id", PropertyKind::Text, "std::string_view", "", {}, "", false},
             PropertyInfo{"ripple", PropertyKind::Bool, "std::optional<bool>", "", {}, "A circle of ink that grows from where the pointer went down. Unset — the normal case — asks the active `Design`: Material throws ink, the others change the surface. Set, it overrides that decision for this one button, which is the escape hatch and not the default. Either way it needs the overload below (the ripple starts at the *point* the press landed) and an `id`, since that is what the animation is keyed by.", true},
         },
@@ -50,6 +53,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/button.hpp",
         "The same button, given what it needs to draw a press.",
+        "A button, in the four variants the design system has.",
         "ButtonOptions",
         {
             PropertyInfo{"variant", PropertyKind::Enum, "ButtonVariant", "ButtonVariant::Secondary", {"Primary", "Secondary", "Ghost", "Danger"}, "", false},
@@ -57,6 +61,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"block", PropertyKind::Bool, "bool", "false", {}, "Stretches to fill the row it is in, the way a COMMIT button does.", false},
             PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height.", false},
+            PropertyInfo{"iconSize", PropertyKind::Number, "float", "0.0f", {}, "The glyph's size. Zero matches the label's, which is what a button with a label wants; one with only an icon in it usually wants more, since the glyph is the whole button rather than a mark beside a word.", false},
             PropertyInfo{"id", PropertyKind::Text, "std::string_view", "", {}, "", false},
             PropertyInfo{"ripple", PropertyKind::Bool, "std::optional<bool>", "", {}, "A circle of ink that grows from where the pointer went down. Unset — the normal case — asks the active `Design`: Material throws ink, the others change the surface. Set, it overrides that decision for this one button, which is the escape hatch and not the default. Either way it needs the overload below (the ripple starts at the *point* the press landed) and an `id`, since that is what the animation is keyed by.", true},
         },
@@ -69,6 +74,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/icon.hpp",
         "",
+        "One icon from the built-in Lucide set.",
         "IconOptions",
         {
             PropertyInfo{"color", PropertyKind::Token, "Token", "Token::Text", {}, "", false},
@@ -80,10 +86,34 @@ std::vector<ComponentInfo> build() {
         "NodeId icon(Ui& ui, Icon which, const IconOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "image",
+        "Components",
+        "gbui/widgets/image.hpp",
+        "Draws `source` inside a box. The picture is sampled bilinearly and cut by the same rounded corners the boxes use, so an image in a card and the card agree about the curve. The pixels are **borrowed for the frame**: they are read when the frame is painted, not when this is called, and nothing here copies them. That is the same contract a label's `string_view` has, and the same one it breaks in the same way — a buffer that dies at the end of the enclosing scope is a picture of whatever the stack holds by the time anyone looks.",
+        "A picture in a box — HTML's `<img>`, with the parts of it that are a toolkit's business.",
+        "ImageOptions",
+        {
+            PropertyInfo{"width", PropertyKind::Length, "Length", "kAuto", {}, "Its box. Either left `kAuto` takes the picture's own size in that direction, so an image with neither set is drawn at 1:1.", false},
+            PropertyInfo{"height", PropertyKind::Length, "Length", "kAuto", {}, "", false},
+            PropertyInfo{"fit", PropertyKind::Opaque, "ImageFit", "ImageFit::Contain", {}, "How the picture meets a box that is not its shape.", false},
+            PropertyInfo{"radius", PropertyKind::Number, "float", "0.0f", {}, "Rounded corners, cut from the picture itself — an avatar is this and a radius of half its size.", false},
+            PropertyInfo{"opacity", PropertyKind::Number, "float", "1.0f", {}, "", false},
+            PropertyInfo{"background", PropertyKind::Opaque, "std::optional<Fill>", "", {}, "Behind the picture, which is what shows through a transparent one and what fills the letterboxing `Contain` leaves.", true},
+            PropertyInfo{"padding", PropertyKind::Edges, "Edges", "", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "Kept out of the flow's stretch, like an icon: a picture has a size and a container has no business overriding it.", false},
+            PropertyInfo{"shrink", PropertyKind::Number, "float", "0.0f", {}, "", false},
+            PropertyInfo{"alt", PropertyKind::Text, "std::string_view", "", {}, "Drawn instead when there are no pixels — HTML's `alt`, doing the job `alt` actually does in a browser rather than the one it is credited with. An empty one leaves the box empty, which is right for decoration. A missing logo in a list of companies is not decoration, and a row that silently loses its mark is worse than one showing three letters.", false},
+        },
+        false,
+        false,
+        "NodeId image(Ui& ui, const Bitmap& source, const ImageOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "beginListRow",
         "Components",
         "gbui/widgets/listRow.hpp",
         "Opens a row. Returns a Scope, so its contents are written inside the braces. `selected` washes the row in the accent at 18%, `hovered` uses `surfaceHover`, and both are passed in — components hold no state.",
+        "A row of a list: the sidebar's branches, the commit list, the changed files.",
         "ListRowOptions",
         {
             PropertyInfo{"selected", PropertyKind::Bool, "bool", "false", {}, "", false},
@@ -102,6 +132,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/panel.hpp",
         "",
+        "A surface with a border and a radius — a card, a dialog body, a docked pane.",
         "PanelOptions",
         {
             PropertyInfo{"background", PropertyKind::Token, "Token", "Token::BgElevated", {}, "", false},
@@ -121,6 +152,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/spacing.hpp",
         "A hairline. Horizontal in a column, vertical in a row: pass the direction of the container it sits in.",
+        "The two nodes that exist to take up room, or to refuse to.",
         "",
         {},
         false,
@@ -132,6 +164,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/spacing.hpp",
         "Fills the free space on the main axis — the flexible gap between a title and the actions on the far side of a toolbar.",
+        "The two nodes that exist to take up room, or to refuse to.",
         "",
         {},
         false,
@@ -143,6 +176,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/text.hpp",
         "",
+        "Runs of text, and the two semantic shorthands over them.",
         "",
         {},
         false,
@@ -154,6 +188,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/text.hpp",
         "A line of text whose runs differ — in colour, weight, slant or decoration. Built as a row of runs sharing a line, which is the honest shape given that a node carries one style. With `wrap` it becomes a *wrapping* row, so the line breaks between spans — see the caveat on that option. A paragraph that has to break mid-sentence still wants `text` with `TextOverflow::Wrap` and one colour, or a gradient across the whole run. Runs are centred against each other rather than sitting on a shared baseline, because `Align::Baseline` is not implemented yet. Spans of one size — the usual case — look identical either way.",
+        "Runs of text, and the two semantic shorthands over them.",
         "RichTextOptions",
         {
             PropertyInfo{"align", PropertyKind::Opaque, "TextAlign", "TextAlign::Start", {}, "", false},
@@ -170,6 +205,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/text.hpp",
         "Small, uppercase, muted: the \"UNSTAGED (1)\" kind of heading.",
+        "Runs of text, and the two semantic shorthands over them.",
         "",
         {},
         false,
@@ -181,6 +217,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/text.hpp",
         "Semantic shorthands, in the sense HTML gives them: `strong` is importance and `emphasis` is stress, and each happens to be drawn with a weight or a slant. They exist so a call site says what it means rather than how it looks, which is what lets the look change later.",
+        "Runs of text, and the two semantic shorthands over them.",
         "",
         {},
         false,
@@ -192,6 +229,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/text.hpp",
         "A run of text with the theme's colours applied — the common case that would otherwise be two structs at every call site.",
+        "Runs of text, and the two semantic shorthands over them.",
         "TextOptions",
         {
             PropertyInfo{"color", PropertyKind::Token, "Token", "Token::Text", {}, "", false},
@@ -217,6 +255,7 @@ std::vector<ComponentInfo> build() {
         "Components",
         "gbui/widgets/toolbar.hpp",
         "",
+        "A horizontal bar of actions.",
         "ToolbarOptions",
         {
             PropertyInfo{"height", PropertyKind::Number, "float", "40.0f", {}, "", false},
@@ -234,6 +273,7 @@ std::vector<ComponentInfo> build() {
         "Containers",
         "gbui/widgets/box.hpp",
         "Opens a container. Everything until the returned scope dies is inside it.",
+        "The general container, the way `<div>` is one.",
         "BoxOptions",
         {
             PropertyInfo{"direction", PropertyKind::Opaque, "Direction", "Direction::Row", {}, "", false},
@@ -272,6 +312,7 @@ std::vector<ComponentInfo> build() {
         "Containers",
         "gbui/widgets/scroll.hpp",
         "Opens a scroll container. The content is laid out at its natural size and clipped to the viewport, and the offset moves it. Wheel over the container scrolls it; Page Up, Page Down, Home and End do too when it has focus; the bar can be dragged. Everything drawn inside costs a node, so this is a *scrolling* view and not a *virtualised* one — 50 000 rows here really do build 50 000 nodes. When the rows are uniform, `virtualList` builds only the visible ones — see virtualList.hpp.",
+        "A scroll container.",
         "ScrollOptions",
         {
             PropertyInfo{"direction", PropertyKind::Opaque, "Direction", "Direction::Column", {}, "", false},
@@ -296,10 +337,23 @@ std::vector<ComponentInfo> build() {
         "Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const ScrollOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "scrollbar",
+        "Containers",
+        "gbui/widgets/scroll.hpp",
+        "Draws the bar for a scroll view that is not where the bar belongs. A bar normally lives inside the view it drives, and `beginScroll` puts it there. A table is the case that forced this one out: its rows scroll vertically *inside* a box that scrolls horizontally, so the row view's own right-hand edge is out at the end of the widest column, and the bar drawn against it is a bar the reader has to scroll sideways to find. A browser has no such problem, because both bars belong to the visible box; this is how a caller says the same thing here. `box` is in the current container's coordinates — where the bar should be, not where the content is. The ids are the view's own, so the press, the drag and the paging are still handled by `beginScroll`: this draws, it does not behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you use it, or there will be two.",
+        "A scroll container.",
+        "",
+        {},
+        false,
+        true,
+        "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true);",
+    });
+    out.push_back(ComponentInfo{
         "table",
         "Containers",
         "gbui/widgets/table.hpp",
         "Draws a table and reports what the reader did to it. `cell` is called for each visible cell and builds whatever belongs there. It is given the row and the column; the box it draws into is already the right width, because **the widths are resolved once for the whole table** rather than negotiated per row. That is the difference between a table and a list of rows that happen to contain the same number of things. The application owns the data, the order and the selection. This owns the geometry.",
+        "A table: columns that agree, a header that stays, and rows that virtualise.",
         "TableOptions",
         {
             PropertyInfo{"rowHeight", PropertyKind::Number, "float", "30.0f", {}, "", false},
@@ -323,6 +377,7 @@ std::vector<ComponentInfo> build() {
         "Containers",
         "gbui/widgets/tabs.hpp",
         "Builds the panel bodies for a tab strip. Separate from `tabs` because the two are rarely siblings: a vertical strip sits beside its panels and a horizontal one above them, and a caller often puts a toolbar or a splitter between them. An unselected panel is built inside a box of no height that clips, so it takes part in nothing the reader can see while still being *there* — which is the whole difference `lazy` turns off.",
+        "A strip of tabs.",
         "TabPanelsOptions",
         {
             PropertyInfo{"lazy", PropertyKind::Bool, "bool", "false", {}, "Build only the selected panel, and skip the rest entirely. Off by default, which is what a hidden `<div>` does on the web: it is still in the document, so anything that measures it or looks it up finds it. Turning it on is cheaper — an unbuilt panel costs nothing to lay out or paint — and the price is that everything about the panels the reader is not looking at stops existing: `input.frameOf` on a control inside one returns nothing, and any component that places itself from last frame's geometry starts from scratch when its tab comes back. For a handful of pages the difference is not worth thinking about. For a window whose tabs each hold a table of fifty thousand rows it is the difference between usable and not.", false},
@@ -336,6 +391,7 @@ std::vector<ComponentInfo> build() {
         "Containers",
         "gbui/widgets/tabs.hpp",
         "Draws the strip and reports which tab the user chose, or nothing. Stateless like everything else: the caller owns the selected index and hands it in. The strip is one focusable stop — the ARIA \"roving tabindex\" pattern — so Tab moves *past* the whole strip rather than through every tab in it, and the arrow keys move between them once it has the keyboard. Not built yet, and named rather than half-done: an overflow menu for when the tabs do not fit (they currently shrink and elide), a close affordance, and reordering by drag.",
+        "A strip of tabs.",
         "TabsOptions",
         {
             PropertyInfo{"orientation", PropertyKind::Enum, "TabsOrientation", "TabsOrientation::Horizontal", {"Horizontal", "Vertical"}, "", false},
@@ -344,6 +400,8 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"gap", PropertyKind::Number, "float", "2.0f", {}, "", false},
             PropertyInfo{"indicator", PropertyKind::Bool, "bool", "true", {}, "The moving bar marking the active tab: under it when horizontal, down its leading edge when vertical. It slides between tabs when an animator is present and simply appears on the new one when there is not.", false},
             PropertyInfo{"indicatorWidth", PropertyKind::Number, "float", "2.0f", {}, "", false},
+            PropertyInfo{"indicatorInset", PropertyKind::Number, "float", "0.0f", {}, "How far the indicator sits from the strip's trailing edge — under a horizontal strip, beside a vertical one. Zero puts it hard against the edge, which is what a strip with a rule under it wants: the bar and the rule are then the same line, one of them lit. A strip without a rule usually wants a pixel or two of air, or the bar reads as an underline attached to the word rather than as a marker under the tab.", false},
+            PropertyInfo{"itemPadding", PropertyKind::Edges, "std::optional<Edges>", "", {}, "The space inside each tab. Unset takes a default that fits the orientation: horizontal tabs get room under the label so the indicator clears its descenders, and vertical rows keep a lane free on the leading edge so the label does not shift sideways when a tab becomes the active one. Here for the same reason `Style::padding` is on every node — a caller who disagrees with the spacing should be able to say so rather than work around it — and it is the one piece of a tab strip's spacing the caller could not reach.", true},
             PropertyInfo{"rule", PropertyKind::Bool, "bool", "true", {}, "A rule along the whole strip — under it, or beside it — so the strip reads as an edge rather than as floating text.", false},
         },
         false,
@@ -355,6 +413,7 @@ std::vector<ComponentInfo> build() {
         "Containers",
         "gbui/widgets/virtualList.hpp",
         "A list that builds only what is on screen. The trick is not the clipping — the scroll view already clips. It is that the rows that are *not* visible are replaced by two spacers, one standing in for everything above the slice and one for everything below. The content is therefore the full height it would have been, so the scrollbar, `maxOffset` and Page Down all keep working on the real list, while the arena holds the forty rows a person can actually see. VirtualSlice shown = virtualList(ui, input, \"history\", state, {.count = commits.size(), .rowHeight = 28.0f}, [&](Ui& ui, std::size_t index) { listRow(ui, input, rowId(index), …); }); `row` is called once per visible index, in order, inside a box of exactly `rowHeight`. It must not open a scope it leaves open. The viewport is last frame's, like everything else that needs geometry before layout has run, so the first frame after a resize builds the previous size's slice — and overscan is what keeps that from showing.",
+        "A list that builds only what is on screen.",
         "VirtualListOptions",
         {
             PropertyInfo{"count", PropertyKind::Number, "std::size_t", "0", {}, "How many rows exist. Only the visible ones are ever built.", false},
@@ -380,6 +439,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/checkbox.hpp",
         "Returns true on the frame the user toggled it.",
+        "A checkbox.",
         "CheckboxOptions",
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
@@ -395,6 +455,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/colorPicker.hpp",
         "The same picker behind a swatch, opened in a popover. Two entry points rather than a flag, because they are two different components in every way that matters: the inline one is always open and owns its space, and this one is a control in a form that borrows space when asked. They share the state and the drawing, which is the part worth sharing. **The application owns whether it is open**, as it does for every other overlay here — `state.open` is a plain bool it can set, restore or ignore.",
+        "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
         "ColorFieldOptions",
         {
             PropertyInfo{"height", PropertyKind::Number, "float", "28.0f", {}, "The trigger's own size. The popover takes `width` from the picker options above, as everything else does.", false},
@@ -412,6 +473,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/colorPicker.hpp",
         "Draws the picker and edits `state` in place. The square is built the way every picker on the web is: the pure hue behind, a white-to-transparent gradient across it and a transparent-to-black gradient down it. Two gradients over a fill is a two-dimensional ramp, and it costs three nodes rather than a per-pixel shader the painter does not have.",
+        "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
         "ColorPickerOptions",
         {
             PropertyInfo{"alpha", PropertyKind::Bool, "bool", "true", {}, "The alpha rail and the alpha in the readout. Off for a picker choosing a theme token, where a translucent colour is not a valid answer.", false},
@@ -432,6 +494,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/datePicker.hpp",
         "A calendar behind a field, opened in a popover. The counterpart to `colorField`, and the same split: the inline calendar owns its space, this one borrows it. They share the state and the grid.",
+        "A calendar: a month of days, walked with the pointer or the keyboard.",
         "DateFieldOptions",
         {
             PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "\"Select a date…\"", {}, "Shown when nothing is chosen. A field with no value has to say so. Falling back to today would be a lie — \"no date\" and \"today\" are different answers, and a form that silently fills one in gets the other submitted.", false},
@@ -452,6 +515,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/datePicker.hpp",
         "Draws a month and reports the day chosen, if any. Stateless like everything else: `selected` comes in, the state carries only what is *being looked at*. The arrow keys move by a day and Page Up and Page Down by a month, both skipping nothing — a day outside the bounds is drawn and dimmed rather than hidden, because a calendar with holes in it is harder to read than one with unavailable days in it.",
+        "A calendar: a month of days, walked with the pointer or the keyboard.",
         "DatePickerOptions",
         {
             PropertyInfo{"minimum", PropertyKind::Opaque, "Date", "", {}, "Nothing before this, or after that, can be chosen. An invalid date means no bound.", false},
@@ -471,6 +535,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/dateTimePicker.hpp",
         "A calendar and a clock behind one input. The pair belongs behind a single field far more often than beside each other on a page — a due date, a scheduled run, a deadline are one value, and asking for it in two controls invites half of it being filled in.",
+        "A calendar and a clock, chosen together.",
         "DateTimeFieldOptions",
         {
             PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "\"Select a date and time…\"", {}, "", false},
@@ -491,6 +556,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/dateTimePicker.hpp",
         "The two pickers, sharing one value.",
+        "A calendar and a clock, chosen together.",
         "DateTimePickerOptions",
         {
             PropertyInfo{"date", PropertyKind::Opaque, "DatePickerOptions", "", {}, "", false},
@@ -507,6 +573,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/hyperlink.hpp",
         "Returns true on the frame it was followed — by click, or by Return while focused. `hyperlink` rather than `link`, because `link` in a C++ codebase already means the linker, a linked list, or the act of linking; this is the one thing it does not usually mean.",
+        "A hyperlink.",
         "HyperlinkOptions",
         {
             PropertyInfo{"href", PropertyKind::Text, "std::string_view", "", {}, "Where it points. Following it hands this to `openUrl`. Empty follows nothing and only reports the click, which is what a link that scrolls somewhere inside the application wants.", false},
@@ -526,6 +593,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/label.hpp",
         "Returns the id to focus when the label was clicked, or nothing. The caller hands it to `Interaction::focus`, which keeps the toolkit from mutating interaction state behind a component's back: if (const auto target = label(ui, input, \"f.name\", \"Repository\", {.forId = \"name\"})) interaction.focus(*target);",
+        "A caption for a control.",
         "LabelOptions",
         {
             PropertyInfo{"forId", PropertyKind::Text, "std::string_view", "", {}, "The control this names. Clicking the label focuses it, exactly as `<label for>` does, unless that control is disabled or read-only.", false},
@@ -545,6 +613,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/numberField.hpp",
         "The value is clamped and rounded before it is returned, so a caller never sees one outside the range.",
+        "A number, with step buttons and the wheel.",
         "NumberFieldOptions",
         {
             PropertyInfo{"minimum", PropertyKind::Number, "double", "-1e18", {}, "", false},
@@ -568,6 +637,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/progress.hpp",
         "Not an input, but it belongs with them: the same track, the same tokens.",
+        "A progress bar, determinate or not.",
         "ProgressOptions",
         {
             PropertyInfo{"value", PropertyKind::Number, "double", "0.0", {}, "Below zero draws the indeterminate form.", false},
@@ -586,6 +656,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/radio.hpp",
         "Returns true on the frame it was chosen; a radio that is already selected reports nothing, because choosing it again is not a change.",
+        "One option of a group.",
         "RadioOptions",
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
@@ -601,6 +672,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/richEditor.hpp",
         "Draws the editor and edits `document` in place. **What this is and is not.** It is a block editor: paragraphs, headings, lists, quotes and code blocks, with bold, italic, underline, strikethrough, inline code and links over ranges within a block. Typing, splitting a block with Return and merging with Backspace all work, and the toolbar is the caller's to compose. It is **not** finished, and the gaps are worth naming rather than discovering: no images — the painter cannot decode one yet; no undo; the caret moves by character and by block, not by *visual line*, so a block that wraps is edited by a caret that does not know where the lines are; and there is no nesting of lists. Each of those is a piece of work of its own, and three of them want engine features that do not exist.",
+        "A rich text editor: blocks of text, marks over ranges, and a toolbar.",
         "RichEditorOptions",
         {
             PropertyInfo{"toolbar", PropertyKind::Opaque, "std::vector<ToolbarItem>", "", {}, "Empty takes `defaultToolbar()`. Anything else is exactly what is drawn, in that order — which is how a caller adds its own buttons, drops the ones it does not want, or reorders the rest.", false},
@@ -620,6 +692,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/slider.hpp",
         "Follows the pointer while it is held, even when it wanders off the track — which is what `Interaction::dragging` is for.",
+        "A single-value slider.",
         "SliderOptions",
         {
             PropertyInfo{"minimum", PropertyKind::Number, "double", "0.0", {}, "", false},
@@ -641,6 +714,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/switchToggle.hpp",
         "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\".",
+        "A switch.",
         "SwitchOptions",
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
@@ -657,6 +731,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/textField.hpp",
         "",
+        "A single-line text field.",
         "TextFieldOptions",
         {
             PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "", {}, "", false},
@@ -679,6 +754,7 @@ std::vector<ComponentInfo> build() {
         "Controls",
         "gbui/widgets/timePicker.hpp",
         "Columns of hours, minutes and — when asked for — seconds, each scrolled to its own value. Columns rather than steppers because a time is picked far more often than it is nudged: \"quarter past two\" is two glances, and two number fields make it two edits. Each column keeps its selection in view, so opening the picker on 23:45 does not show midnight.",
+        "A time of day, chosen from columns of hours and minutes.",
         "TimePickerOptions",
         {
             PropertyInfo{"use24Hour", PropertyKind::Bool, "bool", "true", {}, "Twelve-hour display with an AM/PM column. The *value* is always 0–23.", false},
@@ -701,6 +777,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/menu.hpp",
         "Returns true on the frame it was chosen.",
+        "The rows inside a popover.",
         "MenuItemOptions",
         {
             PropertyInfo{"leading", PropertyKind::Icon, "std::optional<Icon>", "", {}, "", true},
@@ -721,6 +798,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/menu.hpp",
         "A rule between groups of items.",
+        "The rows inside a popover.",
         "",
         {},
         false,
@@ -732,6 +810,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/modal.hpp",
         "The caller supplies the position so dragging survives the tree being rebuilt, and gets it back updated.",
+        "A modal dialog, with a backdrop and a header you can drag it by.",
         "ModalOptions",
         {
             PropertyInfo{"width", PropertyKind::Number, "float", "420.0f", {}, "", false},
@@ -750,6 +829,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/modal.hpp",
         "The row of buttons at the foot of a dialog, pushed to the right.",
+        "A modal dialog, with a backdrop and a header you can drag it by.",
         "",
         {},
         true,
@@ -761,6 +841,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/popover.hpp",
         "Returns a scope, so its contents are written inside the braces like any other container.",
+        "An empty floating surface the caller fills.",
         "PopoverOptions",
         {
             PropertyInfo{"minWidth", PropertyKind::Number, "float", "160.0f", {}, "", false},
@@ -783,6 +864,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/select.hpp",
         "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box — not the rows — keeps the keyboard, so Tab leaves the control rather than walking into the popup.",
+        "A closed box that opens a list.",
         "SelectOptions",
         {
             PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "\"Select…\"", {}, "", false},
@@ -803,6 +885,7 @@ std::vector<ComponentInfo> build() {
         "Overlays",
         "gbui/widgets/tooltip.hpp",
         "Draws nothing when the anchor is not hovered, so the call can sit unconditionally beside the control it describes.",
+        "A tooltip, shown while its anchor is hovered.",
         "TooltipOptions",
         {
             PropertyInfo{"maxWidth", PropertyKind::Number, "float", "260.0f", {}, "", false},
@@ -818,6 +901,7 @@ std::vector<ComponentInfo> build() {
         "Charts",
         "gbui/widgets/chart.hpp",
         "Bars, columns or lollipops over a shared scale. One function rather than four because they differ only in how a value is turned into a rectangle: transposing the axes gives a bar chart from a column chart, stacking changes where each bar starts, and a lollipop is a bar drawn as a stem. Splitting them would mean four copies of the scale, the axis, the grid and the hit testing.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "BarChartOptions",
         {
             PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data.", false},
@@ -829,23 +913,59 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
             PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "`std::snprintf` style, for the value labels and readouts.", false},
             PropertyInfo{"horizontal", PropertyKind::Bool, "bool", "false", {}, "Bars run left to right from a category axis down the side, instead of bottom to top from one along the bottom. Long category names are the usual reason: horizontal gives them room to be read.", false},
-            PropertyInfo{"grouping", PropertyKind::Enum, "BarGrouping", "BarGrouping::Grouped", {"Grouped", "Stacked"}, "", false},
-            PropertyInfo{"shape", PropertyKind::Enum, "BarShape", "BarShape::Bar", {"Bar", "Lollipop"}, "", false},
+            PropertyInfo{"grouping", PropertyKind::Enum, "BarGrouping", "BarGrouping::Grouped", {"Grouped", "Stacked"}, "How several series share a category: side by side, or on top of each other.", false},
+            PropertyInfo{"shape", PropertyKind::Enum, "BarShape", "BarShape::Bar", {"Bar", "Lollipop"}, "A filled rectangle from the baseline, or a stem with a dot at the value.", false},
             PropertyInfo{"categoryPadding", PropertyKind::Number, "float", "0.28f", {}, "Share of each category's slot left as gap, 0 to 0.9.", false},
             PropertyInfo{"seriesGap", PropertyKind::Number, "float", "2.0f", {}, "Between the bars of different series in one category, in pixels.", false},
             PropertyInfo{"radius", PropertyKind::Number, "float", "2.0f", {}, "", false},
             PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "Names along the category axis. Fewer than there are values leaves the rest unlabelled rather than renumbering them.", false},
             PropertyInfo{"categoryAxis", PropertyKind::Number, "float", "22.0f", {}, "Room for the category names. Zero draws none.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "The key drawn under the chart, and the focus a click on it gives.", false},
         },
         false,
         true,
         "ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, const BarChartOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "barChart",
+        "Charts",
+        "gbui/widgets/chart.hpp",
+        "The same bars, showing only `view` of the categories and letting the reader move it. The view is the caller's, like everything else here, and sharing one is the point: a volume chart handed the same `ChartView` as the price chart above it zooms when that one is swept, because they are looking at the same window of the same data rather than each keeping their own idea of it.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
+        "BarChartOptions",
+        {
+            PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data.", false},
+            PropertyInfo{"autoScale", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"tickCount", PropertyKind::Number, "std::optional<int>", "", {}, "Each of these falls back to `Design::chart` when unset.", true},
+            PropertyInfo{"axisWidth", PropertyKind::Number, "std::optional<float>", "", {}, "Room for the value labels. Zero draws none.", true},
+            PropertyInfo{"height", PropertyKind::Number, "float", "160.0f", {}, "", false},
+            PropertyInfo{"grid", PropertyKind::Bool, "std::optional<bool>", "", {}, "", true},
+            PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "`std::snprintf` style, for the value labels and readouts.", false},
+            PropertyInfo{"horizontal", PropertyKind::Bool, "bool", "false", {}, "Bars run left to right from a category axis down the side, instead of bottom to top from one along the bottom. Long category names are the usual reason: horizontal gives them room to be read.", false},
+            PropertyInfo{"grouping", PropertyKind::Enum, "BarGrouping", "BarGrouping::Grouped", {"Grouped", "Stacked"}, "How several series share a category: side by side, or on top of each other.", false},
+            PropertyInfo{"shape", PropertyKind::Enum, "BarShape", "BarShape::Bar", {"Bar", "Lollipop"}, "A filled rectangle from the baseline, or a stem with a dot at the value.", false},
+            PropertyInfo{"categoryPadding", PropertyKind::Number, "float", "0.28f", {}, "Share of each category's slot left as gap, 0 to 0.9.", false},
+            PropertyInfo{"seriesGap", PropertyKind::Number, "float", "2.0f", {}, "Between the bars of different series in one category, in pixels.", false},
+            PropertyInfo{"radius", PropertyKind::Number, "float", "2.0f", {}, "", false},
+            PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "Names along the category axis. Fewer than there are values leaves the rest unlabelled rather than renumbering them.", false},
+            PropertyInfo{"categoryAxis", PropertyKind::Number, "float", "22.0f", {}, "Room for the category names. Zero draws none.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "The key drawn under the chart, and the focus a click on it gives.", false},
+        },
+        false,
+        true,
+        "ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const BarChartOptions& options = {}, const ChartZoom& zoom = {});",
+    });
+    out.push_back(ComponentInfo{
         "candlestickChart",
         "Charts",
         "gbui/widgets/chart.hpp",
         "Open, high, low and close per period. The one chart here whose scale deliberately does **not** reach zero. Every other chart in this file widens its range to include the baseline, because a bar that does not start at zero misstates the ratio between two bars. A price has no such baseline — forcing one on a stock that trades between 180 and 190 squeezes the entire year into the top five percent of the plot and hides the only thing the chart was drawn to show.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "CandlestickOptions",
         {
             PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data.", false},
@@ -857,22 +977,57 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
             PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "`std::snprintf` style, for the value labels and readouts.", false},
             PropertyInfo{"categoryPadding", PropertyKind::Number, "float", "0.3f", {}, "Share of each period's slot left as gap, 0 to 0.9.", false},
+            PropertyInfo{"maxBodyWidth", PropertyKind::Number, "float", "14.0f", {}, "A ceiling on the body, in pixels, whatever the slot allows. A candle is a *mark*, not a bar: zooming in should make it taller and put more air around it, not fatten it. Without the ceiling a chart zoomed to a dozen periods draws them as forty-pixel bricks, which is the width of a bar chart's column and reads as one. The default barely bites at a full view — forty-odd candles across a card land near it anyway — and does all its work once the reader has swept a range.", false},
             PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "", false},
             PropertyInfo{"categoryAxis", PropertyKind::Number, "float", "22.0f", {}, "", false},
             PropertyInfo{"rising", PropertyKind::Token, "std::optional<Token>", "", {}, "Unset takes the theme's added/removed colours, which are already the two a reader of this application associates with up and down.", true},
             PropertyInfo{"falling", PropertyKind::Token, "std::optional<Token>", "", {}, "", true},
             PropertyInfo{"hollowRising", PropertyKind::Bool, "bool", "false", {}, "Draw rising candles as an outline instead of a solid body. The other common convention, and worth having: on a dense chart the hollow bodies recede and the falling ones stand out, which is what a reader watching for drops actually wants.", false},
             PropertyInfo{"lineWidth", PropertyKind::Number, "float", "1.0f", {}, "Width of the wick, and of a hollow body's outline.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
         },
         false,
         true,
         "ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Candle>& candles, const CandlestickOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "candlestickChart",
+        "Charts",
+        "gbui/widgets/chart.hpp",
+        "The same candles, showing only `view` of them — the overload a price chart and its volume share, so sweeping either zooms both.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
+        "CandlestickOptions",
+        {
+            PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data.", false},
+            PropertyInfo{"autoScale", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"tickCount", PropertyKind::Number, "std::optional<int>", "", {}, "Each of these falls back to `Design::chart` when unset.", true},
+            PropertyInfo{"axisWidth", PropertyKind::Number, "std::optional<float>", "", {}, "Room for the value labels. Zero draws none.", true},
+            PropertyInfo{"height", PropertyKind::Number, "float", "160.0f", {}, "", false},
+            PropertyInfo{"grid", PropertyKind::Bool, "std::optional<bool>", "", {}, "", true},
+            PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "`std::snprintf` style, for the value labels and readouts.", false},
+            PropertyInfo{"categoryPadding", PropertyKind::Number, "float", "0.3f", {}, "Share of each period's slot left as gap, 0 to 0.9.", false},
+            PropertyInfo{"maxBodyWidth", PropertyKind::Number, "float", "14.0f", {}, "A ceiling on the body, in pixels, whatever the slot allows. A candle is a *mark*, not a bar: zooming in should make it taller and put more air around it, not fatten it. Without the ceiling a chart zoomed to a dozen periods draws them as forty-pixel bricks, which is the width of a bar chart's column and reads as one. The default barely bites at a full view — forty-odd candles across a card land near it anyway — and does all its work once the reader has swept a range.", false},
+            PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "", false},
+            PropertyInfo{"categoryAxis", PropertyKind::Number, "float", "22.0f", {}, "", false},
+            PropertyInfo{"rising", PropertyKind::Token, "std::optional<Token>", "", {}, "Unset takes the theme's added/removed colours, which are already the two a reader of this application associates with up and down.", true},
+            PropertyInfo{"falling", PropertyKind::Token, "std::optional<Token>", "", {}, "", true},
+            PropertyInfo{"hollowRising", PropertyKind::Bool, "bool", "false", {}, "Draw rising candles as an outline instead of a solid body. The other common convention, and worth having: on a dense chart the hollow bodies recede and the falling ones stand out, which is what a reader watching for drops actually wants.", false},
+            PropertyInfo{"lineWidth", PropertyKind::Number, "float", "1.0f", {}, "Width of the wick, and of a hollow body's outline.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
+        },
+        false,
+        true,
+        "ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Candle>& candles, ChartView& view, const CandlestickOptions& options = {}, const ChartZoom& zoom = {});",
+    });
+    out.push_back(ComponentInfo{
         "chartBrush",
         "Charts",
         "gbui/widgets/chart.hpp",
-        "A strip of the whole series with the current view as a window over it. The part an ApexCharts-style brush actually earns its keep with is not the zooming — the wheel does that — but the *context*: once zoomed in, a reader has no way to tell where they are or how much they cannot see. The strip answers both without them having to zoom back out. Returns true on any frame the view moved.",
+        "A strip of the whole series with the current view as a window over it. The part an ApexCharts-style brush actually earns its keep with is not the zooming — a drag inside the plot does that, and so does the wheel — but the *context*: once zoomed in, a reader has no way to tell where they are or how much they cannot see. The strip answers both without them having to zoom back out, which is also why it is optional. Returns true on any frame the view moved.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "BrushOptions",
         {
             PropertyInfo{"height", PropertyKind::Number, "float", "46.0f", {}, "", false},
@@ -885,10 +1040,31 @@ std::vector<ComponentInfo> build() {
         "bool chartBrush(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const BrushOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "chartToolbar",
+        "Charts",
+        "gbui/widgets/chart.hpp",
+        "The buttons ApexCharts puts in the corner of a chart: zoom in, zoom out, and put it back. A row of ordinary buttons over the caller's own `ChartView`, and nothing else — which is why it is a component rather than an option on the chart. It has no idea which chart it belongs to, so one row can drive a group of them the same way one view already zooms a price and its volume together, and a caller who wants it somewhere other than the top right corner simply puts it there. The gestures are the primary way in and this is the secondary one, for the same reason a map has both: a sweep says *which range*, and these say *a bit more* — and only one of the two can be pressed by someone who has already lost the thread of where they are. Returns true on any frame the view moved.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
+        "ChartToolbarOptions",
+        {
+            PropertyInfo{"zoomIn", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"zoomOut", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"reset", PropertyKind::Bool, "bool", "true", {}, "Puts the whole series back. Disabled while it already is whole, because a button that does nothing is worse than one that is not there — the reader presses it and learns nothing about why.", false},
+            PropertyInfo{"step", PropertyKind::Number, "double", "0.4", {}, "How much of the window a press takes off, as a fraction of it. 0.4 rather than a half: two presses should not lose 75% of the data, and a reader who wants that has the sweep, which says exactly what to keep.", false},
+            PropertyInfo{"minSpan", PropertyKind::Number, "double", "0.02", {}, "", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "30.0f", {}, "The buttons are square, so this is their size.", false},
+            PropertyInfo{"iconSize", PropertyKind::Number, "float", "17.0f", {}, "Bigger than a button with a label would use: the glyph is the whole button here, and at fourteen pixels in a thirty-pixel square it reads as a mark stranded in the middle of a box.", false},
+        },
+        false,
+        true,
+        "bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartView& view, const ChartToolbarOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "donutChart",
         "Charts",
         "gbui/widgets/chart.hpp",
         "A donut, or a pie when `thickness` is 1. Proof that the canvas node carries more than polylines: each wedge is two arcs and two lines, and an arc is cubics. Nothing here is a special case in the painter — it is the same vector layer the icons ride on.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "DonutOptions",
         {
             PropertyInfo{"size", PropertyKind::Number, "float", "150.0f", {}, "", false},
@@ -900,6 +1076,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"dimAlpha", PropertyKind::Number, "float", "0.3f", {}, "What the wedges that were not singled out fade to.", false},
             PropertyInfo{"legend", PropertyKind::Bool, "bool", "true", {}, "", false},
             PropertyInfo{"legendMaxHeight", PropertyKind::Number, "float", "kAuto", {}, "A ceiling on the legend before it scrolls, so a chart with forty contributors does not grow taller than the ring beside it. `kAuto` matches the donut.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "The readout beside the hovered wedge. A donut's legend already names every slice, so this one is about the *number* — which the legend has no room for once there are more than a handful.", false},
         },
         false,
         true,
@@ -910,6 +1087,7 @@ std::vector<ComponentInfo> build() {
         "Charts",
         "gbui/widgets/chart.hpp",
         "A grid of cells shaded by value. `values` is row-major and may be ragged — a short row simply has fewer cells, which is what a calendar's last week is. The colour is one token at varying strength rather than a rainbow. A multi-hue scale looks richer and reads worse: hue carries no order, so a reader has to consult the legend for every cell, while \"more of the same colour\" needs no legend at all.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "HeatmapOptions",
         {
             PropertyInfo{"rows", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "Names down the side and along the top. Fewer than there are rows or columns leaves the rest unlabelled rather than renumbering them.", false},
@@ -925,6 +1103,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"columnLabels", PropertyKind::Number, "float", "16.0f", {}, "", false},
             PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
             PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
         },
         false,
         true,
@@ -935,6 +1114,7 @@ std::vector<ComponentInfo> build() {
         "Charts",
         "gbui/widgets/chart.hpp",
         "Draws one or more series over a shared scale. The geometry is built here and handed to `Ui::draw`, so the whole chart is one node plus its labels rather than a widget per mark. Hit testing is on the *index* — the pointer's x is turned back into a sample number — which is what lets a tooltip name the right point instead of the nearest pixel.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "ChartOptions",
         {
             PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data — which is what a live readout wants and what a comparison does not.", false},
@@ -947,6 +1127,8 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "Printed beside a hovered value; \"%.0f\" style, as `std::snprintf` takes.", false},
             PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "Names for the samples, used as the readout's heading.", false},
             PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "The key drawn under the chart, and the focus a click on it gives.", false},
         },
         false,
         true,
@@ -957,6 +1139,7 @@ std::vector<ComponentInfo> build() {
         "Charts",
         "gbui/widgets/chart.hpp",
         "The same chart, showing only `view` of the data and letting the reader move it. The view is the caller's, like every other piece of state here — which is what lets two charts share one, so panning a line chart pans the bars under it.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "ChartOptions",
         {
             PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left as they are, the chart takes them from the data — which is what a live readout wants and what a comparison does not.", false},
@@ -969,16 +1152,45 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "Printed beside a hovered value; \"%.0f\" style, as `std::snprintf` takes.", false},
             PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "Names for the samples, used as the readout's heading.", false},
             PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"link", PropertyKind::Opaque, "ChartLink*", "nullptr", {}, "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "The key drawn under the chart, and the focus a click on it gives.", false},
         },
         false,
         true,
         "ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const ChartOptions& options = {}, const ChartZoom& zoom = {});",
     });
     out.push_back(ComponentInfo{
+        "radarChart",
+        "Charts",
+        "gbui/widgets/chart.hpp",
+        "One value per axis, per series, on spokes around a common centre. The chart for a *profile* — a handful of measures that belong together and are compared as a shape rather than read off one at a time: a skills assessment, a wine's tasting notes, one machine's five utilisation figures against another's. Everything it is good at falls apart past about eight axes, where the polygon stops being a shape and becomes a scribble. `series` is the same `Series` every other chart here takes; each value is a spoke, in order, starting at twelve o'clock and going clockwise. Hit testing is by *angle*, so a reader pointing anywhere along a spoke means that axis — the same rule the bars use for a category, for the same reason.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
+        "RadarOptions",
+        {
+            PropertyInfo{"scale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds. Left alone the chart takes them from the data — and always from zero, whatever the data says. A radar is read as an *area*, and area from a non-zero baseline is the same lie a truncated bar tells, told about five axes at once: two profiles a hair apart become one enormous and one tiny.", false},
+            PropertyInfo{"autoScale", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"tickCount", PropertyKind::Number, "std::optional<int>", "", {}, "", true},
+            PropertyInfo{"categories", PropertyKind::Opaque, "std::vector<std::string>", "", {}, "One name per axis, drawn outside its spoke. Fewer than there are values leaves the rest unlabelled rather than renumbering them.", false},
+            PropertyInfo{"size", PropertyKind::Number, "float", "240.0f", {}, "The whole chart's box, labels included.", false},
+            PropertyInfo{"grid", PropertyKind::Enum, "RadarGrid", "RadarGrid::Web", {"Web", "Polygon", "None"}, "What is drawn behind the data: a mesh, shaded bands, or nothing.", false},
+            PropertyInfo{"labelRoom", PropertyKind::Number, "float", "52.0f", {}, "Room between the outermost ring and the edge, for the names. Zero draws none and gives the web the whole box.", false},
+            PropertyInfo{"fillAlpha", PropertyKind::Number, "float", "0.1f", {}, "Shading inside a series' polygon, when the series carries no `fillAlpha` of its own. Filled by default, where a line chart is not. A line is read along, and shading under two of them buries the lower one; a radar is read as a shape, and an unfilled one is a wire outline the eye has to close for itself. Lower than the 0.2 the web charting libraries settle on, and deliberately: the painter composites in linear light, where the same number covers roughly twice as much as it does in a browser blending sRGB directly.", false},
+            PropertyInfo{"markerRadius", PropertyKind::Number, "float", "3.0f", {}, "A dot at each vertex. Zero draws none.", false},
+            PropertyInfo{"hover", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"valueFormat", PropertyKind::Text, "std::string_view", "\"%.0f\"", {}, "Printed in the readout; \"%.0f\" style, as `std::snprintf` takes.", false},
+            PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "", false},
+        },
+        false,
+        true,
+        "ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, const RadarOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "scatterChart",
         "Charts",
         "gbui/widgets/chart.hpp",
         "Points on two continuous scales — a scatter, or a bubble chart when the points carry weights. The first chart here with a real **x scale**. Every other one indexes its samples along the bottom: sample 0 at the left, sample n at the right, evenly spaced whatever their x values are. That is right for a series over time and wrong for a correlation, where the whole question is where the points sit against each other on both axes. Hit testing is by distance to the nearest dot rather than by column, because a scatter has no columns — two points can share an x and mean different things.",
+        "Charts: a scale, its ticks, and a line or area drawn from data.",
         "ScatterOptions",
         {
             PropertyInfo{"xScale", PropertyKind::Opaque, "Scale", "0.0, 0.0", {}, "Fixed bounds for each axis. Left alone, both come from the data.", false},
@@ -997,6 +1209,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"fillAlpha", PropertyKind::Number, "float", "0.6f", {}, "", false},
             PropertyInfo{"hitRadius", PropertyKind::Number, "float", "14.0f", {}, "How near the pointer has to be, in pixels, to pick a dot.", false},
             PropertyInfo{"tooltip", PropertyKind::Opaque, "ChartTooltip", "", {}, "", false},
+            PropertyInfo{"legend", PropertyKind::Opaque, "ChartLegend", "", {}, "", false},
         },
         false,
         true,

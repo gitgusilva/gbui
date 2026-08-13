@@ -16,6 +16,7 @@ add_executable(gbui_tests
     fontTest.cpp
     richEditorTest.cpp
     chartTest.cpp
+    imageTest.cpp
     tableTest.cpp
     sliderTest.cpp
     paintTest.cpp
@@ -24,6 +25,12 @@ add_executable(gbui_tests
 
 target_link_libraries(gbui_tests PRIVATE gbui::gbui gbui::meta)
 target_include_directories(gbui_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Where the sample pictures are. A test that reads a file has to be told where
+# the source tree is: it runs from the build directory, and CTest may run it
+# from anywhere at all.
+target_compile_definitions(gbui_tests PRIVATE
+    GBUI_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 if(NOT MSVC)
         # Designated initialisers leave the remaining members at their default

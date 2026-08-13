@@ -97,9 +97,15 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     // wears the same surface every other disabled control wears.
     if (options.disabled) {
         const detail::FieldPalette off = detail::disabledPalette();
-        palette.background = off.background;
-        palette.border = Border{1.0f, Fill{off.border}};
         palette.label = off.label;
+        // Except for a ghost, which has no surface to give up. Handing it one
+        // makes the disabled button the *loudest* thing on the row — three zoom
+        // buttons where the two that do nothing are outlined and the one that
+        // works is invisible, which is exactly backwards.
+        if (options.variant != ButtonVariant::Ghost) {
+            palette.background = off.background;
+            palette.border = Border{1.0f, Fill{off.border}};
+        }
     }
 
     Style style;
@@ -109,8 +115,22 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     // A floor, not a fixed size: at 22 px the label is taller than a 30-pixel
     // button, and a control that keeps its height regardless simply crops the
     // text it exists to show. This is what CSS's `min-height` is for.
-    style.minHeight = options.height > 0.0f ? options.height : ui.design().controlHeight;
+    const float controlHeight = options.height > 0.0f ? options.height : ui.design().controlHeight;
+    style.minHeight = controlHeight;
     style.padding = Edges::symmetric(0.0f, 12.0f);
+
+    // A button with nothing but an icon in it is a **square**.
+    //
+    // The padding above is what a label needs either side of it, and the gap
+    // below is what separates an icon from one. Left in place with no label to
+    // separate, they stretch a fourteen-pixel glyph into a pill — and three of
+    // them side by side come out three different widths, because each pill is
+    // as wide as its own glyph. A zoom toolbar is exactly that arrangement.
+    const bool iconOnly = label.empty() && options.leading.has_value();
+    if (iconOnly && !options.block) {
+        style.padding = Edges{};
+        style.width = controlHeight;
+    }
     style.background = palette.background;
     style.border = palette.border;
     style.radius = ui.design().controlRadius;
@@ -134,6 +154,37 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     // The design decides unless this button insists otherwise.
     const bool wantsInk =
         options.ripple.value_or(ui.design().press == PressFeedback::Ripple);
+
+    /**
+     * The surface `PressFeedback::Surface` names — "the desktop default" — and
+     * which this button never actually drew.
+     *
+     * Every variant was inert under the pointer: no hover, no press, nothing
+     * but a cursor. On a ghost button, which has no surface of its own, that
+     * left a control the reader could not tell they were on at all. Hovering is
+     * drawn whatever the design's press feedback is, because a ripple answers
+     * the *press* and says nothing about where the pointer is resting.
+     *
+     * It needs an `id`: hit testing is by tag, and an unnamed button has none.
+     */
+    const bool interactive = input && !options.disabled && !options.id.empty();
+    const bool hovered = interactive && input->isHovered(options.id);
+    const bool held = interactive && input->dragging() == options.id;
+    if (hovered || (held && !wantsInk)) {
+        switch (options.variant) {
+            case ButtonVariant::Primary:
+                style.background = Fill{Token::AccentHover};
+                break;
+            case ButtonVariant::Danger:
+                // No hover token of its own, so it dims the way a key does.
+                style.opacity *= held ? 0.86f : 0.93f;
+                break;
+            case ButtonVariant::Ghost:
+            case ButtonVariant::Secondary:
+                style.background = Fill{Token::SurfaceHover, held ? 1.0f : 0.6f};
+                break;
+        }
+    }
     // The ink is clipped to the button, so the button has to clip.
     const bool ripple = wantsInk && input && !options.disabled && !options.id.empty();
     if (ripple) style.overflow = Overflow::Hidden;
@@ -147,12 +198,16 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     if (ripple) drawRipple(ui, *input, palette, style, options);
 
     if (options.leading) {
-        icon(ui, *options.leading, {.color = palette.label, .size = 14.0f});
-        // The gap belongs to the button, not to the caller.
-        Style spacing;
-        spacing.width = 6.0f;
-        spacing.shrink = 0.0f;
-        ui.add(spacing);
+        icon(ui, *options.leading,
+             {.color = palette.label, .size = options.iconSize > 0.0f ? options.iconSize : 14.0f});
+        // The gap belongs to the button, not to the caller — and there is
+        // nothing to separate it from when there is no label.
+        if (!iconOnly) {
+            Style spacing;
+            spacing.width = 6.0f;
+            spacing.shrink = 0.0f;
+            ui.add(spacing);
+        }
     }
 
     TextStyle textStyle;

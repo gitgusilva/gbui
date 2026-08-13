@@ -1,0 +1,4545 @@
+[
+  {
+    "name": "badge",
+    "group": "Components",
+    "header": "gbui/widgets/badge.hpp",
+    "summary": "A pill \u2014 a branch name, a counter, a status chip.",
+    "signatures": [
+      "NodeId badge(Ui& ui, std::string_view value, const BadgeOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "BadgeOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "background",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::BgOverlay",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "foreground",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::TextMuted",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "button",
+    "group": "Components",
+    "header": "gbui/widgets/button.hpp",
+    "summary": "A button, in the four variants the design system has.",
+    "signatures": [
+      "NodeId button(Ui& ui, std::string_view text, const ButtonOptions& options = {});",
+      "NodeId button(Ui& ui, const Interaction& input, std::string_view text, const ButtonOptions& options = {});"
+    ],
+    "notes": [
+      "Without an `Interaction` there is no pointer to start a ripple from, so this overload ignores `options.ripple`. Everything else is identical.",
+      "The same button, given what it needs to draw a press."
+    ],
+    "optionsType": "ButtonOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "variant",
+        "kind": "Enum",
+        "type": "ButtonVariant",
+        "default": "ButtonVariant::Secondary",
+        "choices": [
+          "Primary",
+          "Secondary",
+          "Ghost",
+          "Danger"
+        ],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn before the label, in the label's colour.",
+        "optional": true
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "block",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Stretches to fill the row it is in, the way a COMMIT button does.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height.",
+        "optional": false
+      },
+      {
+        "name": "iconSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "The glyph's size. Zero matches the label's, which is what a button with a label wants; one with only an icon in it usually wants more, since the glyph is the whole button rather than a mark beside a word.",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "ripple",
+        "kind": "Bool",
+        "type": "std::optional<bool>",
+        "default": "",
+        "choices": [],
+        "doc": "A circle of ink that grows from where the pointer went down. Unset \u2014 the normal case \u2014 asks the active `Design`: Material throws ink, the others change the surface. Set, it overrides that decision for this one button, which is the escape hatch and not the default. Either way it needs the overload below (the ripple starts at the *point* the press landed) and an `id`, since that is what the animation is keyed by.",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "icon",
+    "group": "Components",
+    "header": "gbui/widgets/icon.hpp",
+    "summary": "One icon from the built-in Lucide set.",
+    "signatures": [
+      "NodeId icon(Ui& ui, Icon which, const IconOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "IconOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Text",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "Side of the square the icon is drawn in.",
+        "optional": false
+      },
+      {
+        "name": "stroke",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "Stroke width on Lucide's 24-unit grid; scaled with the icon.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "image",
+    "group": "Components",
+    "header": "gbui/widgets/image.hpp",
+    "summary": "A picture in a box \u2014 HTML's `<img>`, with the parts of it that are a toolkit's business.",
+    "signatures": [
+      "NodeId image(Ui& ui, const Bitmap& source, const ImageOptions& options = {});"
+    ],
+    "notes": [
+      "Draws `source` inside a box. The picture is sampled bilinearly and cut by the same rounded corners the boxes use, so an image in a card and the card agree about the curve. The pixels are **borrowed for the frame**: they are read when the frame is painted, not when this is called, and nothing here copies them. That is the same contract a label's `string_view` has, and the same one it breaks in the same way \u2014 a buffer that dies at the end of the enclosing scope is a picture of whatever the stack holds by the time anyone looks."
+    ],
+    "optionsType": "ImageOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "width",
+        "kind": "Length",
+        "type": "Length",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "Its box. Either left `kAuto` takes the picture's own size in that direction, so an image with neither set is drawn at 1:1.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Length",
+        "type": "Length",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "fit",
+        "kind": "Opaque",
+        "type": "ImageFit",
+        "default": "ImageFit::Contain",
+        "choices": [],
+        "doc": "How the picture meets a box that is not its shape.",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Rounded corners, cut from the picture itself \u2014 an avatar is this and a radius of half its size.",
+        "optional": false
+      },
+      {
+        "name": "opacity",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "background",
+        "kind": "Opaque",
+        "type": "std::optional<Fill>",
+        "default": "",
+        "choices": [],
+        "doc": "Behind the picture, which is what shows through a transparent one and what fills the letterboxing `Contain` leaves.",
+        "optional": true
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Kept out of the flow's stretch, like an icon: a picture has a size and a container has no business overriding it.",
+        "optional": false
+      },
+      {
+        "name": "shrink",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "alt",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn instead when there are no pixels \u2014 HTML's `alt`, doing the job `alt` actually does in a browser rather than the one it is credited with. An empty one leaves the box empty, which is right for decoration. A missing logo in a list of companies is not decoration, and a row that silently loses its mark is worse than one showing three letters.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginListRow",
+    "group": "Components",
+    "header": "gbui/widgets/listRow.hpp",
+    "summary": "A row of a list: the sidebar's branches, the commit list, the changed files.",
+    "signatures": [
+      "Ui::Scope beginListRow(Ui& ui, const ListRowOptions& options = {});"
+    ],
+    "notes": [
+      "Opens a row. Returns a Scope, so its contents are written inside the braces. `selected` washes the row in the accent at 18%, `hovered` uses `surfaceHover`, and both are passed in \u2014 components hold no state."
+    ],
+    "optionsType": "ListRowOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "selected",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "hovered",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "6.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginPanel",
+    "group": "Components",
+    "header": "gbui/widgets/panel.hpp",
+    "summary": "A surface with a border and a radius \u2014 a card, a dialog body, a docked pane.",
+    "signatures": [
+      "Ui::Scope beginPanel(Ui& ui, const PanelOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "PanelOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "background",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::BgElevated",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "border",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::all(12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "direction",
+        "kind": "Opaque",
+        "type": "Direction",
+        "default": "Direction::Column",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Takes the space left on the main axis, the way a pane holding a list has to. It starts from nothing, as `text` and the scroll view do, so it cannot push its siblings out of the column.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "divider",
+    "group": "Components",
+    "header": "gbui/widgets/spacing.hpp",
+    "summary": "The two nodes that exist to take up room, or to refuse to.",
+    "signatures": [
+      "NodeId divider(Ui& ui, Direction containerDirection);"
+    ],
+    "notes": [
+      "A hairline. Horizontal in a column, vertical in a row: pass the direction of the container it sits in."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "spacer",
+    "group": "Components",
+    "header": "gbui/widgets/spacing.hpp",
+    "summary": "The two nodes that exist to take up room, or to refuse to.",
+    "signatures": [
+      "NodeId spacer(Ui& ui, float grow = 1.0f);"
+    ],
+    "notes": [
+      "Fills the free space on the main axis \u2014 the flexible gap between a title and the actions on the far side of a toolbar."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "emphasis",
+    "group": "Components",
+    "header": "gbui/widgets/text.hpp",
+    "summary": "Runs of text, and the two semantic shorthands over them.",
+    "signatures": [
+      "NodeId emphasis(Ui& ui, std::string_view value, TextOptions options = {});"
+    ],
+    "notes": [],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "richText",
+    "group": "Components",
+    "header": "gbui/widgets/text.hpp",
+    "summary": "Runs of text, and the two semantic shorthands over them.",
+    "signatures": [
+      "NodeId richText(Ui& ui, const std::vector<TextSpan>& spans, const RichTextOptions& options = {});"
+    ],
+    "notes": [
+      "A line of text whose runs differ \u2014 in colour, weight, slant or decoration. Built as a row of runs sharing a line, which is the honest shape given that a node carries one style. With `wrap` it becomes a *wrapping* row, so the line breaks between spans \u2014 see the caveat on that option. A paragraph that has to break mid-sentence still wants `text` with `TextOverflow::Wrap` and one colour, or a gradient across the whole run. Runs are centred against each other rather than sitting on a shared baseline, because `Align::Baseline` is not implemented yet. Spans of one size \u2014 the usual case \u2014 look identical either way."
+    ],
+    "optionsType": "RichTextOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "align",
+        "kind": "Opaque",
+        "type": "TextAlign",
+        "default": "TextAlign::Start",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Space between spans. Zero butts them together, which is what a sentence wants; the spaces come from the spans themselves.",
+        "optional": false
+      },
+      {
+        "name": "wrap",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Lets the line wrap **between spans**. Not the same as wrapping text: the break can only fall where one span ends and the next begins, so a single long span still overflows its line rather than breaking inside itself. Splitting a sentence into more spans gives the layout more places to break. Real wrapping through mixed runs needs an inline formatting context, which the engine does not have.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "sectionHeading",
+    "group": "Components",
+    "header": "gbui/widgets/text.hpp",
+    "summary": "Runs of text, and the two semantic shorthands over them.",
+    "signatures": [
+      "NodeId sectionHeading(Ui& ui, std::string_view value);"
+    ],
+    "notes": [
+      "Small, uppercase, muted: the \"UNSTAGED (1)\" kind of heading."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "strong",
+    "group": "Components",
+    "header": "gbui/widgets/text.hpp",
+    "summary": "Runs of text, and the two semantic shorthands over them.",
+    "signatures": [
+      "NodeId strong(Ui& ui, std::string_view value, TextOptions options = {});"
+    ],
+    "notes": [
+      "Semantic shorthands, in the sense HTML gives them: `strong` is importance and `emphasis` is stress, and each happens to be drawn with a weight or a slant. They exist so a call site says what it means rather than how it looks, which is what lets the look change later."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "text",
+    "group": "Components",
+    "header": "gbui/widgets/text.hpp",
+    "summary": "Runs of text, and the two semantic shorthands over them.",
+    "signatures": [
+      "NodeId text(Ui& ui, std::string_view value, const TextOptions& options = {});"
+    ],
+    "notes": [
+      "A run of text with the theme's colours applied \u2014 the common case that would otherwise be two structs at every call site."
+    ],
+    "optionsType": "TextOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Text",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "kind": "Opaque",
+        "type": "FontWeight",
+        "default": "FontWeight::Regular",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "slant",
+        "kind": "Opaque",
+        "type": "FontSlant",
+        "default": "FontSlant::Normal",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "role",
+        "kind": "Opaque",
+        "type": "FontRole",
+        "default": "FontRole::Ui",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "align",
+        "kind": "Opaque",
+        "type": "TextAlign",
+        "default": "TextAlign::Start",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Give the run the leftover space on the main axis. A commit subject wants this: it takes what is left after the fixed columns and elides the rest, instead of pushing them off the row.",
+        "optional": false
+      },
+      {
+        "name": "overflow",
+        "kind": "Opaque",
+        "type": "TextOverflow",
+        "default": "TextOverflow::Ellipsis",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maxLines",
+        "kind": "Number",
+        "type": "int",
+        "default": "0",
+        "choices": [],
+        "doc": "With `overflow = Wrap`, how many lines the run may take. Zero is unlimited; a count clamps it and ellipsises the last line.",
+        "optional": false
+      },
+      {
+        "name": "lineHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "A multiplier over the font size. Zero takes the face's own line height, which is tight for a paragraph and right for a single-line label.",
+        "optional": false
+      },
+      {
+        "name": "underline",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "strikeThrough",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gradient",
+        "kind": "Opaque",
+        "type": "Gradient",
+        "default": "",
+        "choices": [],
+        "doc": "A gradient across the run, instead of `color`. Two stops is the common case: `Gradient::linear(Fill{Token::Accent}, Fill{Token::Text}, 90)`.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginToolbar",
+    "group": "Components",
+    "header": "gbui/widgets/toolbar.hpp",
+    "summary": "A horizontal bar of actions.",
+    "signatures": [
+      "Ui::Scope beginToolbar(Ui& ui, const ToolbarOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "ToolbarOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "40.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "background",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::BgElevated",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "bottomBorder",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginBox",
+    "group": "Containers",
+    "header": "gbui/widgets/box.hpp",
+    "summary": "The general container, the way `<div>` is one.",
+    "signatures": [
+      "Ui::Scope beginBox(Ui& ui, const BoxOptions& options = {});"
+    ],
+    "notes": [
+      "Opens a container. Everything until the returned scope dies is inside it."
+    ],
+    "optionsType": "BoxOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "direction",
+        "kind": "Opaque",
+        "type": "Direction",
+        "default": "Direction::Row",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "justify",
+        "kind": "Opaque",
+        "type": "Justify",
+        "default": "Justify::Start",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "align",
+        "kind": "Opaque",
+        "type": "Align",
+        "default": "Align::Stretch",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "margin",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maxWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "std::numeric_limits<float>::infinity()",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maxHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "std::numeric_limits<float>::infinity()",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "shrink",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "basis",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "background",
+        "kind": "Opaque",
+        "type": "Fill",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "backgroundGradient",
+        "kind": "Opaque",
+        "type": "Gradient",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "border",
+        "kind": "Token",
+        "type": "std::optional<Token>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "borderWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "opacity",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "overflow",
+        "kind": "Opaque",
+        "type": "Overflow",
+        "default": "Overflow::Visible",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "layer",
+        "kind": "Opaque",
+        "type": "Layer",
+        "default": "Layer::Content",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "cursor",
+        "kind": "Opaque",
+        "type": "Cursor",
+        "default": "Cursor::Default",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "focusable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginScroll",
+    "group": "Containers",
+    "header": "gbui/widgets/scroll.hpp",
+    "summary": "A scroll container.",
+    "signatures": [
+      "Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const ScrollOptions& options = {});"
+    ],
+    "notes": [
+      "Opens a scroll container. The content is laid out at its natural size and clipped to the viewport, and the offset moves it. Wheel over the container scrolls it; Page Up, Page Down, Home and End do too when it has focus; the bar can be dragged. Everything drawn inside costs a node, so this is a *scrolling* view and not a *virtualised* one \u2014 50 000 rows here really do build 50 000 nodes. When the rows are uniform, `virtualList` builds only the visible ones \u2014 see virtualList.hpp."
+    ],
+    "optionsType": "ScrollOptions",
+    "container": true,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "direction",
+        "kind": "Opaque",
+        "type": "Direction",
+        "default": "Direction::Column",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "axis",
+        "kind": "Enum",
+        "type": "std::optional<ScrollAxis>",
+        "default": "",
+        "choices": [
+          "None",
+          "Vertical",
+          "Horizontal"
+        ],
+        "doc": "Which way it scrolls. Auto follows `direction`, which is what a column of rows or a row of chips almost always wants.",
+        "optional": true
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "float",
+        "default": "48.0f",
+        "choices": [],
+        "doc": "Pixels per wheel notch.",
+        "optional": false
+      },
+      {
+        "name": "scrollbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Draws the bar. Turning it off leaves wheel and keyboard scrolling.",
+        "optional": false
+      },
+      {
+        "name": "scrollbarWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "10.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "autoHideScrollbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Hides the bar when the content fits, the way a desktop does.",
+        "optional": false
+      },
+      {
+        "name": "focusable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Whether Tab can land on the viewport. A pane the reader scrolls for itself wants that; a list inside a control that already holds the keyboard \u2014 a select \u2014 does not, or Tab walks into the popup.",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "Bounds on the viewport itself. A maximum is what turns \"as tall as its content\" into \"as tall as its content, then scroll\" \u2014 which is the rule a dropdown needs and could not express before.",
+        "optional": false
+      },
+      {
+        "name": "maxWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maxHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "scrollbar",
+    "group": "Containers",
+    "header": "gbui/widgets/scroll.hpp",
+    "summary": "A scroll container.",
+    "signatures": [
+      "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true);"
+    ],
+    "notes": [
+      "Draws the bar for a scroll view that is not where the bar belongs. A bar normally lives inside the view it drives, and `beginScroll` puts it there. A table is the case that forced this one out: its rows scroll vertically *inside* a box that scrolls horizontally, so the row view's own right-hand edge is out at the end of the widest column, and the bar drawn against it is a bar the reader has to scroll sideways to find. A browser has no such problem, because both bars belong to the visible box; this is how a caller says the same thing here. `box` is in the current container's coordinates \u2014 where the bar should be, not where the content is. The ids are the view's own, so the press, the drag and the paging are still handled by `beginScroll`: this draws, it does not behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you use it, or there will be two."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": true,
+    "properties": []
+  },
+  {
+    "name": "table",
+    "group": "Containers",
+    "header": "gbui/widgets/table.hpp",
+    "summary": "A table: columns that agree, a header that stays, and rows that virtualise.",
+    "signatures": [
+      "TableResult table(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Column>& columns, std::size_t rowCount, TableState& state, const std::function<void(Ui&, std::size_t row, std::size_t column)>& cell, const TableOptions& options = {});"
+    ],
+    "notes": [
+      "Draws a table and reports what the reader did to it. `cell` is called for each visible cell and builds whatever belongs there. It is given the row and the column; the box it draws into is already the right width, because **the widths are resolved once for the whole table** rather than negotiated per row. That is the difference between a table and a list of rows that happen to contain the same number of things. The application owns the data, the order and the selection. This owns the geometry."
+    ],
+    "optionsType": "TableOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "rowHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "30.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "headerHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "32.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "stickyHeader",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The header stays put while the body scrolls under it.",
+        "optional": false
+      },
+      {
+        "name": "zebra",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Alternating row shading. Off by default: with a hover and a selection already in play, a third band is usually noise.",
+        "optional": false
+      },
+      {
+        "name": "virtualise",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Builds only the visible rows. Off draws them all, which is right for a table of twenty and wrong for one of fifty thousand.",
+        "optional": false
+      },
+      {
+        "name": "cellPadding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::symmetric(0.0f, 10.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gridLines",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "The hairline under the header, and the width of every other rule here.",
+        "optional": false
+      },
+      {
+        "name": "rowLines",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "A rule under every row. Off by default: on a table read top to bottom, the rows are already separated by their own alignment, and a line under each one is a lot of ink for no information. Worth turning on when the cells wrap to different heights, or when the reader is comparing across a row rather than down a column.",
+        "optional": false
+      },
+      {
+        "name": "columnLines",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "A rule between every column, in the header and in the body \u2014 which, together with `rowLines`, is a full grid.",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "tabPanels",
+    "group": "Containers",
+    "header": "gbui/widgets/tabs.hpp",
+    "summary": "A strip of tabs.",
+    "signatures": [
+      "void tabPanels(Ui& ui, std::size_t selected, const std::vector<std::function<void(Ui&)>>& panels, const TabPanelsOptions& options = {});"
+    ],
+    "notes": [
+      "Builds the panel bodies for a tab strip. Separate from `tabs` because the two are rarely siblings: a vertical strip sits beside its panels and a horizontal one above them, and a caller often puts a toolbar or a splitter between them. An unselected panel is built inside a box of no height that clips, so it takes part in nothing the reader can see while still being *there* \u2014 which is the whole difference `lazy` turns off."
+    ],
+    "optionsType": "TabPanelsOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "lazy",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Build only the selected panel, and skip the rest entirely. Off by default, which is what a hidden `<div>` does on the web: it is still in the document, so anything that measures it or looks it up finds it. Turning it on is cheaper \u2014 an unbuilt panel costs nothing to lay out or paint \u2014 and the price is that everything about the panels the reader is not looking at stops existing: `input.frameOf` on a control inside one returns nothing, and any component that places itself from last frame's geometry starts from scratch when its tab comes back. For a handful of pages the difference is not worth thinking about. For a window whose tabs each hold a table of fifty thousand rows it is the difference between usable and not.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "tabs",
+    "group": "Containers",
+    "header": "gbui/widgets/tabs.hpp",
+    "summary": "A strip of tabs.",
+    "signatures": [
+      "std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_view id, const std::vector<TabItem>& items, std::size_t selected, const TabsOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the strip and reports which tab the user chose, or nothing. Stateless like everything else: the caller owns the selected index and hands it in. The strip is one focusable stop \u2014 the ARIA \"roving tabindex\" pattern \u2014 so Tab moves *past* the whole strip rather than through every tab in it, and the arrow keys move between them once it has the keyboard. Not built yet, and named rather than half-done: an overflow menu for when the tabs do not fit (they currently shrink and elide), a close affordance, and reordering by drag."
+    ],
+    "optionsType": "TabsOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "orientation",
+        "kind": "Enum",
+        "type": "TabsOrientation",
+        "default": "TabsOrientation::Horizontal",
+        "choices": [
+          "Horizontal",
+          "Vertical"
+        ],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "thickness",
+        "kind": "Number",
+        "type": "float",
+        "default": "36.0f",
+        "choices": [],
+        "doc": "The strip's thickness: its height when horizontal, its width when vertical.",
+        "optional": false
+      },
+      {
+        "name": "itemHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "34.0f",
+        "choices": [],
+        "doc": "Vertical only \u2014 how tall each row is. Horizontal takes its tab height from `thickness`.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "indicator",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The moving bar marking the active tab: under it when horizontal, down its leading edge when vertical. It slides between tabs when an animator is present and simply appears on the new one when there is not.",
+        "optional": false
+      },
+      {
+        "name": "indicatorWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "indicatorInset",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "How far the indicator sits from the strip's trailing edge \u2014 under a horizontal strip, beside a vertical one. Zero puts it hard against the edge, which is what a strip with a rule under it wants: the bar and the rule are then the same line, one of them lit. A strip without a rule usually wants a pixel or two of air, or the bar reads as an underline attached to the word rather than as a marker under the tab.",
+        "optional": false
+      },
+      {
+        "name": "itemPadding",
+        "kind": "Edges",
+        "type": "std::optional<Edges>",
+        "default": "",
+        "choices": [],
+        "doc": "The space inside each tab. Unset takes a default that fits the orientation: horizontal tabs get room under the label so the indicator clears its descenders, and vertical rows keep a lane free on the leading edge so the label does not shift sideways when a tab becomes the active one. Here for the same reason `Style::padding` is on every node \u2014 a caller who disagrees with the spacing should be able to say so rather than work around it \u2014 and it is the one piece of a tab strip's spacing the caller could not reach.",
+        "optional": true
+      },
+      {
+        "name": "rule",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A rule along the whole strip \u2014 under it, or beside it \u2014 so the strip reads as an edge rather than as floating text.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "virtualList",
+    "group": "Containers",
+    "header": "gbui/widgets/virtualList.hpp",
+    "summary": "A list that builds only what is on screen.",
+    "signatures": [
+      "VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const VirtualListOptions& options, const std::function<void(Ui&, std::size_t)>& row);"
+    ],
+    "notes": [
+      "A list that builds only what is on screen. The trick is not the clipping \u2014 the scroll view already clips. It is that the rows that are *not* visible are replaced by two spacers, one standing in for everything above the slice and one for everything below. The content is therefore the full height it would have been, so the scrollbar, `maxOffset` and Page Down all keep working on the real list, while the arena holds the forty rows a person can actually see. VirtualSlice shown = virtualList(ui, input, \"history\", state, {.count = commits.size(), .rowHeight = 28.0f}, [&](Ui& ui, std::size_t index) { listRow(ui, input, rowId(index), \u2026); }); `row` is called once per visible index, in order, inside a box of exactly `rowHeight`. It must not open a scope it leaves open. The viewport is last frame's, like everything else that needs geometry before layout has run, so the first frame after a resize builds the previous size's slice \u2014 and overscan is what keeps that from showing."
+    ],
+    "optionsType": "VirtualListOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "count",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "0",
+        "choices": [],
+        "doc": "How many rows exist. Only the visible ones are ever built.",
+        "optional": false
+      },
+      {
+        "name": "rowHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "Every row is exactly this tall. The list enforces it rather than trusting the caller: a row that laid itself out taller would slide the ones after it out of step with the scrollbar.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "overscan",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "2",
+        "choices": [],
+        "doc": "Rows built above and below the viewport. Two is enough to keep a fast drag from showing an edge, and cheap enough not to think about.",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "float",
+        "default": "48.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "scrollbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "scrollbarWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "10.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "autoHideScrollbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "focusable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "checkbox",
+    "group": "Controls",
+    "header": "gbui/widgets/checkbox.hpp",
+    "summary": "A checkbox.",
+    "signatures": [
+      "[[nodiscard]] bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checked, const CheckboxOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame the user toggled it."
+    ],
+    "optionsType": "CheckboxOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn to the right of the box; empty draws the box alone.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's box size and corner.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "colorField",
+    "group": "Controls",
+    "header": "gbui/widgets/colorPicker.hpp",
+    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
+    "signatures": [
+      "ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorFieldOptions& options = {});"
+    ],
+    "notes": [
+      "The same picker behind a swatch, opened in a popover. Two entry points rather than a flag, because they are two different components in every way that matters: the inline one is always open and owns its space, and this one is a control in a form that borrows space when asked. They share the state and the drawing, which is the part worth sharing. **The application owns whether it is open**, as it does for every other overlay here \u2014 `state.open` is a plain bool it can set, restore or ignore."
+    ],
+    "optionsType": "ColorFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "The trigger's own size. The popover takes `width` from the picker options above, as everything else does.",
+        "optional": false
+      },
+      {
+        "name": "showHexOnTrigger",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A press anywhere else closes it. On, because a popup that outlives the attention that opened it is a popup the reader has to dismiss on purpose. Off keeps it open until the application says otherwise \u2014 which is what a picker being dragged from inside a dialog wants, where the click outside belongs to the dialog.",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Escape closes it. Separate from the above: a caller may want the key without the click, and a modal that owns Escape may want neither.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "colorPicker",
+    "group": "Controls",
+    "header": "gbui/widgets/colorPicker.hpp",
+    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
+    "signatures": [
+      "ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorPickerOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the picker and edits `state` in place. The square is built the way every picker on the web is: the pure hue behind, a white-to-transparent gradient across it and a transparent-to-black gradient down it. Two gradients over a fill is a two-dimensional ramp, and it costs three nodes rather than a per-pixel shader the painter does not have."
+    ],
+    "optionsType": "ColorPickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "alpha",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The alpha rail and the alpha in the readout. Off for a picker choosing a theme token, where a translucent colour is not a valid answer.",
+        "optional": false
+      },
+      {
+        "name": "hue",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The hue rail. Off leaves a picker that only shades one hue, which is what a \"tint of the accent\" control wants.",
+        "optional": false
+      },
+      {
+        "name": "showHex",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The `#rrggbb` readout under the rails.",
+        "optional": false
+      },
+      {
+        "name": "swatches",
+        "kind": "Opaque",
+        "type": "std::vector<Color>",
+        "default": "",
+        "choices": [],
+        "doc": "A row of fixed swatches under everything else. Empty draws none.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "squareHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "150.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "railHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "14.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "10.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateField",
+    "group": "Controls",
+    "header": "gbui/widgets/datePicker.hpp",
+    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
+    "signatures": [
+      "DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DateFieldOptions& options = {});"
+    ],
+    "notes": [
+      "A calendar behind a field, opened in a popover. The counterpart to `colorField`, and the same split: the inline calendar owns its space, this one borrows it. They share the state and the grid."
+    ],
+    "optionsType": "DateFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select a date\u2026\"",
+        "choices": [],
+        "doc": "Shown when nothing is chosen. A field with no value has to say so. Falling back to today would be a lie \u2014 \"no date\" and \"today\" are different answers, and a form that silently fills one in gets the other submitted.",
+        "optional": false
+      },
+      {
+        "name": "pattern",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"dd/MM/yyyy\"",
+        "choices": [],
+        "doc": "How the chosen date is written on the trigger. The same grammar `formatDate` takes, so the field reads the way the rest of the application writes dates.",
+        "optional": false
+      },
+      {
+        "name": "clearable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "An x on the trigger that puts it back to nothing.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "200.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "32.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "datePicker",
+    "group": "Controls",
+    "header": "gbui/widgets/datePicker.hpp",
+    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
+    "signatures": [
+      "DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DatePickerOptions& options = {});"
+    ],
+    "notes": [
+      "Draws a month and reports the day chosen, if any. Stateless like everything else: `selected` comes in, the state carries only what is *being looked at*. The arrow keys move by a day and Page Up and Page Down by a month, both skipping nothing \u2014 a day outside the bounds is drawn and dimmed rather than hidden, because a calendar with holes in it is harder to read than one with unavailable days in it."
+    ],
+    "optionsType": "DatePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "",
+        "choices": [],
+        "doc": "Nothing before this, or after that, can be chosen. An invalid date means no bound.",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "today",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "Date::today()",
+        "choices": [],
+        "doc": "Drawn with a dot under it. Invalid draws none.",
+        "optional": false
+      },
+      {
+        "name": "locale",
+        "kind": "Opaque",
+        "type": "CalendarLocale",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "showToday",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "cellSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "30.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateTimeField",
+    "group": "Controls",
+    "header": "gbui/widgets/dateTimePicker.hpp",
+    "summary": "A calendar and a clock, chosen together.",
+    "signatures": [
+      "DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimeFieldState& state, const DateTimeFieldOptions& options = {});"
+    ],
+    "notes": [
+      "A calendar and a clock behind one input. The pair belongs behind a single field far more often than beside each other on a page \u2014 a due date, a scheduled run, a deadline are one value, and asking for it in two controls invites half of it being filled in."
+    ],
+    "optionsType": "DateTimeFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select a date and time\u2026\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "pattern",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"dd/MM/yyyy HH:mm\"",
+        "choices": [],
+        "doc": "How the value is written on the trigger. One pattern for both halves, in the grammar `formatDate` and `formatTime` share \u2014 the date tokens are read by one and the clock tokens by the other, so `dd/MM/yyyy HH:mm` needs no separate spelling of where the date ends and the time begins.",
+        "optional": false
+      },
+      {
+        "name": "clearable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the design's control height.",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateTimePicker",
+    "group": "Controls",
+    "header": "gbui/widgets/dateTimePicker.hpp",
+    "summary": "A calendar and a clock, chosen together.",
+    "signatures": [
+      "DateTimePickerResult dateTimePicker(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimePickerState& state, const DateTimePickerOptions& options = {});"
+    ],
+    "notes": [
+      "The two pickers, sharing one value."
+    ],
+    "optionsType": "DateTimePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "date",
+        "kind": "Opaque",
+        "type": "DatePickerOptions",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "time",
+        "kind": "Opaque",
+        "type": "TimePickerOptions",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "sideBySide",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The clock beside the calendar, or under it. Beside is the default because a calendar is wider than it is tall and the pair balances.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "hyperlink",
+    "group": "Controls",
+    "header": "gbui/widgets/hyperlink.hpp",
+    "summary": "A hyperlink.",
+    "signatures": [
+      "[[nodiscard]] bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const HyperlinkOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame it was followed \u2014 by click, or by Return while focused. `hyperlink` rather than `link`, because `link` in a C++ codebase already means the linker, a linked list, or the act of linking; this is the one thing it does not usually mean."
+    ],
+    "optionsType": "HyperlinkOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "href",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Where it points. Following it hands this to `openUrl`. Empty follows nothing and only reports the click, which is what a link that scrolls somewhere inside the application wants.",
+        "optional": false
+      },
+      {
+        "name": "chord",
+        "kind": "Opaque",
+        "type": "Modifiers",
+        "default": "",
+        "choices": [],
+        "doc": "Modifiers that must be held for a click to count. All false \u2014 the default \u2014 means a plain click follows it, which is what a link is. Requiring a chord is for a link inside editable text, where a plain click has to place the caret instead; that is the bargain every editor makes, and it is a decision about the surrounding document rather than about the link, so it is the caller's.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "trailing",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn after the label \u2014 an arrow for \"this leaves the application\".",
+        "optional": true
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "underlineOnHover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Underlines always, or only under the pointer. Always is the accessible default: colour alone is not a cue for anyone who cannot see it.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "label",
+    "group": "Controls",
+    "header": "gbui/widgets/label.hpp",
+    "summary": "A caption for a control.",
+    "signatures": [
+      "std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::string_view id, std::string_view text, const LabelOptions& options = {});"
+    ],
+    "notes": [
+      "Returns the id to focus when the label was clicked, or nothing. The caller hands it to `Interaction::focus`, which keeps the toolkit from mutating interaction state behind a component's back: if (const auto target = label(ui, input, \"f.name\", \"Repository\", {.forId = \"name\"})) interaction.focus(*target);"
+    ],
+    "optionsType": "LabelOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "forId",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The control this names. Clicking the label focuses it, exactly as `<label for>` does, unless that control is disabled or read-only.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::TextMuted",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "required",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Marks the field as required, with the usual asterisk.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "numberField",
+    "group": "Controls",
+    "header": "gbui/widgets/numberField.hpp",
+    "summary": "A number, with step buttons and the wheel.",
+    "signatures": [
+      "[[nodiscard]] NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view id, double value, const NumberFieldOptions& options = {});"
+    ],
+    "notes": [
+      "The value is clamped and rounded before it is returned, so a caller never sees one outside the range."
+    ],
+    "optionsType": "NumberFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Number",
+        "type": "double",
+        "default": "-1e18",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Number",
+        "type": "double",
+        "default": "1e18",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "1.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "decimals",
+        "kind": "Number",
+        "type": "int",
+        "default": "0",
+        "choices": [],
+        "doc": "Digits after the point, for both display and rounding.",
+        "optional": false
+      },
+      {
+        "name": "suffix",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "\"px\", \"%\", \" ms\"",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "steppers",
+        "kind": "Enum",
+        "type": "StepperPlacement",
+        "default": "StepperPlacement::Sides",
+        "choices": [
+          "Sides",
+          "Stacked",
+          "None"
+        ],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "120.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "stackedBelow",
+        "kind": "Number",
+        "type": "float",
+        "default": "110.0f",
+        "choices": [],
+        "doc": "Below this the steppers are dropped to `Stacked` automatically, so a field in a narrow column shows its value rather than two buttons.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "progressBar",
+    "group": "Controls",
+    "header": "gbui/widgets/progress.hpp",
+    "summary": "A progress bar, determinate or not.",
+    "signatures": [
+      "NodeId progressBar(Ui& ui, const ProgressOptions& options = {});"
+    ],
+    "notes": [
+      "Not an input, but it belongs with them: the same track, the same tokens."
+    ],
+    "optionsType": "ProgressOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "value",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "Below zero draws the indeterminate form.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "6.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Phase for the indeterminate form, in turns. Feed it a clock.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "radio",
+    "group": "Controls",
+    "header": "gbui/widgets/radio.hpp",
+    "summary": "One option of a group.",
+    "signatures": [
+      "bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected, const RadioOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame it was chosen; a radio that is already selected reports nothing, because choosing it again is not a change."
+    ],
+    "optionsType": "RadioOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's size.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "richEditor",
+    "group": "Controls",
+    "header": "gbui/widgets/richEditor.hpp",
+    "summary": "A rich text editor: blocks of text, marks over ranges, and a toolbar.",
+    "signatures": [
+      "RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view id, RichDocument& document, RichEditorState& state, const RichEditorOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the editor and edits `document` in place. **What this is and is not.** It is a block editor: paragraphs, headings, lists, quotes and code blocks, with bold, italic, underline, strikethrough, inline code and links over ranges within a block. Typing, splitting a block with Return and merging with Backspace all work, and the toolbar is the caller's to compose. It is **not** finished, and the gaps are worth naming rather than discovering: no images \u2014 the painter cannot decode one yet; no undo; the caret moves by character and by block, not by *visual line*, so a block that wraps is edited by a caret that does not know where the lines are; and there is no nesting of lists. Each of those is a piece of work of its own, and three of them want engine features that do not exist."
+    ],
+    "optionsType": "RichEditorOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "toolbar",
+        "kind": "Opaque",
+        "type": "std::vector<ToolbarItem>",
+        "default": "",
+        "choices": [],
+        "doc": "Empty takes `defaultToolbar()`. Anything else is exactly what is drawn, in that order \u2014 which is how a caller adds its own buttons, drops the ones it does not want, or reorders the rest.",
+        "optional": false
+      },
+      {
+        "name": "blockChoices",
+        "kind": "Opaque",
+        "type": "std::vector<BlockChoice>",
+        "default": "",
+        "choices": [],
+        "doc": "What the `BlockStyle` dropdown lists. Empty takes `defaultBlockChoices()`.",
+        "optional": false
+      },
+      {
+        "name": "showToolbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Write something\u2026\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "220.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "slider",
+    "group": "Controls",
+    "header": "gbui/widgets/slider.hpp",
+    "summary": "A single-value slider.",
+    "signatures": [
+      "[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, double value, const SliderOptions& options = {});"
+    ],
+    "notes": [
+      "Follows the pointer while it is held, even when it wanders off the track \u2014 which is what `Interaction::dragging` is for."
+    ],
+    "optionsType": "SliderOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Number",
+        "type": "double",
+        "default": "1.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "0 is continuous; anything else snaps to a multiple of it.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "Takes the free space on the parent's main axis, which is what a slider in a row wants and the only thing `grow` can mean. In a *column* the main axis is vertical, so this used to make a slider eat the leftover height and sit alone at the bottom of its card. It no longer can: the control is clamped to `height` whichever way it is pointed, so growing is free horizontally and impossible vertically.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "20.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "showValue",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Shows the value at the right of the track.",
+        "optional": false
+      },
+      {
+        "name": "decimals",
+        "kind": "Number",
+        "type": "int",
+        "default": "2",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "switchToggle",
+    "group": "Controls",
+    "header": "gbui/widgets/switchToggle.hpp",
+    "summary": "A switch.",
+    "signatures": [
+      "[[nodiscard]] bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const SwitchOptions& options = {});"
+    ],
+    "notes": [
+      "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\"."
+    ],
+    "optionsType": "SwitchOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's track and thumb.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "textField",
+    "group": "Controls",
+    "header": "gbui/widgets/textField.hpp",
+    "summary": "A single-line text field.",
+    "signatures": [
+      "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "TextFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "password",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Draws bullets instead of the text. The state still holds the real string \u2014 this hides it, it does not protect it.",
+        "optional": false
+      },
+      {
+        "name": "revealToggle",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The eye at the trailing edge that shows the password while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against. Ignored unless `password` is set.",
+        "optional": false
+      },
+      {
+        "name": "revealed",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Whether the text is currently shown. The caller owns it, like every other piece of state here, and flips it when the result says so.",
+        "optional": false
+      },
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "32.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "timePicker",
+    "group": "Controls",
+    "header": "gbui/widgets/timePicker.hpp",
+    "summary": "A time of day, chosen from columns of hours and minutes.",
+    "signatures": [
+      "TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view id, const Time& selected, TimePickerState& state, const TimePickerOptions& options = {});"
+    ],
+    "notes": [
+      "Columns of hours, minutes and \u2014 when asked for \u2014 seconds, each scrolled to its own value. Columns rather than steppers because a time is picked far more often than it is nudged: \"quarter past two\" is two glances, and two number fields make it two edits. Each column keeps its selection in view, so opening the picker on 23:45 does not show midnight."
+    ],
+    "optionsType": "TimePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "use24Hour",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Twelve-hour display with an AM/PM column. The *value* is always 0\u201323.",
+        "optional": false
+      },
+      {
+        "name": "showSeconds",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minuteStep",
+        "kind": "Number",
+        "type": "int",
+        "default": "1",
+        "choices": [],
+        "doc": "Coarser columns: 5 or 15 for a picker nobody needs to the minute.",
+        "optional": false
+      },
+      {
+        "name": "secondStep",
+        "kind": "Number",
+        "type": "int",
+        "default": "1",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minimum",
+        "kind": "Opaque",
+        "type": "Time",
+        "default": "0, 0, 0",
+        "choices": [],
+        "doc": "Times outside these cannot be chosen. Leave both at midnight for none \u2014 a range of nothing is not a range anybody wants.",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Opaque",
+        "type": "Time",
+        "default": "0, 0, 0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "locale",
+        "kind": "Opaque",
+        "type": "ClockLocale",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "176.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "columnWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "58.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "rowHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "menuItem",
+    "group": "Overlays",
+    "header": "gbui/widgets/menu.hpp",
+    "summary": "The rows inside a popover.",
+    "signatures": [
+      "bool menuItem(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const MenuItemOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame it was chosen."
+    ],
+    "optionsType": "MenuItemOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "shortcut",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "selected",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "The chosen value: a check mark and the strong text colour.",
+        "optional": false
+      },
+      {
+        "name": "checkSide",
+        "kind": "Enum",
+        "type": "CheckSide",
+        "default": "CheckSide::Leading",
+        "choices": [
+          "Leading",
+          "Trailing"
+        ],
+        "doc": "Where that check mark goes. Leading suits a menu, trailing a select.",
+        "optional": false
+      },
+      {
+        "name": "highlighted",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Drawn as though the pointer were on it. That is what walking a list with the arrow keys looks like \u2014 the highlight moves and the pointer does not \u2014 and it is a different question from `selected`, which is the value the list would return.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "danger",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "focusable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Whether Tab can land on it. A list whose owner drives the highlight \u2014 a select \u2014 turns this off, so Tab leaves the control instead of walking into an open popup and back out of the window's order.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "menuSeparator",
+    "group": "Overlays",
+    "header": "gbui/widgets/menu.hpp",
+    "summary": "The rows inside a popover.",
+    "signatures": [
+      "void menuSeparator(Ui& ui);"
+    ],
+    "notes": [
+      "A rule between groups of items."
+    ],
+    "optionsType": "",
+    "container": false,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "beginModal",
+    "group": "Overlays",
+    "header": "gbui/widgets/modal.hpp",
+    "summary": "A modal dialog, with a backdrop and a header you can drag it by.",
+    "signatures": [
+      "Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, Vec2 position, const ModalOptions& options = {});"
+    ],
+    "notes": [
+      "The caller supplies the position so dragging survives the tree being rebuilt, and gets it back updated."
+    ],
+    "optionsType": "ModalOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "420.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "backdrop",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Dims what is behind it. A modal without one is a floating panel.",
+        "optional": false
+      },
+      {
+        "name": "draggable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Lets the user drag it by its header, kept inside the window.",
+        "optional": false
+      },
+      {
+        "name": "icon",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "danger",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "beginModalActions",
+    "group": "Overlays",
+    "header": "gbui/widgets/modal.hpp",
+    "summary": "A modal dialog, with a backdrop and a header you can drag it by.",
+    "signatures": [
+      "Ui::Scope beginModalActions(Ui& ui);"
+    ],
+    "notes": [
+      "The row of buttons at the foot of a dialog, pushed to the right."
+    ],
+    "optionsType": "",
+    "container": true,
+    "interactive": false,
+    "properties": []
+  },
+  {
+    "name": "beginPopover",
+    "group": "Overlays",
+    "header": "gbui/widgets/popover.hpp",
+    "summary": "An empty floating surface the caller fills.",
+    "signatures": [
+      "Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});"
+    ],
+    "notes": [
+      "Returns a scope, so its contents are written inside the braces like any other container."
+    ],
+    "optionsType": "PopoverOptions",
+    "container": true,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "160.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maxWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "420.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "A ceiling on how tall it may grow. `kAuto` does *not* mean unbounded: it means **the room actually available on the side it lands on**, less the margin. A popup that would run past the bottom of the window stops at it and scrolls inside instead \u2014 which is what JetBrains' popups do, and the only behaviour that works when the anchor is near an edge. A number overrides that, and a smaller one wins.",
+        "optional": false
+      },
+      {
+        "name": "maxHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "allowOverflow",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Lets a popup grow past the window's edge, for a caller that would rather clip than scroll. Off, because the default should be reachable.",
+        "optional": false
+      },
+      {
+        "name": "scroll",
+        "kind": "Enum",
+        "type": "ScrollAxis",
+        "default": "ScrollAxis::Vertical",
+        "choices": [
+          "None",
+          "Vertical",
+          "Horizontal"
+        ],
+        "doc": "Scrolls its own contents once `maxHeight` bites, rather than making the caller wrap everything in a scroll view. The axis is the caller's: `ScrollAxis::None` clips instead, which is what a popover that must never scroll wants.",
+        "optional": false
+      },
+      {
+        "name": "scrollState",
+        "kind": "Opaque",
+        "type": "ScrollState*",
+        "default": "nullptr",
+        "choices": [],
+        "doc": "Where the scroll position lives, when the popover scrolls its own contents. Null means it does not: the box is still bounded by `maxHeight` and still clips, but nothing moves. State belongs to the application here as it does everywhere else \u2014 a popover that kept its own offset would be a component with memory, and the tree is rebuilt every frame.",
+        "optional": false
+      },
+      {
+        "name": "matchAnchorWidth",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Matches the anchor's width \u2014 what a select's list wants.",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::all(6.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gapBetweenItems",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "select",
+    "group": "Overlays",
+    "header": "gbui/widgets/select.hpp",
+    "summary": "A closed box that opens a list.",
+    "signatures": [
+      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});"
+    ],
+    "notes": [
+      "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box \u2014 not the rows \u2014 keeps the keyboard, so Tab leaves the control rather than walking into the popup."
+    ],
+    "optionsType": "SelectOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select\u2026\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height, so a select lines up with every other control on its row without anyone matching numbers.",
+        "optional": false
+      },
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "12",
+        "choices": [],
+        "doc": "How many rows fit before the list scrolls. The rest are reachable by scrolling or by walking to them with the arrow keys.",
+        "optional": false
+      },
+      {
+        "name": "maxListHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "A hard ceiling in pixels, which wins over `maxVisible` when both would apply \u2014 a row count cannot know how tall the window is. `kAuto` leaves the row count in charge.",
+        "optional": false
+      },
+      {
+        "name": "listScroll",
+        "kind": "Enum",
+        "type": "ScrollAxis",
+        "default": "ScrollAxis::Vertical",
+        "choices": [
+          "None",
+          "Vertical",
+          "Horizontal"
+        ],
+        "doc": "Whether the open list scrolls at all. `None` clips it instead, for a caller that would rather constrain the list than let it move.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "tooltip",
+    "group": "Overlays",
+    "header": "gbui/widgets/tooltip.hpp",
+    "summary": "A tooltip, shown while its anchor is hovered.",
+    "signatures": [
+      "void tooltip(Ui& ui, const Interaction& input, std::string_view anchorId, std::string_view text, const TooltipOptions& options = {});"
+    ],
+    "notes": [
+      "Draws nothing when the anchor is not hovered, so the call can sit unconditionally beside the control it describes."
+    ],
+    "optionsType": "TooltipOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "maxWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "260.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "delay",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.4f",
+        "choices": [],
+        "doc": "How long the pointer must rest on the anchor first, in seconds. Without one, dragging the pointer across a toolbar flashes a tooltip for every control it passes over, which is noise rather than help. Needs an animator for the clock; with none, the tooltip shows at once and behaves as it always did.",
+        "optional": false
+      },
+      {
+        "name": "wrap",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A long tooltip wraps rather than eliding \u2014 a description cut off at an ellipsis is worse than no description.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "barChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, const BarChartOptions& options = {});",
+      "ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const BarChartOptions& options = {}, const ChartZoom& zoom = {});"
+    ],
+    "notes": [
+      "Bars, columns or lollipops over a shared scale. One function rather than four because they differ only in how a value is turned into a rectangle: transposing the axes gives a bar chart from a column chart, stacking changes where each bar starts, and a lollipop is a bar drawn as a stem. Splitting them would mean four copies of the scale, the axis, the grid and the hit testing.",
+      "The same bars, showing only `view` of the categories and letting the reader move it. The view is the caller's, like everything else here, and sharing one is the point: a volume chart handed the same `ChartView` as the price chart above it zooms when that one is swept, because they are looking at the same window of the same data rather than each keeping their own idea of it."
+    ],
+    "optionsType": "BarChartOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "scale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "Fixed bounds. Left as they are, the chart takes them from the data.",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tickCount",
+        "kind": "Number",
+        "type": "std::optional<int>",
+        "default": "",
+        "choices": [],
+        "doc": "Each of these falls back to `Design::chart` when unset.",
+        "optional": true
+      },
+      {
+        "name": "axisWidth",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "Room for the value labels. Zero draws none.",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "160.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grid",
+        "kind": "Bool",
+        "type": "std::optional<bool>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "`std::snprintf` style, for the value labels and readouts.",
+        "optional": false
+      },
+      {
+        "name": "horizontal",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Bars run left to right from a category axis down the side, instead of bottom to top from one along the bottom. Long category names are the usual reason: horizontal gives them room to be read.",
+        "optional": false
+      },
+      {
+        "name": "grouping",
+        "kind": "Enum",
+        "type": "BarGrouping",
+        "default": "BarGrouping::Grouped",
+        "choices": [
+          "Grouped",
+          "Stacked"
+        ],
+        "doc": "How several series share a category: side by side, or on top of each other.",
+        "optional": false
+      },
+      {
+        "name": "shape",
+        "kind": "Enum",
+        "type": "BarShape",
+        "default": "BarShape::Bar",
+        "choices": [
+          "Bar",
+          "Lollipop"
+        ],
+        "doc": "A filled rectangle from the baseline, or a stem with a dot at the value.",
+        "optional": false
+      },
+      {
+        "name": "categoryPadding",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.28f",
+        "choices": [],
+        "doc": "Share of each category's slot left as gap, 0 to 0.9.",
+        "optional": false
+      },
+      {
+        "name": "seriesGap",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "Between the bars of different series in one category, in pixels.",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "categories",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "Names along the category axis. Fewer than there are values leaves the rest unlabelled rather than renumbering them.",
+        "optional": false
+      },
+      {
+        "name": "categoryAxis",
+        "kind": "Number",
+        "type": "float",
+        "default": "22.0f",
+        "choices": [],
+        "doc": "Room for the category names. Zero draws none.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "link",
+        "kind": "Opaque",
+        "type": "ChartLink*",
+        "default": "nullptr",
+        "choices": [],
+        "doc": "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.",
+        "optional": false
+      },
+      {
+        "name": "legend",
+        "kind": "Opaque",
+        "type": "ChartLegend",
+        "default": "",
+        "choices": [],
+        "doc": "The key drawn under the chart, and the focus a click on it gives.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "candlestickChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Candle>& candles, const CandlestickOptions& options = {});",
+      "ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Candle>& candles, ChartView& view, const CandlestickOptions& options = {}, const ChartZoom& zoom = {});"
+    ],
+    "notes": [
+      "Open, high, low and close per period. The one chart here whose scale deliberately does **not** reach zero. Every other chart in this file widens its range to include the baseline, because a bar that does not start at zero misstates the ratio between two bars. A price has no such baseline \u2014 forcing one on a stock that trades between 180 and 190 squeezes the entire year into the top five percent of the plot and hides the only thing the chart was drawn to show.",
+      "The same candles, showing only `view` of them \u2014 the overload a price chart and its volume share, so sweeping either zooms both."
+    ],
+    "optionsType": "CandlestickOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "scale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "Fixed bounds. Left as they are, the chart takes them from the data.",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tickCount",
+        "kind": "Number",
+        "type": "std::optional<int>",
+        "default": "",
+        "choices": [],
+        "doc": "Each of these falls back to `Design::chart` when unset.",
+        "optional": true
+      },
+      {
+        "name": "axisWidth",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "Room for the value labels. Zero draws none.",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "160.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grid",
+        "kind": "Bool",
+        "type": "std::optional<bool>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "`std::snprintf` style, for the value labels and readouts.",
+        "optional": false
+      },
+      {
+        "name": "categoryPadding",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.3f",
+        "choices": [],
+        "doc": "Share of each period's slot left as gap, 0 to 0.9.",
+        "optional": false
+      },
+      {
+        "name": "maxBodyWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "14.0f",
+        "choices": [],
+        "doc": "A ceiling on the body, in pixels, whatever the slot allows. A candle is a *mark*, not a bar: zooming in should make it taller and put more air around it, not fatten it. Without the ceiling a chart zoomed to a dozen periods draws them as forty-pixel bricks, which is the width of a bar chart's column and reads as one. The default barely bites at a full view \u2014 forty-odd candles across a card land near it anyway \u2014 and does all its work once the reader has swept a range.",
+        "optional": false
+      },
+      {
+        "name": "categories",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "categoryAxis",
+        "kind": "Number",
+        "type": "float",
+        "default": "22.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "rising",
+        "kind": "Token",
+        "type": "std::optional<Token>",
+        "default": "",
+        "choices": [],
+        "doc": "Unset takes the theme's added/removed colours, which are already the two a reader of this application associates with up and down.",
+        "optional": true
+      },
+      {
+        "name": "falling",
+        "kind": "Token",
+        "type": "std::optional<Token>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "hollowRising",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Draw rising candles as an outline instead of a solid body. The other common convention, and worth having: on a dense chart the hollow bodies recede and the falling ones stand out, which is what a reader watching for drops actually wants.",
+        "optional": false
+      },
+      {
+        "name": "lineWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "Width of the wick, and of a hollow body's outline.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "link",
+        "kind": "Opaque",
+        "type": "ChartLink*",
+        "default": "nullptr",
+        "choices": [],
+        "doc": "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "chartBrush",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "bool chartBrush(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const BrushOptions& options = {});"
+    ],
+    "notes": [
+      "A strip of the whole series with the current view as a window over it. The part an ApexCharts-style brush actually earns its keep with is not the zooming \u2014 a drag inside the plot does that, and so does the wheel \u2014 but the *context*: once zoomed in, a reader has no way to tell where they are or how much they cannot see. The strip answers both without them having to zoom back out, which is also why it is optional. Returns true on any frame the view moved."
+    ],
+    "optionsType": "BrushOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "46.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "axisWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Room down the left, so the strip lines up with the chart above it.",
+        "optional": false
+      },
+      {
+        "name": "handleWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "Handle width, and the smallest grabbable window.",
+        "optional": false
+      },
+      {
+        "name": "dragSelects",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Dragging the strip's empty part draws a new window instead of moving the existing one \u2014 which is how a reader selects a range they can see but are not in.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "chartToolbar",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartView& view, const ChartToolbarOptions& options = {});"
+    ],
+    "notes": [
+      "The buttons ApexCharts puts in the corner of a chart: zoom in, zoom out, and put it back. A row of ordinary buttons over the caller's own `ChartView`, and nothing else \u2014 which is why it is a component rather than an option on the chart. It has no idea which chart it belongs to, so one row can drive a group of them the same way one view already zooms a price and its volume together, and a caller who wants it somewhere other than the top right corner simply puts it there. The gestures are the primary way in and this is the secondary one, for the same reason a map has both: a sweep says *which range*, and these say *a bit more* \u2014 and only one of the two can be pressed by someone who has already lost the thread of where they are. Returns true on any frame the view moved."
+    ],
+    "optionsType": "ChartToolbarOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "zoomIn",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "zoomOut",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "reset",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Puts the whole series back. Disabled while it already is whole, because a button that does nothing is worse than one that is not there \u2014 the reader presses it and learns nothing about why.",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.4",
+        "choices": [],
+        "doc": "How much of the window a press takes off, as a fraction of it. 0.4 rather than a half: two presses should not lose 75% of the data, and a reader who wants that has the sweep, which says exactly what to keep.",
+        "optional": false
+      },
+      {
+        "name": "minSpan",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.02",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "30.0f",
+        "choices": [],
+        "doc": "The buttons are square, so this is their size.",
+        "optional": false
+      },
+      {
+        "name": "iconSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "17.0f",
+        "choices": [],
+        "doc": "Bigger than a button with a label would use: the glyph is the whole button here, and at fourteen pixels in a thirty-pixel square it reads as a mark stranded in the middle of a box.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "donutChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Slice>& slices, DonutState& state, const DonutOptions& options = {});"
+    ],
+    "notes": [
+      "A donut, or a pie when `thickness` is 1. Proof that the canvas node carries more than polylines: each wedge is two arcs and two lines, and an arc is cubics. Nothing here is a special case in the painter \u2014 it is the same vector layer the icons ride on."
+    ],
+    "optionsType": "DonutOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "150.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "thickness",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "How thick the ring is, as a share of the radius. 1 is a full pie. Unset takes the design's.",
+        "optional": true
+      },
+      {
+        "name": "padAngle",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "A gap between wedges, in degrees, so neighbouring colours do not merge.",
+        "optional": true
+      },
+      {
+        "name": "startAngle",
+        "kind": "Number",
+        "type": "float",
+        "default": "-90.0f",
+        "choices": [],
+        "doc": "Where the first wedge starts. -90 puts it at twelve o'clock, which is where every reader expects a donut to begin.",
+        "optional": false
+      },
+      {
+        "name": "hoverGrow",
+        "kind": "Number",
+        "type": "float",
+        "default": "4.0f",
+        "choices": [],
+        "doc": "The hovered wedge grows outward by this much.",
+        "optional": false
+      },
+      {
+        "name": "focusGrow",
+        "kind": "Number",
+        "type": "float",
+        "default": "10.0f",
+        "choices": [],
+        "doc": "How much further a *focused* wedge pulls out of the ring.",
+        "optional": false
+      },
+      {
+        "name": "dimAlpha",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.3f",
+        "choices": [],
+        "doc": "What the wedges that were not singled out fade to.",
+        "optional": false
+      },
+      {
+        "name": "legend",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "legendMaxHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "A ceiling on the legend before it scrolls, so a chart with forty contributors does not grow taller than the ring beside it. `kAuto` matches the donut.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "The readout beside the hovered wedge. A donut's legend already names every slice, so this one is about the *number* \u2014 which the legend has no room for once there are more than a handful.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "heatmap",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::vector<double>>& values, const HeatmapOptions& options = {});"
+    ],
+    "notes": [
+      "A grid of cells shaded by value. `values` is row-major and may be ragged \u2014 a short row simply has fewer cells, which is what a calendar's last week is. The colour is one token at varying strength rather than a rainbow. A multi-hue scale looks richer and reads worse: hue carries no order, so a reader has to consult the legend for every cell, while \"more of the same colour\" needs no legend at all."
+    ],
+    "optionsType": "HeatmapOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "rows",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "Names down the side and along the top. Fewer than there are rows or columns leaves the rest unlabelled rather than renumbering them.",
+        "optional": false
+      },
+      {
+        "name": "columns",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "scale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "steps",
+        "kind": "Number",
+        "type": "int",
+        "default": "5",
+        "choices": [],
+        "doc": "Quantise the colour into this many steps; zero is a continuous ramp. Five by default, and steps rather than a ramp because a reader compares cells by *matching* them, not by judging absolute lightness. Two cells one step apart are visibly different; two cells 3% apart on a continuous ramp are the same colour to anyone reading a grid at a glance.",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "std::optional<Token>",
+        "default": "",
+        "choices": [],
+        "doc": "The hue the scale runs to. Unset takes the design's first chart colour, so the grid re-themes with everything else.",
+        "optional": true
+      },
+      {
+        "name": "cellSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero lets the cells share out the width.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "3.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "rowLabels",
+        "kind": "Number",
+        "type": "float",
+        "default": "34.0f",
+        "choices": [],
+        "doc": "Room for the labels. Zero draws none.",
+        "optional": false
+      },
+      {
+        "name": "columnLabels",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "lineChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, const ChartOptions& options = {});",
+      "ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, ChartView& view, const ChartOptions& options = {}, const ChartZoom& zoom = {});"
+    ],
+    "notes": [
+      "Draws one or more series over a shared scale. The geometry is built here and handed to `Ui::draw`, so the whole chart is one node plus its labels rather than a widget per mark. Hit testing is on the *index* \u2014 the pointer's x is turned back into a sample number \u2014 which is what lets a tooltip name the right point instead of the nearest pixel.",
+      "The same chart, showing only `view` of the data and letting the reader move it. The view is the caller's, like every other piece of state here \u2014 which is what lets two charts share one, so panning a line chart pans the bars under it."
+    ],
+    "optionsType": "ChartOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "scale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "Fixed bounds. Left as they are, the chart takes them from the data \u2014 which is what a live readout wants and what a comparison does not.",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tickCount",
+        "kind": "Number",
+        "type": "std::optional<int>",
+        "default": "",
+        "choices": [],
+        "doc": "Each of these falls back to `Design::chart` when it is not set, so a dashboard configures its charts once instead of per call site.",
+        "optional": true
+      },
+      {
+        "name": "axisWidth",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "Room for the value labels down the left. Zero draws none.",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "120.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grid",
+        "kind": "Bool",
+        "type": "std::optional<bool>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A crosshair and a readout following the pointer.",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "Printed beside a hovered value; \"%.0f\" style, as `std::snprintf` takes.",
+        "optional": false
+      },
+      {
+        "name": "categories",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "Names for the samples, used as the readout's heading.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "link",
+        "kind": "Opaque",
+        "type": "ChartLink*",
+        "default": "nullptr",
+        "choices": [],
+        "doc": "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.",
+        "optional": false
+      },
+      {
+        "name": "legend",
+        "kind": "Opaque",
+        "type": "ChartLegend",
+        "default": "",
+        "choices": [],
+        "doc": "The key drawn under the chart, and the focus a click on it gives.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "radarChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Series>& series, const RadarOptions& options = {});"
+    ],
+    "notes": [
+      "One value per axis, per series, on spokes around a common centre. The chart for a *profile* \u2014 a handful of measures that belong together and are compared as a shape rather than read off one at a time: a skills assessment, a wine's tasting notes, one machine's five utilisation figures against another's. Everything it is good at falls apart past about eight axes, where the polygon stops being a shape and becomes a scribble. `series` is the same `Series` every other chart here takes; each value is a spoke, in order, starting at twelve o'clock and going clockwise. Hit testing is by *angle*, so a reader pointing anywhere along a spoke means that axis \u2014 the same rule the bars use for a category, for the same reason."
+    ],
+    "optionsType": "RadarOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "scale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "Fixed bounds. Left alone the chart takes them from the data \u2014 and always from zero, whatever the data says. A radar is read as an *area*, and area from a non-zero baseline is the same lie a truncated bar tells, told about five axes at once: two profiles a hair apart become one enormous and one tiny.",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tickCount",
+        "kind": "Number",
+        "type": "std::optional<int>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "categories",
+        "kind": "Opaque",
+        "type": "std::vector<std::string>",
+        "default": "",
+        "choices": [],
+        "doc": "One name per axis, drawn outside its spoke. Fewer than there are values leaves the rest unlabelled rather than renumbering them.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "The whole chart's box, labels included.",
+        "optional": false
+      },
+      {
+        "name": "grid",
+        "kind": "Enum",
+        "type": "RadarGrid",
+        "default": "RadarGrid::Web",
+        "choices": [
+          "Web",
+          "Polygon",
+          "None"
+        ],
+        "doc": "What is drawn behind the data: a mesh, shaded bands, or nothing.",
+        "optional": false
+      },
+      {
+        "name": "labelRoom",
+        "kind": "Number",
+        "type": "float",
+        "default": "52.0f",
+        "choices": [],
+        "doc": "Room between the outermost ring and the edge, for the names. Zero draws none and gives the web the whole box.",
+        "optional": false
+      },
+      {
+        "name": "fillAlpha",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.1f",
+        "choices": [],
+        "doc": "Shading inside a series' polygon, when the series carries no `fillAlpha` of its own. Filled by default, where a line chart is not. A line is read along, and shading under two of them buries the lower one; a radar is read as a shape, and an unfilled one is a wire outline the eye has to close for itself. Lower than the 0.2 the web charting libraries settle on, and deliberately: the painter composites in linear light, where the same number covers roughly twice as much as it does in a browser blending sRGB directly.",
+        "optional": false
+      },
+      {
+        "name": "markerRadius",
+        "kind": "Number",
+        "type": "float",
+        "default": "3.0f",
+        "choices": [],
+        "doc": "A dot at each vertex. Zero draws none.",
+        "optional": false
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "Printed in the readout; \"%.0f\" style, as `std::snprintf` takes.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "legend",
+        "kind": "Opaque",
+        "type": "ChartLegend",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "scatterChart",
+    "group": "Charts",
+    "header": "gbui/widgets/chart.hpp",
+    "summary": "Charts: a scale, its ticks, and a line or area drawn from data.",
+    "signatures": [
+      "ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id, const std::vector<PointSeries>& series, const ScatterOptions& options = {});"
+    ],
+    "notes": [
+      "Points on two continuous scales \u2014 a scatter, or a bubble chart when the points carry weights. The first chart here with a real **x scale**. Every other one indexes its samples along the bottom: sample 0 at the left, sample n at the right, evenly spaced whatever their x values are. That is right for a series over time and wrong for a correlation, where the whole question is where the points sit against each other on both axes. Hit testing is by distance to the nearest dot rather than by column, because a scatter has no columns \u2014 two points can share an x and mean different things."
+    ],
+    "optionsType": "ScatterOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "xScale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "Fixed bounds for each axis. Left alone, both come from the data.",
+        "optional": false
+      },
+      {
+        "name": "yScale",
+        "kind": "Opaque",
+        "type": "Scale",
+        "default": "0.0, 0.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "autoScale",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "tickCount",
+        "kind": "Number",
+        "type": "std::optional<int>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "axisWidth",
+        "kind": "Number",
+        "type": "std::optional<float>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "220.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grid",
+        "kind": "Bool",
+        "type": "std::optional<bool>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
+      {
+        "name": "hover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "valueFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "xFormat",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"%.0f\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "xAxis",
+        "kind": "Number",
+        "type": "float",
+        "default": "20.0f",
+        "choices": [],
+        "doc": "Room under the plot for the x labels. Zero draws none.",
+        "optional": false
+      },
+      {
+        "name": "minRadius",
+        "kind": "Number",
+        "type": "float",
+        "default": "5.0f",
+        "choices": [],
+        "doc": "The radii the weights are spread across, when there are weights.",
+        "optional": false
+      },
+      {
+        "name": "maxRadius",
+        "kind": "Number",
+        "type": "float",
+        "default": "26.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "fillAlpha",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.6f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "hitRadius",
+        "kind": "Number",
+        "type": "float",
+        "default": "14.0f",
+        "choices": [],
+        "doc": "How near the pointer has to be, in pixels, to pick a dot.",
+        "optional": false
+      },
+      {
+        "name": "tooltip",
+        "kind": "Opaque",
+        "type": "ChartTooltip",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "legend",
+        "kind": "Opaque",
+        "type": "ChartLegend",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  }
+]

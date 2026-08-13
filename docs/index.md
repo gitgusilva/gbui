@@ -4,7 +4,7 @@ layout: home
 hero:
   name: gbui
   text: A UI toolkit for C++
-  tagline: Flexbox layout, themeable components and a painter you can implement — with no web engine and no dependency beyond the standard library.
+  tagline: Flexbox layout, themeable components and a painter you can implement — with no web engine and nothing to fetch.
   actions:
     - theme: brand
       text: Get started
@@ -78,11 +78,11 @@ stb_truetype, wrapped or elided by the same function layout used; vector icons;
 an SVG backend for review; a window and an event loop on SDL2; the whole
 interaction layer — hover, press, click, focus, `:focus-visible`, focus-within,
 Tab traversal, wheel routing and per-node cursors; an animation clock; and
-around fifty components, from a button to a table, a rich-text editor and eight
+over fifty components, from a button to a table, a rich-text editor and nine
 kinds of chart.
 
 **What does not exist yet.** An accessibility tree and the bridge a screen
-reader needs; text shaping, so Arabic, Devanagari and emoji are wrong; images,
-since nothing decodes a PNG; a GPU painter; and a code editor with syntax
+reader needs; text shaping, so Arabic, Devanagari and emoji are wrong; a GPU
+painter; and a code editor with syntax
 highlighting. Each of those is named in the header of the module that would own
 it rather than half-built.

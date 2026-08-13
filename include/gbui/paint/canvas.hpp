@@ -32,15 +32,50 @@ namespace gbui {
  * round box with a square region lets whatever is inside it show through the
  * corners, which is exactly what it looks like.
  */
+/**
+ * The box a pixel has to be inside to be drawn, and the corners it is rounded
+ * by.
+ *
+ * The two are kept apart on purpose. A radius belongs to the box it was written
+ * for, and nesting does not transfer it: a chart's square plot inside a card
+ * with a six-pixel radius is still a square plot, and the card's curve belongs
+ * at the card's corners — which are somewhere else entirely. Handing the
+ * intersection the larger of the two radii rounded every inner box in the
+ * application by its container's corner, which is visible the moment two of
+ * them are stacked and their meeting edge curves away from each other.
+ */
 struct Clip {
+    /** The tightest box, and square. */
     Rect rect;
     float radius = 0.0f;
+    /** The box `radius` belongs to, which is not `rect` once anything has been
+     *  nested inside it. */
+    Rect rounded{};
 
-    /** The intersection, keeping the tighter corner. Two rounded clips that
-     *  actually overlap at their corners are rare enough that the larger radius
-     *  is the honest approximation and the alternative is a region algebra. */
+    constexpr Clip() = default;
+    constexpr Clip(Rect box, float corner = 0.0f) : rect(box), radius(corner), rounded(box) {}
+
+    /**
+     * The intersection: the tighter box, and whichever clip actually has
+     * corners.
+     *
+     * Two *rounded* clips nested in each other are rare enough that the larger
+     * radius with its own box is the honest approximation, and the alternative
+     * is a region algebra. A rounded one containing a square one is not rare at
+     * all — it is every card in the application — and that is the case this
+     * gets exactly right.
+     */
     Clip intersect(const Clip& other) const {
-        return {rect.intersect(other.rect), std::max(radius, other.radius)};
+        Clip out;
+        out.rect = rect.intersect(other.rect);
+        if (radius >= other.radius) {
+            out.radius = radius;
+            out.rounded = rounded;
+        } else {
+            out.radius = other.radius;
+            out.rounded = other.rounded;
+        }
+        return out;
     }
 };
 
@@ -63,6 +98,17 @@ public:
     /** Antialiased rounded rectangle. A radius of zero is a plain rectangle.
      *  A gradient paint is sampled per pixel across `rect`. */
     void fillRoundedRect(const Rect& rect, float radius, const Paint& paint, const Clip& clip);
+
+    /**
+     * Draws `source` into `dest`, sampled.
+     *
+     * Bilinear, because a logo scaled to fit a row is almost never at its own
+     * size and nearest-neighbour turns its edges into a staircase. The rounded
+     * corners and the clip are the same coverage the fills use, so a picture in
+     * a rounded box is cut by the same curve as the box.
+     */
+    void blitImage(const Rect& dest, const Bitmap& source, float radius, float opacity,
+                   const Clip& clip);
     void strokeRoundedRect(const Rect& rect, float radius, float thickness, const Paint& paint,
                            const Clip& clip);
     /** Strokes or fills a flattened path. Coverage comes from the distance to
@@ -88,6 +134,7 @@ public:
     void fillRect(const FillRect&) override;
     void strokeRect(const StrokeRect&) override;
     void drawText(const DrawText&) override;
+    void drawImage(const DrawImage&) override;
     void drawPath(const DrawPath&) override;
     void pushClip(const PushClip&) override;
     void popClip() override;

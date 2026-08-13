@@ -51,6 +51,8 @@ enum class Icon {
     Settings,
     Strikethrough,
     Terminal,
+    TrendingDown,
+    TrendingUp,
     Underline,
     Upload,
     X,

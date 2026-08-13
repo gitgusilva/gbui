@@ -8,14 +8,14 @@ aside: false
 
 # Demos
 
-Six application screens, and the C++ that draws them. Press Run and they are
+Seven application screens, and the C++ that draws them. Press Run and they are
 not a video and not a screenshot: the same source is compiled to WebAssembly,
 lays out and rasterises every frame on the CPU, and copies the result into a
 `<canvas>`. There is no DOM inside that rectangle — no elements, no CSS, no
 WebGL. What you are pointing at is a display list.
 
-Between them the six exercise every chart, every container and every
-interactive control the library has. They live in
+Between them they exercise every chart, every container and every interactive
+control the library has. They live in
 [`demos/`](https://github.com/gitgusilva/gbui/tree/main/demos) and use nothing
 but the public headers, so a change that makes them awkward has made the
 library awkward.
@@ -51,7 +51,7 @@ stages in order. Three shells drive it and each is thin:
 | `demos/runtime/wasm.cpp` | a C surface for JavaScript, about a hundred lines |
 | `demos/web/gbui-embed.js` | browser events in, RGBA out — framework-free |
 
-That division is what makes the same six screens run in a native window, in a
+That division is what makes the same screens run in a native window, in a
 headless CI job and in this page without one line of them knowing which.
 
 ### Run them locally

@@ -6,6 +6,8 @@
 import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
 
+import GbuiCode from './components/GbuiCode.vue'
+import GbuiComponents from './components/GbuiComponents.vue'
 import GbuiDemo from './components/GbuiDemo.vue'
 import './custom.css'
 
@@ -13,5 +15,7 @@ export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('GbuiDemo', GbuiDemo)
+    app.component('GbuiCode', GbuiCode)
+    app.component('GbuiComponents', GbuiComponents)
   },
 } satisfies Theme

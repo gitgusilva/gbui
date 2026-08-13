@@ -50,6 +50,31 @@ struct TabsOptions {
      *  is present and simply appears on the new one when there is not. */
     bool indicator = true;
     float indicatorWidth = 2.0f;
+    /**
+     * How far the indicator sits from the strip's trailing edge — under a
+     * horizontal strip, beside a vertical one.
+     *
+     * Zero puts it hard against the edge, which is what a strip with a rule
+     * under it wants: the bar and the rule are then the same line, one of them
+     * lit. A strip without a rule usually wants a pixel or two of air, or the
+     * bar reads as an underline attached to the word rather than as a marker
+     * under the tab.
+     */
+    float indicatorInset = 0.0f;
+    /**
+     * The space inside each tab.
+     *
+     * Unset takes a default that fits the orientation: horizontal tabs get room
+     * under the label so the indicator clears its descenders, and vertical rows
+     * keep a lane free on the leading edge so the label does not shift sideways
+     * when a tab becomes the active one.
+     *
+     * Here for the same reason `Style::padding` is on every node — a caller who
+     * disagrees with the spacing should be able to say so rather than work
+     * around it — and it is the one piece of a tab strip's spacing the caller
+     * could not reach.
+     */
+    std::optional<Edges> itemPadding{};
     /** A rule along the whole strip — under it, or beside it — so the strip
      *  reads as an edge rather than as floating text. */
     bool rule = true;

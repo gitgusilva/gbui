@@ -12,6 +12,8 @@
 //     --skin NAME    gitbox | material | cupertino | fluent
 //     --light        the light palette
 //     --at SECONDS   wind the demo clock forward before the shot
+//     --at-pointer X Y   park the pointer there first, so a still can catch a
+//                        hover — a chart's readout, a row's highlight
 //     --font-size N
 //
 // While it runs: left and right move between screens, `t` cycles the skin,
@@ -29,13 +31,58 @@
 #include <string>
 #include <vector>
 
+#include "gbui/meta/components.hpp"
 #include "gbui/platform/window.hpp"
+#include "gbui_demos/catalog.hpp"
 #include "gbui_demos/demos.hpp"
 #include "gbui_demos/host.hpp"
 
 using namespace gbui;
 
 namespace {
+
+/**
+ * Every component in the metadata with no live example, and the reverse.
+ *
+ * The only thing holding the two halves together. `gbui::meta` is generated
+ * from the headers and cannot fall behind them; the examples are written by
+ * hand and can. A gallery that quietly omits a component is worse than one
+ * that refuses to build, so this is a build step rather than a good intention.
+ */
+int reportCoverage() {
+    int problems = 0;
+
+    std::size_t names = 0;
+    for (const meta::ComponentInfo& entry : meta::components()) {
+        // A component is declared once per overload; only the first of each
+        // name is counted, and only one example is expected.
+        bool first = true;
+        for (const meta::ComponentInfo& other : meta::components()) {
+            if (&other == &entry) break;
+            if (other.name == entry.name) first = false;
+        }
+        if (!first) continue;
+        ++names;
+        if (demos::catalog::find(entry.name)) continue;
+        std::printf("no example: %-20.*s (%.*s)\n", static_cast<int>(entry.name.size()),
+                    entry.name.data(), static_cast<int>(entry.header.size()), entry.header.data());
+        ++problems;
+    }
+
+    // The other direction matters too: an example for a component that no
+    // longer exists stops compiling the day someone renames it, and until
+    // then it is a lie in the gallery.
+    for (const demos::catalog::Example& example : demos::catalog::examples()) {
+        if (meta::find(example.component)) continue;
+        std::printf("example for an unknown component: %.*s\n",
+                    static_cast<int>(example.component.size()), example.component.data());
+        ++problems;
+    }
+
+    std::printf("%zu components, %zu examples, %d missing\n", names,
+                demos::catalog::examples().size(), problems);
+    return problems;
+}
 
 void printCatalogue() {
     std::printf("%-12s  %-26s  %s\n", "ID", "TITLE", "SECTOR");
@@ -66,10 +113,14 @@ bool ensureDirectory(const std::filesystem::path& directory) {
  *  components that place themselves from last frame's geometry — a chart's
  *  crosshair, a table's columns — need a frame or two to settle, and a shot
  *  taken too early shows a layout that never appears on screen. */
-void settle(demos::Host& host, float seconds) {
+void settle(demos::Host& host, float seconds, Vec2 pointer, bool pointed) {
     constexpr float kStep = 1.0f / 60.0f;
     const int steps = seconds > 0.0f ? static_cast<int>(seconds / kStep) : 0;
     for (int i = 0; i < steps; ++i) host.frame(kStep);
+    // The pointer goes down last and gets frames of its own: hit testing reads
+    // the tree the *previous* frame laid out, so a hover asked for and shot in
+    // the same frame lands on a layout that had not happened yet.
+    if (pointed) host.pointerMove(pointer.x, pointer.y);
     for (int i = 0; i < 4; ++i) host.frame(kStep);
 }
 
@@ -77,17 +128,33 @@ void settle(demos::Host& host, float seconds) {
 
 int main(int argc, char** argv) {
     demos::HostOptions options;
+    std::string component;
     std::string shotPath;
     std::string svgPath;
     std::string stillsDirectory;
     float at = 0.0f;
     float fontSize = 0.0f;
     bool sized = false;
+    // Where the pointer is parked before a still is taken. Off the canvas by
+    // default, which is what "no pointer" means to the hit testing.
+    Vec2 pointer{-1.0f, -1.0f};
+    bool pointed = false;
 
     for (int i = 1; i < argc; ++i) {
         const char* argument = argv[i];
         if (std::strcmp(argument, "--list") == 0) {
             printCatalogue();
+            return 0;
+        }
+        if (std::strcmp(argument, "--coverage") == 0) {
+            return reportCoverage() == 0 ? 0 : 1;
+        }
+        if (std::strcmp(argument, "--components") == 0) {
+            for (const meta::ComponentInfo& entry : meta::components()) {
+                std::printf("%-20.*s %.*s\n", static_cast<int>(entry.name.size()),
+                            entry.name.data(), static_cast<int>(entry.group.size()),
+                            entry.group.data());
+            }
             return 0;
         }
         if (std::strcmp(argument, "--shot") == 0 && i + 1 < argc)
@@ -96,6 +163,8 @@ int main(int argc, char** argv) {
             svgPath = argv[++i];
         else if (std::strcmp(argument, "--stills") == 0 && i + 1 < argc)
             stillsDirectory = argv[++i];
+        else if (std::strcmp(argument, "--component") == 0 && i + 1 < argc)
+            component = argv[++i];
         else if (std::strcmp(argument, "--skin") == 0 && i + 1 < argc)
             options.skin = argv[++i];
         else if (std::strcmp(argument, "--light") == 0)
@@ -104,6 +173,10 @@ int main(int argc, char** argv) {
             at = static_cast<float>(std::atof(argv[++i]));
         } else if (std::strcmp(argument, "--font-size") == 0 && i + 1 < argc) {
             fontSize = static_cast<float>(std::atof(argv[++i]));
+        } else if (std::strcmp(argument, "--at-pointer") == 0 && i + 2 < argc) {
+            pointer.x = static_cast<float>(std::atof(argv[++i]));
+            pointer.y = static_cast<float>(std::atof(argv[++i]));
+            pointed = true;
         } else if (std::strcmp(argument, "--scale") == 0 && i + 1 < argc) {
             options.scale = static_cast<float>(std::atof(argv[++i]));
         } else if (std::strcmp(argument, "--size") == 0 && i + 2 < argc) {
@@ -128,12 +201,13 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    // Each screen carries the size it was drawn for, so a still is composed the
-    // way its author composed it unless the caller says otherwise.
+    // Each screen carries the size it was drawn for — and a component preview
+    // its own, which is far smaller than any screen — so a still is composed
+    // the way its author composed it unless the caller says otherwise.
     const auto applyDesignSize = [&](demos::Host& host) {
-        if (sized || !host.info()) return;
-        host.resize(static_cast<int>(host.info()->design.x),
-                    static_cast<int>(host.info()->design.y), options.scale);
+        if (sized) return;
+        const Vec2 design = host.designSize();
+        host.resize(static_cast<int>(design.x), static_cast<int>(design.y), options.scale);
     };
 
     if (!stillsDirectory.empty()) {
@@ -148,7 +222,7 @@ int main(int argc, char** argv) {
             demos::Host host(one);
             if (fontSize > 0.0f) host.setFontSize(fontSize);
             applyDesignSize(host);
-            settle(host, at);
+            settle(host, at, pointer, pointed);
             const std::string path = stillsDirectory + std::string(entry.id) + ".ppm";
             if (!host.writePpm(path)) {
                 std::fprintf(stderr, "gbui_demo: cannot write %s\n", path.c_str());
@@ -161,6 +235,10 @@ int main(int argc, char** argv) {
 
     demos::Host host(options);
     if (fontSize > 0.0f) host.setFontSize(fontSize);
+    if (!component.empty() && !host.selectComponent(component)) {
+        std::fprintf(stderr, "gbui_demo: no example for component '%s'\n", component.c_str());
+        return 2;
+    }
 
     if (!shotPath.empty() || !svgPath.empty()) {
         if (!ensureDirectory(std::filesystem::path(shotPath).parent_path()) ||
@@ -169,7 +247,7 @@ int main(int argc, char** argv) {
             return 1;
         }
         applyDesignSize(host);
-        settle(host, at);
+        settle(host, at, pointer, pointed);
         if (!shotPath.empty() && !host.writePpm(shotPath)) {
             std::fprintf(stderr, "gbui_demo: cannot write %s\n", shotPath.c_str());
             return 1;

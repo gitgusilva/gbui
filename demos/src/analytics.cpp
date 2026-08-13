@@ -52,6 +52,8 @@ private:
     kit::Rolling latency_{48, 120.0, 410.0, 2.9f, 0.5f};
 
     std::size_t range_ = 2;
+    /** Which series the revenue chart's key has singled out, or -1. */
+    int series_ = -1;
     ChartView view_{};
     DonutState channels_{};
     TableState accounts_{};
@@ -147,7 +149,7 @@ void Analytics::kpis(Ui& ui) {
 
 void Analytics::revenuePanel(Ui& ui, const Interaction& input) {
     auto card = kit::beginCard(ui, {.title = "REVENUE VS FORECAST",
-                                    .note = "drag to pan · ctrl+wheel to zoom",
+                                    .note = "drag to zoom · shift-drag to pan",
                                     .gap = 6.0f,
                                     .grow = 1.6f,
                                     .minWidth = 320.0f});
@@ -162,30 +164,24 @@ void Analytics::revenuePanel(Ui& ui, const Interaction& input) {
     const auto categories = categoriesFor(range_, revenue_.values().size());
 
     lineChart(ui, input, "analytics.revenue", series, view_,
-              {.height = 190.0f, .valueFormat = "$%.0f", .categories = categories},
-              {.wheel = true, .drag = true});
+              {.height = 190.0f,
+               .valueFormat = "$%.0f",
+               .categories = categories,
+               // Clicking a name in the key singles that series out. The chart
+               // draws the key either way; what the pointer here buys is the
+               // focus, and the focus needs somewhere to live.
+               .legend = {.focused = &series_}},
+              {.wheel = true, .drag = ChartDrag::Select});
     chartBrush(ui, input, "analytics.revenue.brush", series, view_, {.axisWidth = 46.0f});
 
     {
-        Style legend;
-        legend.direction = Direction::Row;
-        legend.align = Align::Center;
-        legend.gap = 16.0f;
-        legend.shrink = 0.0f;
-        auto legendScope = ui.begin(legend);
-        kit::statusDot(ui, kit::Tone::Info, 8.0f);
-        text(ui, "Booked", {.color = Token::TextMuted, .size = 11.0f});
-        {
-            Style swatch;
-            swatch.width = 8.0f;
-            swatch.height = 8.0f;
-            swatch.radius = 4.0f;
-            swatch.shrink = 0.0f;
-            swatch.alignSelf = Align::Center;
-            swatch.background = Fill{Token::Graph3};
-            ui.add(swatch);
-        }
-        text(ui, "Forecast", {.color = Token::TextMuted, .size = 11.0f});
+        // The chart draws the key itself now; what is left here is the note
+        // beside it, which is this screen's own and not a chart's business.
+        Style note;
+        note.direction = Direction::Row;
+        note.align = Align::Center;
+        note.shrink = 0.0f;
+        auto noteScope = ui.begin(note);
         spacer(ui);
         text(ui, "peak " + kit::format("$%.0f", revenue_.peak()),
              {.color = Token::TextMuted, .role = FontRole::Mono, .size = 11.0f});
@@ -416,9 +412,9 @@ DemoInfo analyticsDemo() {
             "over a brush, a channel donut and a sortable account table.",
         .highlights = {"Pan and zoom", "Sortable table", "Donut with legend", "Live sparklines"},
         .tryThis =
-            "Drag inside the revenue chart to pan it, hold Ctrl and scroll to zoom, "
-            "drag the window along the strip underneath, and click ARR twice to sort by "
-            "it.",
+            "Drag across the revenue chart to zoom to that range, hold Shift and drag to "
+            "pan it, drag the window along the strip underneath, and click ARR twice to "
+            "sort by it.",
         .design = {1280.0f, 824.0f},
         .palette = Palette::Follow,
         .create = [] { return std::unique_ptr<Demo>(new Analytics()); }};

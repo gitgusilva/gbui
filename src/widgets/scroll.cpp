@@ -5,6 +5,64 @@
 
 namespace gbui {
 
+void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state,
+               Rect box, ScrollAxis axis, float width, bool autoHide) {
+    const bool vertical = axis != ScrollAxis::Horizontal;
+    if (box.empty() || (!state.scrollable() && autoHide)) return;
+
+    const std::string thumbId = std::string(id) + ".thumb";
+    const std::string trackId = std::string(id) + ".track";
+
+    const float length = vertical ? box.height : box.width;
+    const float ratio = state.contentSize > 0.0f
+                            ? std::clamp(state.viewportSize / state.contentSize, 0.0f, 1.0f)
+                            : 1.0f;
+    // A thumb shorter than this is a target nobody can hit.
+    const float thumbLength = std::max(28.0f, length * ratio);
+    const float thumbTravel = std::max(0.0f, length - thumbLength);
+    const float thumbAt = thumbTravel * state.progress();
+
+    // A bar the pointer is over is a bar being used: the track darkens and the
+    // thumb thickens, both by the same number, so the two read as one object
+    // waking up rather than as two things changing.
+    const bool overBar = input.isHovered(trackId) || input.isHovered(thumbId) ||
+                         input.dragging() == thumbId;
+    const float wake =
+        ui.animate(id, "bar", overBar ? 1.0f : 0.0f, {.duration = 0.12f, .easing = Easing::EaseOut});
+    const bool held = input.dragging() == thumbId;
+
+    Style track;
+    track.position = Position::Absolute;
+    track.left = box.x + (vertical ? box.width - width : 0.0f);
+    track.top = box.y + (vertical ? 0.0f : box.height - width);
+    track.width = vertical ? width : box.width;
+    track.height = vertical ? box.height : width;
+    track.radius = 0.0f;
+    track.background = Fill{Token::Bg, 0.4f + 0.35f * wake};
+    // The track is a target, not a decoration — clicking it pages, which is
+    // what the arrow-less bars every desktop now ships do.
+    track.cursorHint = Cursor::Default;
+    ui.add(track);
+    ui.tag(trackId);
+
+    // The thumb grows out of the track's centre line, so thickening it does not
+    // make it drift sideways.
+    const float thickness = width - 4.0f + 2.0f * wake;
+    const float sideways = (width - thickness) / 2.0f;
+
+    Style thumb;
+    thumb.position = Position::Absolute;
+    thumb.left = box.x + (vertical ? box.width - width + sideways : thumbAt);
+    thumb.top = box.y + (vertical ? thumbAt : box.height - width + sideways);
+    thumb.width = vertical ? thickness : thumbLength;
+    thumb.height = vertical ? thumbLength : thickness;
+    thumb.radius = thickness / 2.0f;
+    thumb.background = Fill{held || wake > 0.5f ? Token::TextMuted : Token::BorderStrong};
+    thumb.cursorHint = held ? Cursor::Grabbing : Cursor::Grab;
+    ui.add(thumb);
+    ui.tag(thumbId).cursor(thumb.cursorHint);
+}
+
 Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
                       const ScrollOptions& options) {
     const ScrollAxis axis = options.resolvedAxis();
@@ -132,56 +190,9 @@ Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, Scr
     // measured from the parent's content box — so only the viewport's *size*
     // still comes from the last layout, and a resize costs a frame of width
     // rather than a frame of the whole pane sitting in the wrong place.
-    if (scrolls && options.scrollbar && viewportFrame.width > 0.0f &&
-        (state.scrollable() || !options.autoHideScrollbar)) {
-        const float length = vertical ? viewportFrame.height : viewportFrame.width;
-        const float ratio = state.contentSize > 0.0f
-                                ? std::clamp(state.viewportSize / state.contentSize, 0.0f, 1.0f)
-                                : 1.0f;
-        // A thumb shorter than this is a target nobody can hit.
-        const float thumbLength = std::max(28.0f, length * ratio);
-        const float thumbTravel = std::max(0.0f, length - thumbLength);
-        const float thumbAt = thumbTravel * state.progress();
-
-        // A bar the pointer is over is a bar being used: the track darkens and
-        // the thumb thickens, both by the same number, so the two read as one
-        // object waking up rather than as two things changing.
-        const bool overBar = input.isHovered(trackId) || input.isHovered(thumbId) ||
-                             input.dragging() == thumbId;
-        const float wake = ui.animate(id, "bar", overBar ? 1.0f : 0.0f,
-                                      {.duration = 0.12f, .easing = Easing::EaseOut});
-        const bool held = input.dragging() == thumbId;
-
-        Style track;
-        track.position = Position::Absolute;
-        track.left = vertical ? viewportFrame.width - options.scrollbarWidth : 0.0f;
-        track.top = vertical ? 0.0f : viewportFrame.height - options.scrollbarWidth;
-        track.width = vertical ? options.scrollbarWidth : viewportFrame.width;
-        track.height = vertical ? viewportFrame.height : options.scrollbarWidth;
-        track.radius = 0.0f;
-        track.background = Fill{Token::Bg, 0.4f + 0.35f * wake};
-        // The track is a target, not a decoration — clicking it pages, which is
-        // what the arrow-less bars every desktop now ships do.
-        track.cursorHint = Cursor::Default;
-        ui.add(track);
-        ui.tag(trackId);
-
-        // The thumb grows out of the track's centre line, so thickening it does
-        // not make it drift sideways.
-        const float thickness = options.scrollbarWidth - 4.0f + 2.0f * wake;
-        const float sideways = (options.scrollbarWidth - thickness) / 2.0f;
-
-        Style thumb;
-        thumb.position = Position::Absolute;
-        thumb.left = (vertical ? viewportFrame.width - options.scrollbarWidth + sideways : thumbAt);
-        thumb.top = (vertical ? thumbAt : viewportFrame.height - options.scrollbarWidth + sideways);
-        thumb.width = vertical ? thickness : thumbLength;
-        thumb.height = vertical ? thumbLength : thickness;
-        thumb.radius = thickness / 2.0f;
-        thumb.background = Fill{held || wake > 0.5f ? Token::TextMuted : Token::BorderStrong};
-        thumb.cursorHint = held ? Cursor::Grabbing : Cursor::Grab;
-        ui.add(thumb);
-        ui.tag(thumbId).cursor(thumb.cursorHint);
+    if (scrolls && options.scrollbar && viewportFrame.width > 0.0f) {
+        scrollbar(ui, input, id, state, Rect{0.0f, 0.0f, viewportFrame.width, viewportFrame.height},
+                  axis, options.scrollbarWidth, options.autoHideScrollbar);
     }
 
     // ---- the content ------------------------------------------------------

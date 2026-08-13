@@ -49,6 +49,7 @@ set(GBUI_SOURCES
     src/widgets/datePicker.cpp
     src/widgets/dateTimePicker.cpp
     src/widgets/icon.cpp
+    src/widgets/image.cpp
     src/widgets/icons.cpp
     src/widgets/label.cpp
     src/widgets/hyperlink.cpp
@@ -75,7 +76,9 @@ set(GBUI_SOURCES
     src/widgets/tooltip.cpp
     src/widgets/virtualList.cpp
     src/platform/font.cpp
+    src/platform/image.cpp
     src/platform/shell.cpp
+    src/platform/stbImageImpl.cpp
     src/platform/stbTruetypeImpl.cpp)
 
 find_package(SDL2 QUIET)
@@ -116,7 +119,7 @@ else()
         -Wnon-virtual-dtor -Woverloaded-virtual
         $<$<BOOL:${GBUI_WERROR}>:-Werror>)
     # Third-party code was not written for those flags.
-    set_source_files_properties(src/platform/stbTruetypeImpl.cpp PROPERTIES
+    set_source_files_properties(src/platform/stbImageImpl.cpp src/platform/stbTruetypeImpl.cpp PROPERTIES
         COMPILE_OPTIONS "-w")
 
     # GCC 13 reports maybe-uninitialized from inside libstdc++ when a

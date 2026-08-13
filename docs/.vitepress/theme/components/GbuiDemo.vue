@@ -16,7 +16,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData, withBase } from 'vitepress'
 
-import { data as demos } from '../demos.data'
+import { data as catalogue } from '../demos.data'
+import GbuiCode from './GbuiCode.vue'
+
+const demos = catalogue.demos
 
 const props = withDefaults(
   defineProps<{
@@ -166,10 +169,17 @@ onBeforeUnmount(() => demo.value?.destroy())
     </div>
 
     <!-- The source. Highlighted during the build, so this ships no highlighter. -->
-    <div v-show="mode === 'code'" class="gbui-demo-code" :style="{ maxHeight: `${height}px` }">
-      <div v-if="code" v-html="code" />
-      <p v-else class="gbui-demo-quiet gbui-demo-waiting">Loading {{ selected.path }}…</p>
+    <div v-show="mode === 'code'">
+      <GbuiCode :html="code" :path="selected.path" :max-height="height" />
     </div>
+
+    <!-- Where it lives. Walked from the repository at build time rather than
+         typed out, so it is the directory and not a picture of it. -->
+    <details v-show="mode === 'code'" class="gbui-demo-tree">
+      <summary>Where this lives</summary>
+      <pre><code>demos/
+{{ catalogue.tree }}</code></pre>
+    </details>
 
     <div v-show="mode === 'run'" class="gbui-demo-stage" :style="{ height: `${height}px` }">
       <canvas ref="canvas" class="gbui-demo-canvas" :aria-label="`${selected.title}, running`" />
@@ -292,23 +302,6 @@ onBeforeUnmount(() => demo.value?.destroy())
 .gbui-demo-mode.active {
   color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
-}
-
-/* ---- the code --------------------------------------------------------- */
-
-.gbui-demo-code {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
-  overflow: auto;
-  background: var(--vp-c-bg-alt);
-}
-
-.gbui-demo-code :deep(pre) {
-  margin: 0;
-  padding: 16px 18px;
-  font-size: 12.5px;
-  line-height: 1.6;
-  background: transparent !important;
 }
 
 /* ---- the stage -------------------------------------------------------- */
@@ -445,6 +438,32 @@ onBeforeUnmount(() => demo.value?.destroy())
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--vp-c-text-2);
+}
+
+.gbui-demo-tree {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+}
+
+.gbui-demo-tree summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.gbui-demo-tree summary:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.gbui-demo-tree pre {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-alt);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-x: auto;
 }
 
 .gbui-demo-hint kbd {

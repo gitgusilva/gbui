@@ -4,10 +4,124 @@
 #include <fstream>
 
 #include "gbui/layout/layout.hpp"
+#include "gbui/meta/components.hpp"
 #include "gbui/paint/paint.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/widgets/components.hpp"
+#include "gbui_demos/catalog.hpp"
 
 namespace gbui::demos {
+
+namespace {
+
+/**
+ * The frame one component is previewed in.
+ *
+ * Wide enough for the stage below plus its margins and no wider: the stage is
+ * capped at 560, so every pixel past 600 is empty space with a component
+ * huddled at one end of it. The height is the web gallery's preview strip,
+ * which is what the same examples are seen in on the documentation site — a
+ * table wants the room and a checkbox does not, and one frame for all of them
+ * is what makes fifty previews read as a set.
+ */
+constexpr float kPreviewWidth = 600.0f;
+constexpr float kPreviewHeight = 460.0f;
+
+/**
+ * One component, on its own, in a frame that says what it is.
+ *
+ * A `Demo` like any other — which is the point. The host has one pipeline and
+ * one input path, and a component preview earns nothing by having a second.
+ */
+class ComponentDemo final : public Demo {
+public:
+    ComponentDemo(const catalog::Example& example, const meta::ComponentInfo* info)
+        : example_(example), info_(info), state_(catalog::freshState()) {}
+
+    /**
+     * The sentence a reader wants above a preview.
+     *
+     * The header's own — "A button, in the four variants the design system
+     * has." — and not the declaration's, which is per overload and often
+     * explains a distinction rather than the component: `button`'s first is
+     * documented by what it cannot do without an `Interaction`. The
+     * declaration doc is the right thing next to a *signature*, and the wrong
+     * thing next to a picture.
+     */
+    static std::string_view describe(const meta::ComponentInfo* info) {
+        if (!info) return {};
+        return info->headerDoc.empty() ? info->summary : info->headerDoc;
+    }
+
+    NodeId build(Frame& frame) override {
+        Ui& ui = frame.ui;
+        state_.clock = frame.time;
+
+        Style page;
+        page.direction = Direction::Column;
+        page.gap = 12.0f;
+        page.padding = Edges::all(20.0f);
+        page.background = Fill{Token::Bg};
+        page.radius = 0.0f;
+        auto root = ui.begin(page);
+
+        {
+            Style header;
+            header.direction = Direction::Column;
+            header.gap = 4.0f;
+            header.shrink = 0.0f;
+            auto headerScope = ui.begin(header);
+            text(ui, example_.component,
+                 {.color = Token::TextStrong,
+                  .weight = FontWeight::SemiBold,
+                  .role = FontRole::Mono,
+                  .size = 15.0f});
+            if (const std::string_view summary = describe(info_); !summary.empty()) {
+                text(ui, summary,
+                     {.color = Token::TextMuted,
+                      .size = 12.0f,
+                      .overflow = TextOverflow::Wrap,
+                      .maxLines = 2});
+            }
+        }
+
+        // The example sits on a surface of its own, so what the reader is
+        // looking at is unambiguous: everything inside the border is the
+        // component, everything outside it is this frame.
+        {
+            Style stage;
+            stage.direction = Direction::Column;
+            stage.gap = 10.0f;
+            // Stretch, not Start. A slider's track, a table's columns and a
+            // virtualised list all take their width from the box they are
+            // given — hand them a content-sized one and they collapse to
+            // nothing, which is what the first render of this gallery did.
+            stage.align = Align::Stretch;
+            stage.maxWidth = 560.0f;
+            stage.padding = Edges::all(18.0f);
+            stage.grow = 1.0f;
+            stage.basis = 0.0f;
+            stage.minHeight = 0.0f;
+            stage.background = Fill{Token::BgElevated};
+            stage.border = Border{1.0f, Fill{Token::Border}};
+            auto stageScope = ui.begin(stage);
+            example_.build(ui, frame.input, state_);
+        }
+
+        if (info_) {
+            text(ui, info_->header,
+                 {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.5f});
+        }
+        return root.id();
+    }
+
+private:
+    catalog::Example example_;
+    const meta::ComponentInfo* info_ = nullptr;
+    catalog::State state_;
+};
+
+}  // namespace
 
 const std::vector<Skin>& skins() {
     static const std::vector<Skin> list = {
@@ -66,6 +180,25 @@ bool Host::select(std::string_view id) {
     selectedId_ = std::string(entry->id);
     restart();
     return true;
+}
+
+bool Host::selectComponent(std::string_view component) {
+    const catalog::Example* example = catalog::find(component);
+    if (!example) return false;
+
+    demo_ = std::make_unique<ComponentDemo>(*example, meta::find(component));
+    // No `DemoInfo`: a component has no sector, no fixed palette — so it
+    // follows the reader's preference like anything else would — and no design
+    // size of its own, which is what `designSize` answers for it.
+    info_ = nullptr;
+    selectedId_ = std::string(component);
+    restart();
+    return true;
+}
+
+Vec2 Host::designSize() const {
+    if (info_) return info_->design;
+    return {kPreviewWidth, kPreviewHeight};
 }
 
 void Host::setSkin(std::string_view id) {

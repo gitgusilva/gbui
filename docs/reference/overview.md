@@ -15,8 +15,8 @@ carry the finer detail and the reasoning.
 | [overlay](/reference/overlay) | `gbui/overlay/*.hpp` | where a floating box goes |
 | [paint](/reference/paint) | `gbui/paint/*.hpp` | display list, painters, the software rasteriser |
 | [widgets](/reference/widgets) | `gbui/widgets/*.hpp` | components and icons |
-| [charts](/reference/charts) | `gbui/widgets/chart.hpp` | scales, series, and eight kinds of chart |
-| [platform](/reference/platform) | `gbui/platform/*.hpp` | window, event loop, fonts, opening a URL |
+| [charts](/reference/charts) | `gbui/widgets/chart.hpp` | scales, series, and nine kinds of chart |
+| [platform](/reference/platform) | `gbui/platform/*.hpp` | window, event loop, fonts, image decoding, opening a URL |
 
 A module may depend on the ones above it and never on the ones below, with the
 two documented exceptions in

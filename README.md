@@ -3,8 +3,9 @@
 # gbui
 
 **A UI toolkit for C++20.** Flexbox layout, themeable components, and a painter
-interface a backend implements — with no web engine and no dependency beyond the
-standard library.
+interface a backend implements — with no web engine and nothing to fetch: the
+toolkit is the standard library and nothing else, and the two public-domain
+headers it vendors sit in the platform layer, where the machine already is.
 
 [![CI](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml/badge.svg)](https://github.com/gitgusilva/gbui/actions/workflows/ci.yml)
 
@@ -29,17 +30,17 @@ standard library.
 
 Each stage reads only the one before it, which is why layout is arithmetic you
 can assert without a window and painting is a list of commands you can inspect
-without a GPU. Around fifty components sit on top — from a button to a table, a
-rich-text editor and eight kinds of chart — all stateless functions, themed by
+without a GPU. Over fifty components sit on top — from a button to a table, a
+rich-text editor and nine kinds of chart — all stateless functions, themed by
 token rather than by colour.
 
 It was written for [GitBox](https://github.com/gitgusilva/gitbox) as a path off
 Electron, and reads the **same `theme.json`** the
 [gitbox-themes](https://github.com/gitgusilva/gitbox-themes) registry publishes.
 
-Six full application screens — a revenue dashboard, a weather desk, a plant
-supervisory HMI, a production line monitor, a grid control desk and a logistics
-control tower — run in the browser on the
+Seven full application screens — a revenue dashboard, a weather desk, a plant
+supervisory HMI, a production line monitor, a grid control desk, a logistics
+control tower and a trading desk — run in the browser on the
 [demos page](https://gitgusilva.github.io/gbui/demos), compiled to WebAssembly
 and rasterised on the CPU. Their source is in [`demos/`](demos), and it is
 ordinary consumer code: public headers, one link line, no private access.
@@ -52,7 +53,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 
 ./build/examples/gbui_controls     # every component, interactive
-./build/demos/gbui_demo --list     # six application screens, and one to open
+./build/demos/gbui_demo --list     # seven application screens, and one to open
 ```
 
 C++20 and CMake 3.20. SDL2 is optional — without it everything still builds and

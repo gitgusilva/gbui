@@ -178,16 +178,18 @@ float gradientPosition(const ResolvedGradient& gradient, float px, float py, con
  */
 float clipCoverage(float px, float py, const Clip& clip) {
     if (clip.radius <= 0.0f) return 1.0f;
-    return coverageFor(roundedRectDistance(px, py, clip.rect, clip.radius));
+    // Against the box the radius was written for, not against the intersection
+    // — see `Clip`.
+    return coverageFor(roundedRectDistance(px, py, clip.rounded, clip.radius));
 }
 
 /** How far a row is bitten into by the clip's corners, so a span that clears it
  *  can be filled without asking about every pixel. */
 float clipInsetAt(float py, const Clip& clip) {
     if (clip.radius <= 0.0f) return 0.0f;
-    const float halfH = clip.rect.height / 2.0f;
-    const float r = std::min(clip.radius, std::min(clip.rect.width / 2.0f, halfH));
-    const float dy = std::fabs(py - (clip.rect.y + halfH)) - (halfH - r);
+    const float halfH = clip.rounded.height / 2.0f;
+    const float r = std::min(clip.radius, std::min(clip.rounded.width / 2.0f, halfH));
+    const float dy = std::fabs(py - (clip.rounded.y + halfH)) - (halfH - r);
     if (dy <= 0.0f) return 0.0f;
     const float bite = r * r - dy * dy;
     return bite > 0.0f ? r - std::sqrt(bite) : r;
@@ -394,9 +396,17 @@ void Canvas::drawPath(const Path& path, const Paint& paint, float strokeWidth, c
 }
 
 void Canvas::resize(int width, int height) {
-    width_ = std::max(0, width);
-    height_ = std::max(0, height);
-    pixels_.assign(static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_) * 4, 0);
+    const int wanted = std::max(0, width);
+    const int tall = std::max(0, height);
+    if (wanted == width_ && tall == height_) return;
+    width_ = wanted;
+    height_ = tall;
+    // `resize`, not `assign`. Both give a buffer of the right length, and only
+    // one of them writes over the whole of it: at 1280x824 that is four
+    // megabytes zeroed on the way to a frame whose first act is to clear the
+    // canvas anyway. The early return above matters more — this is called with
+    // an unchanged size on every frame of every window that never resizes.
+    pixels_.resize(static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_) * 4);
 }
 
 void Canvas::clear(Color color) {
@@ -425,6 +435,14 @@ void Canvas::fillRoundedRect(const Rect& rect, float radius, const Paint& paint,
     // is a call and a branch for an answer that cannot change.
     const bool flat = !paint.isGradient();
     const SourceColor solid = linearise(paint.color);
+    // An opaque one is not even a blend: the destination cannot show through,
+    // so the covered run is a pattern to be written rather than a colour to be
+    // mixed. Worth separating because it is the common case *and* the expensive
+    // one — a page background, a card, a table row are all opaque and all
+    // large, and this is what lets the run be stored four bytes at a time
+    // instead of through a call the compiler cannot vectorise past.
+    const bool opaque = flat && paint.color.a >= 1.0f;
+    const std::uint8_t pattern[4] = {paint.color.r, paint.color.g, paint.color.b, 255};
 
     // The corner geometry, so a row can say where it is fully covered without
     // asking the distance function about every pixel in it. Only the pixels
@@ -460,25 +478,34 @@ void Canvas::fillRoundedRect(const Rect& rect, float radius, const Paint& paint,
         //
         // The clip's own corners bite into the row as well, and a span that
         // clears both is the only one that can be filled without asking.
+        // The fast span has to clear the clip's *rounded* box as well as its
+        // own, since that is where the corners it could be bitten by are.
         const float clipInset = clipInsetAt(py, clip);
         const bool rowInside = py >= rect.y + 1.0f && py <= rect.bottom() - 1.0f &&
                                (clip.radius <= 0.0f ||
-                                (py >= clip.rect.y + 1.0f && py <= clip.rect.bottom() - 1.0f));
+                                (py >= clip.rounded.y + 1.0f && py <= clip.rounded.bottom() - 1.0f));
         const int solidFrom =
             std::max({x0, static_cast<int>(std::ceil(rect.x + inset + 1.0f)),
-                      static_cast<int>(std::ceil(clip.rect.x + clipInset + 1.0f))});
+                      static_cast<int>(std::ceil(clip.rounded.x + clipInset + 1.0f))});
         const int solidTo =
             std::min({x1, static_cast<int>(std::floor(rect.right() - inset - 1.0f)),
-                      static_cast<int>(std::floor(clip.rect.right() - clipInset - 1.0f))});
+                      static_cast<int>(std::floor(clip.rounded.right() - clipInset - 1.0f))});
 
         for (int x = x0; x < x1; ++x) {
             if (flat && rowInside && x >= solidFrom && x < solidTo) {
                 // A run of fully covered pixels of one colour: fill it and skip
                 // to its end. This is where a 360x680 panel spends its time.
-                for (; x < solidTo; ++x) {
-                    blendPixel(row + static_cast<std::size_t>(x) * 4, solid, 1.0f);
+                std::uint8_t* at = row + static_cast<std::size_t>(x) * 4;
+                if (opaque) {
+                    for (int n = solidTo - x; n > 0; --n, at += 4) {
+                        std::memcpy(at, pattern, 4);
+                    }
+                } else {
+                    for (int n = solidTo - x; n > 0; --n, at += 4) {
+                        blendPixel(at, solid, 1.0f);
+                    }
                 }
-                --x;  // the for-loop's ++x steps past the last one written
+                x = solidTo - 1;   // the for-loop's ++x steps past the last one
                 continue;
             }
             // The +0.5 samples the pixel centre, which is what keeps a
@@ -493,6 +520,77 @@ void Canvas::fillRoundedRect(const Rect& rect, float radius, const Paint& paint,
                 blendPixel(row + static_cast<std::size_t>(x) * 4, colorAt(paint, px, py, rect),
                            coverage);
             }
+        }
+    }
+}
+
+void Canvas::blitImage(const Rect& dest, const Bitmap& source, float radius, float opacity,
+                       const Clip& clip) {
+    if (!source.valid() || dest.empty() || opacity <= 0.0f) return;
+    const Rect area = dest.intersect(clip.rect);
+    if (area.empty()) return;
+
+    const int x0 = std::max(0, static_cast<int>(std::floor(area.x)));
+    const int y0 = std::max(0, static_cast<int>(std::floor(area.y)));
+    const int x1 = std::min(width_, static_cast<int>(std::ceil(area.right())));
+    const int y1 = std::min(height_, static_cast<int>(std::ceil(area.bottom())));
+    const auto pitchIn = static_cast<std::size_t>(std::max(0, source.pitch()));
+
+    // Pixel centres map to pixel centres: the half-pixel on each side is what
+    // keeps a picture drawn at its own size from being resampled at all, and a
+    // scaled one from drifting half a texel towards the origin.
+    const float scaleX = static_cast<float>(source.width) / dest.width;
+    const float scaleY = static_cast<float>(source.height) / dest.height;
+
+    for (int y = y0; y < y1; ++y) {
+        std::uint8_t* row = pixels_.data() + static_cast<std::size_t>(y) * pitch();
+        const float py = static_cast<float>(y) + 0.5f;
+        const float v = (py - dest.y) * scaleY - 0.5f;
+        const int v0 = static_cast<int>(std::floor(v));
+        const float fy = v - static_cast<float>(v0);
+        const int sy0 = std::clamp(v0, 0, source.height - 1);
+        const int sy1 = std::clamp(v0 + 1, 0, source.height - 1);
+
+        for (int x = x0; x < x1; ++x) {
+            const float px = static_cast<float>(x) + 0.5f;
+            const float coverage =
+                (radius > 0.0f ? coverageFor(roundedRectDistance(px, py, dest, radius)) : 1.0f) *
+                clipCoverage(px, py, clip);
+            if (coverage <= 0.0f) continue;
+
+            const float u = (px - dest.x) * scaleX - 0.5f;
+            const int u0 = static_cast<int>(std::floor(u));
+            const float fx = u - static_cast<float>(u0);
+            const int sx0 = std::clamp(u0, 0, source.width - 1);
+            const int sx1 = std::clamp(u0 + 1, 0, source.width - 1);
+
+            const std::uint8_t* a = source.pixels + static_cast<std::size_t>(sy0) * pitchIn +
+                                    static_cast<std::size_t>(sx0) * 4;
+            const std::uint8_t* b = source.pixels + static_cast<std::size_t>(sy0) * pitchIn +
+                                    static_cast<std::size_t>(sx1) * 4;
+            const std::uint8_t* c = source.pixels + static_cast<std::size_t>(sy1) * pitchIn +
+                                    static_cast<std::size_t>(sx0) * 4;
+            const std::uint8_t* d = source.pixels + static_cast<std::size_t>(sy1) * pitchIn +
+                                    static_cast<std::size_t>(sx1) * 4;
+
+            const auto mix = [&](int channel) {
+                const float top = static_cast<float>(a[channel]) * (1.0f - fx) +
+                                  static_cast<float>(b[channel]) * fx;
+                const float bottom = static_cast<float>(c[channel]) * (1.0f - fx) +
+                                     static_cast<float>(d[channel]) * fx;
+                return top * (1.0f - fy) + bottom * fy;
+            };
+
+            // The source's own alpha, the picture's opacity and the coverage of
+            // the corner all multiply into one number, because they are the
+            // same question asked three times: how much of this pixel is the
+            // picture.
+            const float alpha = mix(3) / 255.0f * opacity * coverage;
+            if (alpha <= 0.0f) continue;
+            const Color colour{static_cast<std::uint8_t>(mix(0) + 0.5f),
+                               static_cast<std::uint8_t>(mix(1) + 0.5f),
+                               static_cast<std::uint8_t>(mix(2) + 0.5f), 1.0f};
+            blendPixel(row + static_cast<std::size_t>(x) * 4, colour, alpha);
         }
     }
 }
@@ -521,6 +619,13 @@ void Canvas::strokeRoundedRect(const Rect& rect, float radius, float thickness, 
     // panel's area and was most of this function's cost.
     const float guard = std::max(radius, thickness) + 1.0f;
 
+    // Hoisted for the same reason the fill hoists it: a flat paint is one
+    // colour, and asking for it per pixel costs a call and three gamma table
+    // lookups an outline has no use for. A border is a thin shape over a long
+    // perimeter, so that per-pixel cost was most of what one cost to draw.
+    const bool flat = !paint.isGradient();
+    const SourceColor solid = linearise(paint.color);
+
     for (int y = y0; y < y1; ++y) {
         std::uint8_t* row = pixels_.data() + static_cast<std::size_t>(y) * pitch();
         const float py = static_cast<float>(y) + 0.5f;
@@ -532,19 +637,30 @@ void Canvas::strokeRoundedRect(const Rect& rect, float radius, float thickness, 
                 const float hole = coverageFor(roundedRectDistance(px, py, inner, innerRadius));
                 const float coverage =
                     std::max(0.0f, outer - hole) * clipCoverage(px, py, clip);
-                blendPixel(row + static_cast<std::size_t>(x) * 4, colorAt(paint, px, py, rect),
-                           coverage);
+                if (coverage <= 0.0f) continue;
+                if (flat) {
+                    blendPixel(row + static_cast<std::size_t>(x) * 4, solid, coverage);
+                } else {
+                    blendPixel(row + static_cast<std::size_t>(x) * 4,
+                               colorAt(paint, px, py, rect), coverage);
+                }
             }
         };
 
-        // A row through the corners, or through the top or bottom edge, still
-        // has to be walked end to end — that is where the arc is.
-        if (py < rect.y + guard || py > rect.bottom() - guard) {
+        // A row through the top or bottom *edge* is painted end to end, because
+        // the edge is. A row merely level with a corner is not: the only paint
+        // on it is the two arcs, and walking the twelve hundred pixels between
+        // them asking each one whether it is inside a rounded rectangle was the
+        // rest of what a card's outline cost.
+        const float edge = thickness + 1.0f;
+        if (py < rect.y + edge || py > rect.bottom() - edge) {
             band(x0, x1);
             continue;
         }
-        band(x0, static_cast<int>(std::ceil(rect.x + thickness + 1.0f)));
-        band(static_cast<int>(std::floor(rect.right() - thickness - 1.0f)), x1);
+        const bool throughCorner = py < rect.y + guard || py > rect.bottom() - guard;
+        const float reach = throughCorner ? guard : edge;
+        band(x0, static_cast<int>(std::ceil(rect.x + reach)));
+        band(static_cast<int>(std::floor(rect.right() - reach)), x1);
     }
 }
 
@@ -593,6 +709,10 @@ void SoftwarePainter::fillRect(const FillRect& command) {
 
 void SoftwarePainter::strokeRect(const StrokeRect& command) {
     canvas_.strokeRoundedRect(command.rect, command.radius, command.width, command.paint, clip());
+}
+
+void SoftwarePainter::drawImage(const DrawImage& command) {
+    canvas_.blitImage(command.box, command.source, command.radius, command.opacity, clip());
 }
 
 void SoftwarePainter::drawText(const DrawText& command) {

@@ -119,12 +119,13 @@ public:
             switch (event.type) {
                 case SDL_QUIT: return false;
                 case SDL_WINDOWEVENT:
+                    // Noted, not acted on. A drag on a window edge delivers a
+                    // size event per compositor tick, and answering each one
+                    // means reallocating and re-laying out for sizes that were
+                    // never on screen. Only the last one this frame is real.
                     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ||
                         event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                        int width = 0;
-                        int height = 0;
-                        SDL_GetRendererOutputSize(renderer_, &width, &height);
-                        resizeSurface(width, height);
+                        sizeChanged_ = true;
                     }
                     break;
                 case SDL_MOUSEMOTION:
@@ -162,6 +163,13 @@ public:
                 default: break;
             }
         }
+        if (sizeChanged_) {
+            sizeChanged_ = false;
+            int width = 0;
+            int height = 0;
+            SDL_GetRendererOutputSize(renderer_, &width, &height);
+            resizeSurface(width, height);
+        }
         return true;
     }
 
@@ -169,9 +177,13 @@ public:
 
     void present() override {
         if (!texture_ || canvas_.width() == 0) return;
-        SDL_UpdateTexture(texture_, nullptr, canvas_.pixels(), static_cast<int>(canvas_.pitch()));
+        // The texture is at least the canvas and often larger — see
+        // `resizeSurface` — so both the upload and the blit name the part in
+        // use rather than the whole of it.
+        const SDL_Rect used{0, 0, canvas_.width(), canvas_.height()};
+        SDL_UpdateTexture(texture_, &used, canvas_.pixels(), static_cast<int>(canvas_.pitch()));
         SDL_RenderClear(renderer_);
-        SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
+        SDL_RenderCopy(renderer_, texture_, &used, nullptr);
         SDL_RenderPresent(renderer_);
     }
 
@@ -243,9 +255,25 @@ private:
     void resizeSurface(int width, int height) {
         if (width == canvas_.width() && height == canvas_.height()) return;
         canvas_.resize(width, height);
-        if (texture_) SDL_DestroyTexture(texture_);
-        texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ABGR8888,
-                                     SDL_TEXTUREACCESS_STREAMING, width, height);
+
+        // The texture only ever *grows*, and in steps.
+        //
+        // Creating one is a driver allocation and destroying one can make the
+        // driver wait for frames still using it. A window dragged across the
+        // screen changes size a hundred times, and answering each with a fresh
+        // texture is what made the drag stutter while the same drag in a
+        // browser does not. Rounded up so a slow drag does not reallocate on
+        // every second pixel either.
+        constexpr int kStep = 256;
+        if (!texture_ || width > textureWidth_ || height > textureHeight_) {
+            const int wide = ((std::max(width, textureWidth_) + kStep - 1) / kStep) * kStep;
+            const int tall = ((std::max(height, textureHeight_) + kStep - 1) / kStep) * kStep;
+            if (texture_) SDL_DestroyTexture(texture_);
+            texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ABGR8888,
+                                         SDL_TEXTUREACCESS_STREAMING, wide, tall);
+            textureWidth_ = wide;
+            textureHeight_ = tall;
+        }
         resized_ = true;
 
         // The pointer arrives in window coordinates; the canvas is in drawable
@@ -261,6 +289,10 @@ private:
     SDL_Window* window_ = nullptr;
     SDL_Renderer* renderer_ = nullptr;
     SDL_Texture* texture_ = nullptr;
+    /** What the texture actually is, which is at least the canvas. */
+    int textureWidth_ = 0;
+    int textureHeight_ = 0;
+    bool sizeChanged_ = false;
     Canvas canvas_;
     MouseState mouse_{};
     InputFrame input_{};

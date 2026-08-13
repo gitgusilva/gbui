@@ -17,6 +17,8 @@ struct Sheet {
     TableState state;
     TableResult result;
     Rect across{};
+    Rect box{};
+    Rect thumb{};
 };
 
 /** Builds a table three times, so the widths settle against last frame's
@@ -46,6 +48,8 @@ Sheet run(const std::vector<Column>& columns, const std::vector<float>& widths,
         layout(arena, ui.root(), Rect{0, 0, tableWidth, 300}, context);
         input.update(arena, ui.root(), InputFrame{});
         sheet.across = input.frameOf("t.across");
+        sheet.box = input.frameOf("t");
+        sheet.thumb = input.frameOf("t.body.thumb");
     }
     return sheet;
 }
@@ -166,4 +170,32 @@ TEST("a column fits its sample in the style the cell draws it in") {
     // by the amount the faces actually differ rather than by a guess.
     CHECK(asMono > asUi);
     CHECK_NEAR(asMono - asUi, 5.0f * (10.0f - 6.0f));
+}
+
+/**
+ * The vertical bar belongs to the *table*, not to the rows.
+ *
+ * The rows scroll up and down inside a box that scrolls side to side, so their
+ * own right-hand edge is out at the end of the widest column. A bar drawn there
+ * is a bar the reader has to scroll sideways to find — and once the columns are
+ * wide enough, one they cannot reach at all. A browser puts both bars on the
+ * visible box; so does this.
+ */
+TEST("the row scrollbar stays inside the table when the columns do not") {
+    // Four columns that cannot fit in 300, and twelve rows that cannot either.
+    const std::vector<Column> columns = {
+        {.title = "A", .sizing = ColumnSize::Fixed},
+        {.title = "B", .sizing = ColumnSize::Fixed},
+        {.title = "C", .sizing = ColumnSize::Fixed},
+        {.title = "D", .sizing = ColumnSize::Fixed},
+    };
+    const Sheet sheet = run(columns, {200.0f, 200.0f, 200.0f, 200.0f}, 300.0f);
+
+    CHECK(total(sheet.result.columnWidths) > sheet.box.width);
+    CHECK(!sheet.thumb.empty());
+    // Inside the table's own box, with a hair of slack for the bar's inset.
+    CHECK(sheet.thumb.right() <= sheet.box.right() + 0.5f);
+    CHECK(sheet.thumb.x >= sheet.box.x);
+    // And against its right-hand edge rather than somewhere in the middle.
+    CHECK(sheet.box.right() - sheet.thumb.right() < 12.0f);
 }

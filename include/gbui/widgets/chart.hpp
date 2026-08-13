@@ -60,16 +60,41 @@ struct TooltipRow {
     std::string value{};
 };
 
-/** What a readout says about one sample.
+struct PointSeries;
+struct Candle;
+struct Slice;
+
+/** What a readout says about one mark.
  *
  * Handed to `ChartTooltip::rows`, whose job is to turn it into lines. Split
  * this way so a caller replacing the *content* does not also have to lay out a
- * panel, and one replacing the *look* does not have to reformat numbers. */
+ * panel, and one replacing the *look* does not have to reformat numbers.
+ *
+ * One struct for every chart rather than one per kind, because the alternative
+ * is a `ChartTooltip` per kind and five copies of the callbacks with it. What
+ * a chart cannot fill it leaves null, and which fields those are is decided by
+ * which chart is asking — a `rows` callback is written for a call site, not for
+ * charts in general. */
 struct TooltipContext {
-    /** Sample number in the whole series, not in the view. */
+    /**
+     * The mark under the pointer: the sample number for a line or a bar, the
+     * point within its series for a scatter, the candle, the heatmap cell's
+     * column, the slice.
+     *
+     * In the whole series, not in the view — a zoomed line chart still names
+     * the sample the reader would find in the data.
+     */
     std::size_t index = 0;
-    /** The series drawn, in the order they were given. */
+    /** Which series it came from, where `index` cannot name it alone: a
+     *  scatter's dots and a heatmap's rows. Zero everywhere else. */
+    std::size_t seriesIndex = 0;
+    /** Whichever collection the chart was drawn from; the rest are null. */
     const std::vector<Series>* series = nullptr;
+    const std::vector<PointSeries>* points = nullptr;
+    const std::vector<Candle>* candles = nullptr;
+    const std::vector<Slice>* slices = nullptr;
+    /** A heatmap's cells, row-major, as it was handed them. */
+    const std::vector<std::vector<double>>* cells = nullptr;
 };
 
 /**
@@ -102,6 +127,59 @@ struct ChartTooltip {
     std::optional<bool> swatches{};
 };
 
+/**
+ * The mark a group of charts is pointing at together.
+ *
+ * Two charts stacked over one axis — a price and its volume, a load and its
+ * frequency — are one instrument, and a reader pointing at a moment in either
+ * means that moment in both. Left unlinked they are two instruments that happen
+ * to be adjacent: the crosshair lands on one, the other says nothing, and the
+ * reader has to hold a position on screen in their head while they look at it.
+ *
+ * Shared by *index*, not by pixel, which is the only thing that survives two
+ * charts of different widths, one with an axis and one without. That does mean
+ * a group only makes sense over charts indexing the same samples — `lineChart`,
+ * `barChart` and `candlestickChart` — and nowhere else: a donut's third wedge
+ * and a scatter's third dot have nothing to do with each other.
+ *
+ * Held by the caller, like `ChartView` and for the same reason. Whichever chart
+ * the pointer is actually over writes it and names itself in `source`; the
+ * others read it and draw their own readout at that index. A chart built before
+ * the one being pointed at follows a frame late, which at sixty frames a second
+ * is not a thing a reader can see.
+ */
+struct ChartLink {
+    /** The sample the group is showing, or -1 for none. */
+    int index = -1;
+    /** The id of the chart the pointer is actually over. A chart compares it
+     *  with its own to tell "I am being hovered" from "I am following". */
+    std::string source{};
+};
+
+/**
+ * The key under a chart, and the focus a click on it gives.
+ *
+ * Shown by default, which is the one defensible default: a chart with two
+ * series and no key is a chart whose colours mean nothing until the reader
+ * finds the sentence that explains them. It is skipped anyway when no series
+ * carries a name, so a single unnamed line costs nothing.
+ *
+ * Clicking an entry singles that series out and dims the rest — the same
+ * gesture the donut's legend already has, and what a reader tries when six
+ * lines have become a thicket. It needs somewhere to remember which one, so a
+ * null `focused` leaves the legend a key and nothing more.
+ */
+struct ChartLegend {
+    bool show = true;
+    /** The series singled out, or -1. The caller's, like every other piece of
+     *  state here: `int focused = -1;` beside the chart's data is the whole of
+     *  what it takes. */
+    int* focused = nullptr;
+    /** What the others fade to while one is singled out. */
+    float dimAlpha = 0.22f;
+    float height = 24.0f;
+};
+
 struct ChartOptions {
     /** Fixed bounds. Left as they are, the chart takes them from the data —
      *  which is what a live readout wants and what a comparison does not. */
@@ -121,6 +199,12 @@ struct ChartOptions {
     /** Names for the samples, used as the readout's heading. */
     std::vector<std::string> categories{};
     ChartTooltip tooltip{};
+    /** Ties this chart's readout to the other charts sharing the same
+     *  `ChartLink`, so pointing at a sample in one points at it in all of
+     *  them. Null leaves the chart on its own. */
+    ChartLink* link = nullptr;
+    /** The key drawn under the chart, and the focus a click on it gives. */
+    ChartLegend legend{};
 };
 
 /**
@@ -134,14 +218,71 @@ struct ChartView {
     double from = 0.0;
     double to = 1.0;
 
+    /**
+     * The range being swept out right now, while the button is still down.
+     *
+     * Held by the caller like the view itself, and for the same reason: the
+     * chart remembers nothing between frames, so the one thing a rubber band
+     * needs — where the press landed — has to live somewhere that does. In
+     * fractions of the whole series, the same units as `from` and `to`, so it
+     * still means the same thing after the pointer has left the plot.
+     *
+     * Nothing outside the gesture reads it, and it is empty the rest of the
+     * time. It is separate from `from`/`to` on purpose: the view cannot follow
+     * the sweep as it is drawn, because rescaling the plot under the pointer
+     * would move the very data the reader is aiming at.
+     */
+    struct Sweep {
+        bool active = false;
+        double from = 0.0;
+        double to = 0.0;
+        /**
+         * The plot the press landed on.
+         *
+         * Needed the moment a view is shared, which is the point of sharing
+         * one: the second chart is handed a sweep it did not start, and without
+         * a name on it that chart reads "a sweep is running and the pointer is
+         * not on me" as "the reader let go" and commits the gesture out from
+         * under the chart still drawing it.
+         */
+        std::string on{};
+    } sweep{};
+
     bool whole() const { return from <= 0.0 && to >= 1.0; }
     double span() const { return to - from; }
     void reset() {
         from = 0.0;
         to = 1.0;
+        sweep = {};
     }
     /** Clamped to [0,1], at least `minSpan` wide, and the right way round. */
     void normalise(double minSpan = 0.01);
+};
+
+/** What dragging inside the plot does. */
+enum class ChartDrag {
+    /** Nothing: a press is only ever a click, for the readout. */
+    None,
+    /**
+     * Sweeps out a range and zooms to it when the button comes up.
+     *
+     * The default, and what a reader tries first — the range they want is one
+     * they can already see, and pointing straight at it is fewer moves than
+     * steering a window into place from somewhere else. Drawn in either
+     * direction, because about half of them start from the right-hand end.
+     *
+     * Holding Shift pans instead, so the second gesture is still on the plot
+     * rather than only on a strip underneath it.
+     */
+    Select,
+    /**
+     * Slides the view under the pointer.
+     *
+     * Worth choosing when the chart is a timeline the reader mostly travels
+     * along rather than one they cut ranges out of — and it does nothing at
+     * all until something is zoomed in, since a whole view has nowhere to go.
+     */
+    Pan,
 };
 
 /** How a chart responds to the wheel and to dragging. */
@@ -163,8 +304,14 @@ struct ChartZoom {
      * scrolls past a chart far more often than they zoom one.
      */
     bool wheelModifier = true;
-    /** Dragging inside the plot slides the view. */
-    bool drag = true;
+    /** What a drag inside the plot means. */
+    ChartDrag drag = ChartDrag::Select;
+    /** How far a sweep has to travel, in pixels, before it counts as one.
+     *
+     *  Under this it is a click — which is what a reader asking for the readout
+     *  does, and zooming their chart to a two-pixel slice because their hand
+     *  moved would be a trap rather than a feature. */
+    float dragThreshold = 4.0f;
     /** The narrowest the view may get, as a fraction of the whole. */
     double minSpan = 0.02;
 };
@@ -203,6 +350,50 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
                       const std::vector<Series>& series, ChartView& view,
                       const ChartOptions& options = {}, const ChartZoom& zoom = {});
 
+struct ChartToolbarOptions {
+    bool zoomIn = true;
+    bool zoomOut = true;
+    /** Puts the whole series back. Disabled while it already is whole, because
+     *  a button that does nothing is worse than one that is not there — the
+     *  reader presses it and learns nothing about why. */
+    bool reset = true;
+    /**
+     * How much of the window a press takes off, as a fraction of it.
+     *
+     * 0.4 rather than a half: two presses should not lose 75% of the data, and
+     * a reader who wants that has the sweep, which says exactly what to keep.
+     */
+    double step = 0.4;
+    double minSpan = 0.02;
+    /** The buttons are square, so this is their size. */
+    float height = 30.0f;
+    /** Bigger than a button with a label would use: the glyph is the whole
+     *  button here, and at fourteen pixels in a thirty-pixel square it reads as
+     *  a mark stranded in the middle of a box. */
+    float iconSize = 17.0f;
+};
+
+/**
+ * The buttons ApexCharts puts in the corner of a chart: zoom in, zoom out, and
+ * put it back.
+ *
+ * A row of ordinary buttons over the caller's own `ChartView`, and nothing
+ * else — which is why it is a component rather than an option on the chart. It
+ * has no idea which chart it belongs to, so one row can drive a group of them
+ * the same way one view already zooms a price and its volume together, and a
+ * caller who wants it somewhere other than the top right corner simply puts it
+ * there.
+ *
+ * The gestures are the primary way in and this is the secondary one, for the
+ * same reason a map has both: a sweep says *which range*, and these say *a bit
+ * more* — and only one of the two can be pressed by someone who has already
+ * lost the thread of where they are.
+ *
+ * Returns true on any frame the view moved.
+ */
+bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartView& view,
+                  const ChartToolbarOptions& options = {});
+
 struct BrushOptions {
     float height = 46.0f;
     /** Room down the left, so the strip lines up with the chart above it. */
@@ -219,9 +410,10 @@ struct BrushOptions {
  * A strip of the whole series with the current view as a window over it.
  *
  * The part an ApexCharts-style brush actually earns its keep with is not the
- * zooming — the wheel does that — but the *context*: once zoomed in, a reader
- * has no way to tell where they are or how much they cannot see. The strip
- * answers both without them having to zoom back out.
+ * zooming — a drag inside the plot does that, and so does the wheel — but the
+ * *context*: once zoomed in, a reader has no way to tell where they are or how
+ * much they cannot see. The strip answers both without them having to zoom back
+ * out, which is also why it is optional.
  *
  * Returns true on any frame the view moved.
  */
@@ -275,7 +467,11 @@ struct BarChartOptions {
      *  bottom to top from one along the bottom. Long category names are the
      *  usual reason: horizontal gives them room to be read. */
     bool horizontal = false;
+    /** How several series share a category: side by side, or on top of each
+     *  other. */
     BarGrouping grouping = BarGrouping::Grouped;
+    /** A filled rectangle from the baseline, or a stem with a dot at the
+     *  value. */
     BarShape shape = BarShape::Bar;
     /** Share of each category's slot left as gap, 0 to 0.9. */
     float categoryPadding = 0.28f;
@@ -287,6 +483,13 @@ struct BarChartOptions {
     std::vector<std::string> categories{};
     /** Room for the category names. Zero draws none. */
     float categoryAxis = 22.0f;
+    ChartTooltip tooltip{};
+    /** Ties this chart's readout to the other charts sharing the same
+     *  `ChartLink`, so pointing at a sample in one points at it in all of
+     *  them. Null leaves the chart on its own. */
+    ChartLink* link = nullptr;
+    /** The key drawn under the chart, and the focus a click on it gives. */
+    ChartLegend legend{};
 };
 
 /**
@@ -300,6 +503,19 @@ struct BarChartOptions {
  */
 ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
                      const std::vector<Series>& series, const BarChartOptions& options = {});
+
+/**
+ * The same bars, showing only `view` of the categories and letting the reader
+ * move it.
+ *
+ * The view is the caller's, like everything else here, and sharing one is the
+ * point: a volume chart handed the same `ChartView` as the price chart above it
+ * zooms when that one is swept, because they are looking at the same window of
+ * the same data rather than each keeping their own idea of it.
+ */
+ChartResult barChart(Ui& ui, const Interaction& input, std::string_view id,
+                     const std::vector<Series>& series, ChartView& view,
+                     const BarChartOptions& options = {}, const ChartZoom& zoom = {});
 
 // ---------------------------------------------------------------------------
 // Points
@@ -349,6 +565,7 @@ struct ScatterOptions {
     /** How near the pointer has to be, in pixels, to pick a dot. */
     float hitRadius = 14.0f;
     ChartTooltip tooltip{};
+    ChartLegend legend{};
 };
 
 struct ScatterResult {
@@ -408,6 +625,7 @@ struct HeatmapOptions {
     float columnLabels = 16.0f;
     bool hover = true;
     std::string_view valueFormat = "%.0f";
+    ChartTooltip tooltip{};
 };
 
 struct HeatmapResult {
@@ -466,6 +684,17 @@ struct CandlestickOptions {
 
     /** Share of each period's slot left as gap, 0 to 0.9. */
     float categoryPadding = 0.3f;
+    /**
+     * A ceiling on the body, in pixels, whatever the slot allows.
+     *
+     * A candle is a *mark*, not a bar: zooming in should make it taller and put
+     * more air around it, not fatten it. Without the ceiling a chart zoomed to
+     * a dozen periods draws them as forty-pixel bricks, which is the width of a
+     * bar chart's column and reads as one. The default barely bites at a full
+     * view — forty-odd candles across a card land near it anyway — and does all
+     * its work once the reader has swept a range.
+     */
+    float maxBodyWidth = 14.0f;
     std::vector<std::string> categories{};
     float categoryAxis = 22.0f;
     /** Unset takes the theme's added/removed colours, which are already the
@@ -482,6 +711,11 @@ struct CandlestickOptions {
     bool hollowRising = false;
     /** Width of the wick, and of a hollow body's outline. */
     float lineWidth = 1.0f;
+    ChartTooltip tooltip{};
+    /** Ties this chart's readout to the other charts sharing the same
+     *  `ChartLink`, so pointing at a sample in one points at it in all of
+     *  them. Null leaves the chart on its own. */
+    ChartLink* link = nullptr;
 };
 
 /**
@@ -497,6 +731,13 @@ struct CandlestickOptions {
 ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id,
                              const std::vector<Candle>& candles,
                              const CandlestickOptions& options = {});
+
+/** The same candles, showing only `view` of them — the overload a price chart
+ *  and its volume share, so sweeping either zooms both. */
+ChartResult candlestickChart(Ui& ui, const Interaction& input, std::string_view id,
+                             const std::vector<Candle>& candles, ChartView& view,
+                             const CandlestickOptions& options = {},
+                             const ChartZoom& zoom = {});
 
 /** One wedge of a donut: a value and the colour it is drawn in. */
 struct Slice {
@@ -535,6 +776,10 @@ struct DonutOptions {
      *  contributors does not grow taller than the ring beside it. `kAuto`
      *  matches the donut. */
     float legendMaxHeight = kAuto;
+    /** The readout beside the hovered wedge. A donut's legend already names
+     *  every slice, so this one is about the *number* — which the legend has
+     *  no room for once there are more than a handful. */
+    ChartTooltip tooltip{};
 };
 
 struct DonutResult {
@@ -555,5 +800,87 @@ struct DonutResult {
 DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
                        const std::vector<Slice>& slices, DonutState& state,
                        const DonutOptions& options = {});
+
+// ---------------------------------------------------------------------------
+// Radar
+// ---------------------------------------------------------------------------
+
+/** How a radar's web is drawn behind the data. */
+enum class RadarGrid {
+    /** Rings and spokes as hairlines: the mesh a reader traces a value along. */
+    Web,
+    /**
+     * The bands between the rings shaded in alternating steps, and no ring
+     * lines at all — ApexCharts calls this a polygon fill.
+     *
+     * Reads as a target rather than as graph paper, which suits a chart being
+     * *looked* at more than one being measured off: the shape of the series is
+     * what carries, and a mesh behind it competes.
+     */
+    Polygon,
+    None,
+};
+
+struct RadarOptions {
+    /**
+     * Fixed bounds. Left alone the chart takes them from the data — and always
+     * from zero, whatever the data says.
+     *
+     * A radar is read as an *area*, and area from a non-zero baseline is the
+     * same lie a truncated bar tells, told about five axes at once: two
+     * profiles a hair apart become one enormous and one tiny.
+     */
+    Scale scale{0.0, 0.0};
+    bool autoScale = true;
+    std::optional<int> tickCount{};
+    /** One name per axis, drawn outside its spoke. Fewer than there are values
+     *  leaves the rest unlabelled rather than renumbering them. */
+    std::vector<std::string> categories{};
+    /** The whole chart's box, labels included. */
+    float size = 240.0f;
+    /** What is drawn behind the data: a mesh, shaded bands, or nothing. */
+    RadarGrid grid = RadarGrid::Web;
+    /** Room between the outermost ring and the edge, for the names. Zero draws
+     *  none and gives the web the whole box. */
+    float labelRoom = 52.0f;
+    /**
+     * Shading inside a series' polygon, when the series carries no `fillAlpha`
+     * of its own.
+     *
+     * Filled by default, where a line chart is not. A line is read along, and
+     * shading under two of them buries the lower one; a radar is read as a
+     * shape, and an unfilled one is a wire outline the eye has to close for
+     * itself.
+     *
+     * Lower than the 0.2 the web charting libraries settle on, and deliberately:
+     * the painter composites in linear light, where the same number covers
+     * roughly twice as much as it does in a browser blending sRGB directly.
+     */
+    float fillAlpha = 0.1f;
+    /** A dot at each vertex. Zero draws none. */
+    float markerRadius = 3.0f;
+    bool hover = true;
+    /** Printed in the readout; "%.0f" style, as `std::snprintf` takes. */
+    std::string_view valueFormat = "%.0f";
+    ChartTooltip tooltip{};
+    ChartLegend legend{};
+};
+
+/**
+ * One value per axis, per series, on spokes around a common centre.
+ *
+ * The chart for a *profile* — a handful of measures that belong together and
+ * are compared as a shape rather than read off one at a time: a skills
+ * assessment, a wine's tasting notes, one machine's five utilisation figures
+ * against another's. Everything it is good at falls apart past about eight
+ * axes, where the polygon stops being a shape and becomes a scribble.
+ *
+ * `series` is the same `Series` every other chart here takes; each value is a
+ * spoke, in order, starting at twelve o'clock and going clockwise. Hit testing
+ * is by *angle*, so a reader pointing anywhere along a spoke means that axis —
+ * the same rule the bars use for a category, for the same reason.
+ */
+ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id,
+                       const std::vector<Series>& series, const RadarOptions& options = {});
 
 }  // namespace gbui

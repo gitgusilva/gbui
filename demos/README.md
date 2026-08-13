@@ -1,6 +1,6 @@
 # demos
 
-Six application screens built with nothing but the public library, and three
+Seven application screens built with nothing but the public library, and three
 thin shells that run them: a native window, a headless renderer and a
 WebAssembly module.
 
@@ -15,7 +15,7 @@ header and demonstrates the pipeline. These are ordinary consumers: they
 include `<gbui/…>`, link `gbui::gbui`, and would build unchanged against an
 installed copy of the toolkit. A change that makes them awkward has made the
 library awkward — which is the whole reason they exist as a target rather than
-as six loose files.
+as seven loose files.
 
 ```
 demos/
@@ -23,7 +23,7 @@ demos/
     demos.hpp        the catalogue: Demo, DemoInfo, create()
     host.hpp         everything around a demo that is not the demo
   src/
-    kit.hpp          the vocabulary the six screens share
+    kit.hpp          the vocabulary the screens share
     registry.cpp     the catalogue, in the order the gallery reads
     host.cpp
     analytics.cpp    Meridian      · SaaS revenue dashboard
@@ -32,6 +32,8 @@ demos/
     production.cpp   Kaizen        · manufacturing, MES / OEE
     grid.cpp         Voltway       · energy, transmission
     logistics.cpp    Portway       · warehouse and fleet
+    markets.cpp      Halyard       · equities, a live trading desk
+    catalog/         one live example per component in `gbui::meta`
   runtime/
     native.cpp       a window, a screenshot writer and an SVG recorder
     wasm.cpp         a C surface for JavaScript
@@ -105,7 +107,7 @@ from what the screen actually does.
 
 Two rules worth keeping:
 
-- **Take colours from `Token`, never from a literal.** All six screens re-theme
+- **Take colours from `Token`, never from a literal.** Every screen re-themes
   across four design systems because none of them names a colour.
 - **Keep the data deterministic.** `kit::Rolling` runs on the frame clock from a
   seeded wave, so a screenshot taken at a given second is the same picture on

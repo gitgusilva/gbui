@@ -57,6 +57,12 @@ NodeId Ui::vector(std::string_view pathData, Style style, Fill color, float stro
     return id;
 }
 
+NodeId Ui::picture(const Bitmap& source, Style style, ImageFit fit, float opacity) {
+    const NodeId id = attach(style);
+    arena_[id].image = ImageContent{source, fit, opacity};
+    return id;
+}
+
 Ui& Ui::tag(std::string_view id) {
     if (last_.valid()) arena_[last_].id = arena_.intern(id);
     return *this;

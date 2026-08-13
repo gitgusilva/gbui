@@ -118,7 +118,7 @@ void Grid::balance(Ui& ui, const Interaction& input) {
                .axisWidth = 52.0f,
                .height = 190.0f,
                .valueFormat = "%.0f"},
-              {.wheel = true, .drag = true});
+              {.wheel = true, .drag = ChartDrag::Select});
 
     {
         Style row;

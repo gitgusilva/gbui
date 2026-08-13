@@ -120,6 +120,12 @@ public:
     NodeId vector(std::string_view pathData, Style style = {}, Fill color = Fill{Token::Text},
                   float stroke = 2.0f);
 
+    /** A leaf holding the caller's pixels. `widgets/image.hpp` is the friendly
+     *  way in; this is what it attaches. The buffer is borrowed for the frame,
+     *  never copied — see `Bitmap`. */
+    NodeId picture(const Bitmap& source, Style style = {}, ImageFit fit = ImageFit::Contain,
+                   float opacity = 1.0f);
+
     /**
      * A leaf the application draws into: a rectangle and whatever vector art it
      * wants inside it.

@@ -10,6 +10,9 @@
 // into the same spans, and `custom.css` picks between them off the class
 // VitePress puts on <html>. Two full copies would have doubled this for a
 // difference nobody can see at once.
+//
+// The palettes are Visual Studio Code's own — a C++ reader should not have to
+// learn a second set of colours to read a page about C++.
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,8 +31,13 @@ export default defineLoader({
   watch: ['../../../demos/src/*.cpp'],
 
   async load(): Promise<Record<string, string>> {
+    // `dark-plus` and `light-plus` are Visual Studio Code's own defaults, so a
+    // C++ reader sees the colours they already have in their editor: types,
+    // functions, macros and namespaces each distinct rather than a wash of
+    // three. GitHub's themes colour far less of C++ — most of a header comes
+    // out one shade of foreground.
     const highlighter = await createHighlighter({
-      themes: ['github-light', 'github-dark'],
+      themes: ['light-plus', 'dark-plus'],
       langs: ['cpp'],
     })
 
@@ -38,8 +46,17 @@ export default defineLoader({
       const source = readFileSync(resolve(demosDir, `src/${id}.cpp`), 'utf-8')
       out[id] = highlighter.codeToHtml(source, {
         lang: 'cpp',
-        themes: { light: 'github-light', dark: 'github-dark' },
+        themes: { light: 'light-plus', dark: 'dark-plus' },
         defaultColor: false,
+        // Every line wrapped, so the viewer can put a number beside it without
+        // a second pass over the HTML.
+        transformers: [
+          {
+            line(node, line) {
+              node.properties['data-line'] = String(line)
+            },
+          },
+        ],
       })
     }
     return out

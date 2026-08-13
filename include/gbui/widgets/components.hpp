@@ -17,6 +17,7 @@
 #include "gbui/widgets/button.hpp"
 #include "gbui/widgets/chart.hpp"
 #include "gbui/widgets/icon.hpp"
+#include "gbui/widgets/image.hpp"
 #include "gbui/widgets/listRow.hpp"
 #include "gbui/widgets/panel.hpp"
 #include "gbui/widgets/spacing.hpp"

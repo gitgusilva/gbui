@@ -324,7 +324,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
 
 void Scada::trend(Ui& ui, const Interaction& input) {
     auto card = kit::beginCard(ui, {.title = "FIT-101 TREND · LAST 30 MINUTES",
-                                    .note = "m³/h · drag to pan",
+                                    .note = "m³/h · drag to zoom",
                                     .grow = 1.2f,
                                     .minWidth = 260.0f});
     // One quantity and the setpoint it is chasing. Three tags on one axis is
@@ -340,8 +340,8 @@ void Scada::trend(Ui& ui, const Interaction& input) {
          .fillAlpha = 0.0f,
          .thickness = 1.0f},
     };
-    lineChart(ui, input, "scada.trend", series, view_, {.height = 168.0f, .valueFormat = "%.0f"},
-              {.drag = true});
+    lineChart(ui, input, "scada.trend", series, view_,
+              {.height = 168.0f, .valueFormat = "%.0f"});
 }
 
 void Scada::commandLog(Ui& ui, const Interaction& input) {

@@ -24,6 +24,7 @@
 
 #include <emscripten/emscripten.h>
 
+#include "gbui/meta/components.hpp"
 #include "gbui_demos/demos.hpp"
 #include "gbui_demos/host.hpp"
 
@@ -222,6 +223,84 @@ EMSCRIPTEN_KEEPALIVE char* gbui_demos_catalogue() {
     return duplicate(json);
 }
 
+/**
+ * Every component the library declares, as JSON, with everything a gallery
+ * needs to describe one: its group, the header's own summary, the declaration
+ * doc, the signature, whether it is a container, whether it reacts to the
+ * pointer, and each option with its type, default and documentation.
+ *
+ * Read straight out of `gbui::meta`, which is generated from the headers — so
+ * a page built on this cannot describe a component the library does not have,
+ * or miss an option it does. Free the result with `_free`.
+ */
+EMSCRIPTEN_KEEPALIVE char* gbui_demos_components() {
+    std::string json = "[";
+    bool first = true;
+    for (const meta::ComponentInfo& entry : meta::components()) {
+        // One entry per declaration, so an overloaded component appears twice.
+        // Merged here rather than in the page: the first carries the group and
+        // the options, and a second signature is appended to it.
+        if (!first) {
+            const std::size_t previous = json.rfind("{\"name\":\"");
+            if (previous != std::string::npos) {
+                const std::string tail = json.substr(previous);
+                const std::string needle = "{\"name\":\"" + std::string(entry.name) + "\",";
+                if (tail.rfind(needle, 0) == 0) {
+                    json += ",\"also\":";
+                    appendJsonString(json, entry.signature);
+                    continue;
+                }
+            }
+        }
+        if (!first) json += "},";
+        first = false;
+
+        json += "{\"name\":";
+        appendJsonString(json, entry.name);
+        json += ",\"group\":";
+        appendJsonString(json, entry.group);
+        json += ",\"header\":";
+        appendJsonString(json, entry.header);
+        json += ",\"summary\":";
+        appendJsonString(json, entry.headerDoc.empty() ? entry.summary : entry.headerDoc);
+        json += ",\"detail\":";
+        appendJsonString(json, entry.summary);
+        json += ",\"signature\":";
+        appendJsonString(json, entry.signature);
+        json += ",\"optionsType\":";
+        appendJsonString(json, entry.optionsType);
+        json += std::string(",\"container\":") + (entry.container ? "true" : "false");
+        json += std::string(",\"interactive\":") + (entry.interactive ? "true" : "false");
+        json += ",\"properties\":[";
+        bool firstProperty = true;
+        for (const meta::PropertyInfo& property : entry.properties) {
+            if (!firstProperty) json += ',';
+            firstProperty = false;
+            json += "{\"name\":";
+            appendJsonString(json, property.name);
+            json += ",\"type\":";
+            appendJsonString(json, property.type);
+            json += ",\"default\":";
+            appendJsonString(json, property.defaultText);
+            json += ",\"doc\":";
+            appendJsonString(json, property.doc);
+            json += std::string(",\"optional\":") + (property.optional ? "true" : "false");
+            json += ",\"choices\":[";
+            bool firstChoice = true;
+            for (const std::string_view choice : property.choices) {
+                if (!firstChoice) json += ',';
+                firstChoice = false;
+                appendJsonString(json, choice);
+            }
+            json += "]}";
+        }
+        json += ']';
+    }
+    if (!first) json += '}';
+    json += ']';
+    return duplicate(json);
+}
+
 /** The skins a host can be switched between, as JSON. Free with `_free`. */
 EMSCRIPTEN_KEEPALIVE char* gbui_demos_skins() {
     std::string json = "[";
@@ -278,6 +357,11 @@ EMSCRIPTEN_KEEPALIVE int gbui_demos_select(void* handle, const char* id) {
 }
 
 EMSCRIPTEN_KEEPALIVE void gbui_demos_restart(void* handle) { asHost(handle)->restart(); }
+
+/** Shows one component's live example instead of an application screen. */
+EMSCRIPTEN_KEEPALIVE int gbui_demos_select_component(void* handle, const char* name) {
+    return asHost(handle)->selectComponent(name ? name : "") ? 1 : 0;
+}
 
 EMSCRIPTEN_KEEPALIVE void gbui_demos_set_skin(void* handle, const char* id) {
     asHost(handle)->setSkin(id ? id : "");

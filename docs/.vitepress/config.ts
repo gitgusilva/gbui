@@ -24,16 +24,28 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/introduction' },
       { text: 'Reference', link: '/reference/overview' },
+      { text: 'Components', link: '/components' },
       { text: 'Demos', link: '/demos' },
       versionMenu(),
     ],
 
     sidebar: {
+      '/components': [
+        {
+          text: 'Components',
+          items: [
+            { text: 'All of them', link: '/components' },
+            { text: 'Writing a component', link: '/guide/writing-a-component' },
+            { text: 'The six demo screens', link: '/demos' },
+          ],
+        },
+      ],
       '/demos': [
         {
           text: 'Demos',
           items: [
             { text: 'The six screens', link: '/demos' },
+            { text: 'Components', link: '/components' },
             { text: 'Your first window', link: '/guide/first-window' },
             { text: 'Writing a component', link: '/guide/writing-a-component' },
           ],

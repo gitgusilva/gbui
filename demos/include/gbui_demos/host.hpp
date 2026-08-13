@@ -80,8 +80,30 @@ public:
     /** Switches demos, restarting the clock. False when the id is unknown, and
      *  in that case what was showing stays. */
     bool select(std::string_view id);
+
+    /**
+     * Shows one *component* instead of an application screen: its live example
+     * from the catalogue, with its name and signature from the metadata.
+     *
+     * The same host, the same pipeline, the same input — a component preview
+     * is a demo whose tree happens to be four lines. False when no example is
+     * registered for that name, which `gbui_demo --coverage` exists to catch
+     * before a reader does.
+     */
+    bool selectComponent(std::string_view component);
     std::string_view selected() const { return selectedId_; }
     const DemoInfo* info() const { return info_; }
+
+    /**
+     * The size what is showing was composed for, in logical pixels.
+     *
+     * A screen carries its own — a control room desk is drawn for a wide one —
+     * and a component carries the preview frame's, which is a good deal smaller
+     * than any of them. Without this a still of `slider` came out as one
+     * slider in the corner of a dashboard-sized canvas, because the only size
+     * on offer was the last screen's.
+     */
+    Vec2 designSize() const;
 
     /** One of `skins()`. Unknown names are ignored. */
     void setSkin(std::string_view id);

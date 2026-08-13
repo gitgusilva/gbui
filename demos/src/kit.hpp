@@ -1,4 +1,4 @@
-// The vocabulary the six screens share.
+// The vocabulary the screens share.
 //
 // A stat tile, a gauge, a meter, a sparkline, a status pill — the handful of
 // things every dashboard in every industry draws, written once here so each
@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -34,7 +35,7 @@ namespace gbui::demos::kit {
  *
  * Industrial screens are read at a glance from across a room, and the glance
  * carries one bit: is this fine. Naming the meaning rather than the token is
- * what lets the six screens agree — a tank at 94% and a build that failed are
+ * what lets the screens agree — a tank at 94% and a build that failed are
  * the same red, because they are the same `Alarm`.
  */
 enum class Tone { Neutral, Ok, Warn, Alarm, Info };
@@ -276,6 +277,11 @@ struct CardOptions {
     std::string_view title{};
     /** Drawn small and muted to the right of the title. */
     std::string_view note{};
+    /** Drawn at the far right of the header, after the note — a chart's zoom
+     *  buttons, a filter, a menu. A callback because the header is closed
+     *  before the caller's body opens, and the alternative is every screen
+     *  building its own header row to put one button in it. */
+    std::function<void(Ui&)> actions{};
     Direction direction = Direction::Column;
     float gap = 10.0f;
     Edges padding = Edges::all(14.0f);
@@ -290,7 +296,7 @@ struct CardOptions {
 };
 
 /** A titled surface. Everything on these screens that is not a bar lives in
- *  one, which is what makes six unrelated industries look like one product. */
+ *  one, which is what makes seven unrelated industries look like one product. */
 inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
     Style outer;
     outer.direction = Direction::Column;
@@ -319,6 +325,10 @@ inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
         if (!options.note.empty()) {
             spacer(ui);
             text(ui, options.note, {.color = Token::TextMuted, .size = 11.0f});
+        }
+        if (options.actions) {
+            if (options.note.empty()) spacer(ui);
+            options.actions(ui);
         }
     }
 

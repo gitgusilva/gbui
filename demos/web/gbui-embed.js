@@ -67,6 +67,19 @@ export async function catalogue() {
   return JSON.parse(takeText(module, module._gbui_demos_catalogue()))
 }
 
+/**
+ * Every component the library declares, with its group, documentation,
+ * signature and options.
+ *
+ * Read out of `gbui::meta`, which is generated from the headers — so a page
+ * built on this cannot describe a component the library does not have, or miss
+ * an option it does.
+ */
+export async function components() {
+  const module = await loadModule()
+  return JSON.parse(takeText(module, module._gbui_demos_components()))
+}
+
 /** The palettes and shape rules a demo can be shown in. */
 export async function skins() {
   const module = await loadModule()
@@ -78,6 +91,7 @@ export async function skins() {
  *
  * Options:
  *   id           which demo; the first in the catalogue by default
+ *   component    show one component's example instead of a screen
  *   dark         start in the dark palette (true)
  *   skin         gitbox | material | cupertino | fluent
  *   fontSize     base UI size in logical pixels
@@ -115,6 +129,14 @@ export async function mountDemo(canvas, options = {}) {
     module._gbui_demos_create(id, first.width, first.height, first.scale, settings.dark ? 1 : 0),
   )
   if (!handle) throw new Error('gbui: the demo host could not be created')
+
+  // A page that wants one component rather than a screen says so at mount, so
+  // the first frame is already the right thing and nothing flashes.
+  if (options.component) {
+    withText(module, options.component, (name) =>
+      module._gbui_demos_select_component(handle, name),
+    )
+  }
 
   if (options.skin) withText(module, settings.skin, (id) => module._gbui_demos_set_skin(handle, id))
   if (options.fontSize) module._gbui_demos_set_font_size(handle, options.fontSize)
@@ -306,6 +328,15 @@ export async function mountDemo(canvas, options = {}) {
     },
     select(id) {
       const ok = withText(module, id, (name) => module._gbui_demos_select(handle, name))
+      lastFrameAt = 0
+      schedule()
+      return ok === 1
+    },
+    /** Shows one component's live example instead of an application screen. */
+    selectComponent(name) {
+      const ok = withText(module, name, (text) =>
+        module._gbui_demos_select_component(handle, text),
+      )
       lastFrameAt = 0
       schedule()
       return ok === 1

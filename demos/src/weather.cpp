@@ -228,7 +228,7 @@ void Weather::current(Ui& ui) {
             reading.gap = 6.0f;
             reading.shrink = 0.0f;
             auto readingScope = ui.begin(reading);
-            // A gradient *across the run*: the one place on these six screens
+            // A gradient *across the run*: the one place on these screens
             // where the number is allowed to be the picture as well as the
             // value.
             text(ui, kit::format("%.1f", temperature),
@@ -352,7 +352,7 @@ void Weather::trends(Ui& ui, const Interaction& input) {
             {.name = "Dew point", .values = dewPoint_.values(), .color = Token::Graph6},
         };
         lineChart(ui, input, "weather.temperature", series, view_,
-                  {.height = 168.0f, .valueFormat = "%.1f°"}, {.drag = true});
+                  {.height = 168.0f, .valueFormat = "%.1f°"});
     }
     {
         auto card =

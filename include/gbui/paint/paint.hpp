@@ -70,6 +70,15 @@ struct StrokeRect {
     float radius = 0.0f;
 };
 
+/** A picture, already fitted and ready to be put down. `box` may reach outside
+ *  `clip` — `Cover` and `None` crop — so a backend draws the intersection. */
+struct DrawImage {
+    Rect box;
+    Bitmap source;
+    float radius = 0.0f;
+    float opacity = 1.0f;
+};
+
 struct DrawText {
     Rect box;          ///< The content box the run is aligned inside.
     std::string_view text;
@@ -100,7 +109,7 @@ struct PushClip {
 struct PopClip {};
 
 using DrawCommand =
-    std::variant<FillRect, StrokeRect, DrawText, DrawPath, PushClip, PopClip>;
+    std::variant<FillRect, StrokeRect, DrawText, DrawImage, DrawPath, PushClip, PopClip>;
 
 /** An ordered, absolute, theme-resolved description of one frame. */
 class DisplayList {
@@ -166,6 +175,7 @@ public:
     virtual void fillRect(const FillRect&) = 0;
     virtual void strokeRect(const StrokeRect&) = 0;
     virtual void drawText(const DrawText&) = 0;
+    virtual void drawImage(const DrawImage&) = 0;
     virtual void drawPath(const DrawPath&) = 0;
     virtual void pushClip(const PushClip&) = 0;
     virtual void popClip() = 0;
@@ -183,6 +193,7 @@ public:
     void fillRect(const FillRect&) override;
     void strokeRect(const StrokeRect&) override;
     void drawText(const DrawText&) override;
+    void drawImage(const DrawImage&) override;
     void drawPath(const DrawPath&) override;
     void pushClip(const PushClip&) override;
     void popClip() override;

@@ -992,7 +992,7 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
         const ChartResult churn =
             lineChart(ui, input, "controls.churn", {added, removed}, model.churnView,
                       {.height = 130.0f, .tooltip = readout},
-                      {.wheel = true, .wheelModifier = true, .drag = true});
+                      {.wheel = true, .wheelModifier = true, .drag = ChartDrag::Select});
         chartBrush(ui, input, "controls.churn.brush", {added, removed}, model.churnView,
                    {.axisWidth = 34.0f});
         text(ui,

@@ -1,8 +1,17 @@
 # Introduction
 
 gbui is a UI toolkit for C++20. It draws application interfaces — the kind with
-lists, panels, toolbars, dialogs and tables — without a web engine and without a
-dependency beyond the standard library.
+lists, panels, toolbars, dialogs and tables — without a web engine and with
+nothing to fetch: a checkout builds offline.
+
+That claim is worth being exact about, because "no dependencies" is a thing
+every library says. The toolkit — core, style, scene, layout, paint, widgets —
+is the standard library and nothing else. Below it, `platform/` is where the
+machine is: a font stack, a display server, a decoder. Two public-domain
+single-header files live there, [`stb_truetype.h`](https://github.com/nothings/stb)
+for glyphs and `stb_image.h` for pictures, vendored into the tree rather than
+fetched, compiled one to a translation unit, and reachable from nowhere above
+them. Swapping either means editing one file in `platform/`.
 
 It was written for [GitBox](https://github.com/gitgusilva/gitbox), a desktop Git
 client built on Electron, as a way off that runtime that keeps the design system

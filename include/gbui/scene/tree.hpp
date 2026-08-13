@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "gbui/core/cursor.hpp"
+#include "gbui/core/image.hpp"
 #include "gbui/core/path.hpp"
 #include "gbui/style/style.hpp"
 
@@ -64,6 +65,15 @@ struct IconContent {
     std::string_view path{};
     float stroke = 2.0f;
     Fill color{Token::Text};
+};
+
+/** A picture on a node: the caller's pixels, and how they meet the node's box.
+ *  Borrowed for the frame like the text is — see `Bitmap`. */
+struct ImageContent {
+    Bitmap source{};
+    ImageFit fit = ImageFit::Contain;
+    float opacity = 1.0f;
+    bool valid() const { return source.valid(); }
 };
 
 /**
@@ -100,6 +110,7 @@ struct Node {
     Style style{};
     TextStyle textStyle{};
     IconContent icon{};
+    ImageContent image{};
     /** Leaf content. Points into the arena's string blocks, never owned here. */
     std::string_view text{};
     /** Free-form tag for hit testing and tests — "sidebar.item.main". */

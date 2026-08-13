@@ -139,6 +139,8 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
     if (columns.empty()) return result;
 
     const std::string headerId = std::string(id) + ".header";
+    // One width for both bars, so the corner they leave between them is square.
+    constexpr float kScrollbarWidth = 10.0f;
     const std::string bodyId = std::string(id) + ".body";
 
     // The width the columns share out. Last frame's, like every other piece of
@@ -244,9 +246,12 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                 head.justify = column.align == TextAlign::End      ? Justify::End
                                : column.align == TextAlign::Center ? Justify::Center
                                                                    : Justify::Start;
-                if (column.sortable && input.isHovered(cellId)) {
-                    head.background = Fill{Token::SurfaceHover};
-                }
+                // No hover surface on a header. A row lights up because the
+                // reader is picking one *out* of many; a column title is not
+                // picked out of anything, and the two affordances it does need
+                // — that it can be clicked, and which way it would sort — are
+                // already carried by the cursor and by the arrow every sortable
+                // column wears permanently.
                 head.cursorHint = column.sortable ? Cursor::Pointer : Cursor::Default;
                 auto headScope = ui.begin(head);
                 ui.tag(cellId).cursor(head.cursorHint);
@@ -414,23 +419,41 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         (void)lineScope;
     };
 
+    // The rows scroll without a bar of their own: theirs would be drawn against
+    // *their* right-hand edge, which is out at the end of the widest column and
+    // therefore off screen the moment the columns are wider than the table. It
+    // is drawn below instead, against the table itself — which is where a
+    // browser puts it, and the only place a reader can reach it.
     if (options.virtualise) {
         VirtualListOptions rows;
         rows.count = rowCount;
         rows.rowHeight = options.rowHeight;
         rows.step = options.rowHeight * 3.0f;
+        rows.scrollbar = false;
         result.shown = virtualList(ui, input, bodyId, state.body, rows,
                                    [&](Ui& rowUi, std::size_t row) { buildRow(rowUi, row); });
     } else {
         ScrollOptions view;
         view.axis = ScrollAxis::Vertical;
+        view.scrollbar = false;
         auto body = beginScroll(ui, input, bodyId, state.body, view);
         for (std::size_t row = 0; row < rowCount; ++row) buildRow(ui, row);
         result.shown = VirtualSlice{0, rowCount, rowCount, options.rowHeight};
         (void)body;
     }
 
-    (void)acrossScope;
+    acrossScope.close();
+
+    // Against the table's own box, under the header and above the sideways bar
+    // — the corner where the two would cross belongs to neither.
+    const Rect box = input.frameOf(id);
+    if (!box.empty()) {
+        const float sideways = state.columns.scrollable() ? kScrollbarWidth : 0.0f;
+        scrollbar(ui, input, bodyId, state.body,
+                  Rect{0.0f, options.headerHeight, box.width,
+                       std::max(0.0f, box.height - options.headerHeight - sideways)},
+                  ScrollAxis::Vertical, kScrollbarWidth);
+    }
 
     // Clicking a row selects it. Read after the rows are built, so the tags the
     // click is matched against are this frame's.

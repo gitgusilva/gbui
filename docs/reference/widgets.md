@@ -98,6 +98,57 @@ The `Interaction` overload is what a ripple needs — the ink grows from the
 `ripple` asks the active `Design`: Material throws ink, the others change the
 surface.
 
+## Image
+
+`#include "gbui/widgets/image.hpp"`
+
+```cpp
+NodeId image(Ui&, const Bitmap&, const ImageOptions& = {});
+
+struct Bitmap { const std::uint8_t* pixels; int width, height, stride; };
+enum class ImageFit { Fill, Contain, Cover, None };
+```
+
+HTML's `<img>`, with the parts of it that are a toolkit's business: a box, a
+fit, a radius, an opacity and an `alt`. `ImageFit` is CSS's `object-fit` and is
+named after it — `Contain` letterboxes, `Cover` crops, and both are cut by the
+box, which is why the picture is drawn as a child of it rather than on it.
+
+**The pixels are borrowed for the frame.** They are read when the frame is
+painted, not when `image` is called, and nothing copies them — the same contract
+a label's `string_view` has, and the same one it breaks the same way. Put them
+in a member, a cache or a static; a buffer that dies with the enclosing scope is
+a picture of whatever the stack holds by the time anyone looks.
+
+The picture is sampled bilinearly, because a logo scaled into a table row is
+almost never at its own size and nearest-neighbour turns its edges into a
+staircase. Corners are cut by the same coverage the fills use, so an image in a
+rounded box and the box agree about the curve. `SvgPainter` carries it too, as a
+base64 PNG written on the way out — an exported document that quietly dropped
+the pictures would be the one thing that painter exists not to be.
+
+### Getting the pixels
+
+```cpp
+#include "gbui/platform/image.hpp"
+
+class Image {
+    static Image fromFile(const std::string& path);
+    static Image fromMemory(const std::uint8_t*, std::size_t);
+    Bitmap bitmap() const;      // valid while the Image is
+    const std::string& error() const;
+};
+```
+
+PNG, JPEG, BMP, GIF, TGA and PSD, through the vendored `stb_image.h`. It lives
+in `platform/` for the reason everything else does: that is where the machine
+is, and core, style, scene, layout, paint and widgets stay free of third-party
+code. `Image` owns and `Bitmap` borrows, which is the whole reason there are
+two — decode once into something you keep, hand a view to the widget each frame.
+
+A failure carries a reason. "The picture did not appear" has a dozen causes and
+the decoder is the only thing that knows which one it was.
+
 ## Icon and badge
 
 ```cpp
@@ -235,6 +286,18 @@ jumping the list under the reader. This is what arrow-key navigation over a list
 needs, virtualised or not — a select's open list uses the same call.
 `VirtualListOptions::rows()` hands over the metrics of a virtualised one.
 
+```cpp
+void scrollbar(Ui&, const Interaction&, id, const ScrollState&, Rect box,
+               ScrollAxis = Vertical, float width = 10.0f, bool autoHide = true);
+```
+
+A bar for a view that is not where the bar belongs. Normally `beginScroll` draws
+its own and this is not needed; the table is the case that forced it out. `box`
+is where the bar should go, in the current container's coordinates, and the ids
+are the view's own — so the press, the drag and the paging are still handled by
+`beginScroll`. It draws; it does not behave. Turn the view's own bar off with
+`ScrollOptions::scrollbar` when you use it, or there will be two.
+
 ## Table
 
 `#include "gbui/widgets/table.hpp"`
@@ -299,10 +362,19 @@ no information.
 `TableResult` reports `sortChanged`, `selectionChanged`, the `shown` slice and
 the resolved `columnWidths`.
 
-**Known rough edge:** the horizontal scrollbar is a child of the box that
-scrolls, so it slides with the columns instead of staying pinned to the bottom
-edge. It should be lifted out and given the viewport's geometry, the way the
-sticky header already is.
+**Both scrollbars belong to the table, not to what scrolls.** The rows scroll
+up and down *inside* a box that scrolls side to side, so the row view's own
+right-hand edge is out at the end of the widest column: a bar drawn against it
+is one the reader has to scroll sideways to find, and once the columns are wide
+enough, one they cannot reach at all. The rows' bar is turned off and drawn
+against the table's own box instead — which is where a browser puts it — through
+`scrollbar()` below.
+
+A header does not light up on hover. A row does, because the reader is picking
+one *out* of many; a column title is not picked out of anything, and the two
+things it does need to say — that it can be clicked, and which way it would sort
+— are already carried by the cursor and by the arrow every sortable column wears
+permanently.
 
 ## Tabs
 

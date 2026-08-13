@@ -1,4 +1,5 @@
 #include "gbui/paint/paint.hpp"
+#include <cstdint>
 
 #include <algorithm>
 #include <array>
@@ -235,6 +236,8 @@ void Painter::paint(const DisplayList& list) {
                     strokeRect(c);
                 else if constexpr (std::is_same_v<T, DrawText>)
                     drawText(c);
+                else if constexpr (std::is_same_v<T, DrawImage>)
+                    drawImage(c);
                 else if constexpr (std::is_same_v<T, DrawPath>)
                     drawPath(c);
                 else if constexpr (std::is_same_v<T, PushClip>)
@@ -328,6 +331,15 @@ void recordLayer(const Arena& arena, NodeId root, const Theme& theme, DisplayLis
                           node.content.y + (node.content.height - side) / 2.0f};
         Path path = parseSvgPath(node.icon.path).transformed(scale, offset);
         out.add(DrawPath{std::move(path), iconPaint, node.icon.stroke * scale});
+    }
+
+    // A picture, fitted into the content box. After the background, which is
+    // what shows through a transparent one and fills what `Contain` leaves; and
+    // before the children, so a caption laid over it is laid over it.
+    if (node.image.valid()) {
+        const Rect box = fitted(node.content, node.image.source.size(), node.image.fit);
+        out.add(DrawImage{box, node.image.source, style.radius,
+                          node.image.opacity * style.opacity});
     }
 
     // Vector art the application built, in this node's own coordinates. Drawn
@@ -518,6 +530,132 @@ void SvgPainter::strokeRect(const StrokeRect& c) {
         body_ += " stroke-opacity=\"" + number(c.paint.color.a) + "\"";
     }
     body_ += "/>\n";
+}
+
+namespace {
+
+/**
+ * The picture as a PNG, so the SVG carries it.
+ *
+ * An SVG cannot hold raw pixels — `<image>` takes a URI — and dropping the
+ * picture would make the exported document quietly disagree with the window,
+ * which is the one thing this painter exists not to do. So a PNG is written
+ * here, uncompressed: deflate has a *stored* mode, which is a header and then
+ * the bytes, and the alternative is a compressor this library will not be
+ * growing. The file is larger than a real encoder's and identical to read.
+ *
+ * The pieces are the format's own, in the format's order: a signature, IHDR,
+ * one IDAT holding a zlib stream, IEND, and a CRC after each.
+ */
+std::uint32_t crc32Of(const std::uint8_t* data, std::size_t size) {
+    static const auto table = [] {
+        std::array<std::uint32_t, 256> out{};
+        for (std::uint32_t i = 0; i < 256; ++i) {
+            std::uint32_t c = i;
+            for (int k = 0; k < 8; ++k) c = (c & 1u) ? 0xEDB88320u ^ (c >> 1) : c >> 1;
+            out[i] = c;
+        }
+        return out;
+    }();
+    std::uint32_t crc = 0xFFFFFFFFu;
+    for (std::size_t i = 0; i < size; ++i) {
+        crc = table[(crc ^ data[i]) & 0xFFu] ^ (crc >> 8);
+    }
+    return crc ^ 0xFFFFFFFFu;
+}
+
+void appendBig(std::vector<std::uint8_t>& out, std::uint32_t value) {
+    out.push_back(static_cast<std::uint8_t>(value >> 24));
+    out.push_back(static_cast<std::uint8_t>(value >> 16));
+    out.push_back(static_cast<std::uint8_t>(value >> 8));
+    out.push_back(static_cast<std::uint8_t>(value));
+}
+
+void appendChunk(std::vector<std::uint8_t>& out, const char* name,
+                 const std::vector<std::uint8_t>& data) {
+    appendBig(out, static_cast<std::uint32_t>(data.size()));
+    const std::size_t start = out.size();
+    out.insert(out.end(), name, name + 4);
+    out.insert(out.end(), data.begin(), data.end());
+    appendBig(out, crc32Of(out.data() + start, out.size() - start));
+}
+
+std::vector<std::uint8_t> encodePng(const Bitmap& source) {
+    // The raw stream: every row preceded by its filter byte, which is zero —
+    // no filtering, because there is no compressor here for filtering to help.
+    std::vector<std::uint8_t> raw;
+    const auto rowBytes = static_cast<std::size_t>(source.width) * 4;
+    raw.reserve((rowBytes + 1) * static_cast<std::size_t>(source.height));
+    for (int y = 0; y < source.height; ++y) {
+        raw.push_back(0);
+        const std::uint8_t* row =
+            source.pixels + static_cast<std::size_t>(y) * static_cast<std::size_t>(source.pitch());
+        raw.insert(raw.end(), row, row + rowBytes);
+    }
+
+    std::vector<std::uint8_t> zlib{0x78, 0x01};
+    std::size_t at = 0;
+    do {
+        const std::size_t block = std::min<std::size_t>(raw.size() - at, 65535);
+        const bool last = at + block >= raw.size();
+        zlib.push_back(last ? 1 : 0);
+        zlib.push_back(static_cast<std::uint8_t>(block));
+        zlib.push_back(static_cast<std::uint8_t>(block >> 8));
+        zlib.push_back(static_cast<std::uint8_t>(~block));
+        zlib.push_back(static_cast<std::uint8_t>((~block) >> 8));
+        zlib.insert(zlib.end(), raw.begin() + static_cast<std::ptrdiff_t>(at),
+                    raw.begin() + static_cast<std::ptrdiff_t>(at + block));
+        at += block;
+        if (last) break;
+    } while (at < raw.size());
+
+    std::uint32_t a = 1;
+    std::uint32_t b = 0;
+    for (const std::uint8_t byte : raw) {
+        a = (a + byte) % 65521;
+        b = (b + a) % 65521;
+    }
+    appendBig(zlib, (b << 16) | a);
+
+    std::vector<std::uint8_t> header;
+    appendBig(header, static_cast<std::uint32_t>(source.width));
+    appendBig(header, static_cast<std::uint32_t>(source.height));
+    header.insert(header.end(), {8, 6, 0, 0, 0});   // 8-bit channels, RGBA, no interlace
+
+    std::vector<std::uint8_t> png{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+    appendChunk(png, "IHDR", header);
+    appendChunk(png, "IDAT", zlib);
+    appendChunk(png, "IEND", {});
+    return png;
+}
+
+std::string base64Of(const std::vector<std::uint8_t>& data) {
+    static constexpr char kDigits[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve((data.size() + 2) / 3 * 4);
+    for (std::size_t i = 0; i < data.size(); i += 3) {
+        const std::uint32_t x = data[i];
+        const std::uint32_t y = i + 1 < data.size() ? data[i + 1] : 0u;
+        const std::uint32_t z = i + 2 < data.size() ? data[i + 2] : 0u;
+        const std::uint32_t triple = (x << 16) | (y << 8) | z;
+        out.push_back(kDigits[(triple >> 18) & 63u]);
+        out.push_back(kDigits[(triple >> 12) & 63u]);
+        out.push_back(i + 1 < data.size() ? kDigits[(triple >> 6) & 63u] : '=');
+        out.push_back(i + 2 < data.size() ? kDigits[triple & 63u] : '=');
+    }
+    return out;
+}
+
+}  // namespace
+
+void SvgPainter::drawImage(const DrawImage& c) {
+    if (!c.source.valid() || c.box.empty()) return;
+    body_ += "<image x=\"" + number(c.box.x) + "\" y=\"" + number(c.box.y) + "\" width=\"" +
+             number(c.box.width) + "\" height=\"" + number(c.box.height) +
+             "\" preserveAspectRatio=\"none\"";
+    if (c.opacity < 1.0f) body_ += " opacity=\"" + number(c.opacity) + "\"";
+    body_ += " href=\"data:image/png;base64," + base64Of(encodePng(c.source)) + "\"/>\n";
 }
 
 void SvgPainter::drawText(const DrawText& c) {

@@ -127,8 +127,10 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
                                  : options.thickness - (options.rule ? 1.0f : 0.0f);
         // Vertical rows keep a lane free on the leading edge for the indicator,
         // so the label does not shift sideways when a tab becomes active.
-        tab.padding = vertical ? Edges{0.0f, 10.0f, 0.0f, 12.0f}
-                               : Edges::symmetric(0.0f, 12.0f);
+        // Room under a horizontal label, so the indicator sits clear of its
+        // descenders instead of underlining them.
+        tab.padding = options.itemPadding.value_or(vertical ? Edges{0.0f, 10.0f, 0.0f, 12.0f}
+                                                            : Edges{0.0f, 12.0f, 6.0f, 12.0f});
         tab.radius = 6.0f;
         tab.shrink = vertical ? 0.0f : 1.0f;
         tab.opacity = opacityFor(item.disabled);
@@ -172,8 +174,9 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
 
         Style bar;
         bar.position = Position::Absolute;
-        bar.left = vertical ? 0.0f : along;
-        bar.top = vertical ? along : stripFrame.height - options.indicatorWidth;
+        bar.left = vertical ? options.indicatorInset : along;
+        bar.top = vertical ? along
+                           : stripFrame.height - options.indicatorWidth - options.indicatorInset;
         bar.width = vertical ? options.indicatorWidth : length;
         bar.height = vertical ? length : options.indicatorWidth;
         bar.radius = options.indicatorWidth / 2.0f;

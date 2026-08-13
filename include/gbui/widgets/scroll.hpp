@@ -44,6 +44,27 @@ struct ScrollState {
  */
 enum class ScrollAxis { None, Vertical, Horizontal };
 
+/**
+ * Draws the bar for a scroll view that is not where the bar belongs.
+ *
+ * A bar normally lives inside the view it drives, and `beginScroll` puts it
+ * there. A table is the case that forced this one out: its rows scroll
+ * vertically *inside* a box that scrolls horizontally, so the row view's own
+ * right-hand edge is out at the end of the widest column, and the bar drawn
+ * against it is a bar the reader has to scroll sideways to find. A browser has
+ * no such problem, because both bars belong to the visible box; this is how a
+ * caller says the same thing here.
+ *
+ * `box` is in the current container's coordinates — where the bar should be, not
+ * where the content is. The ids are the view's own, so the press, the drag and
+ * the paging are still handled by `beginScroll`: this draws, it does not
+ * behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you
+ * use it, or there will be two.
+ */
+void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state,
+               Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f,
+               bool autoHide = true);
+
 struct ScrollOptions {
     Direction direction = Direction::Column;
     /** Which way it scrolls. Auto follows `direction`, which is what a column

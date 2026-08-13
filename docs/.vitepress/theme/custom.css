@@ -66,19 +66,19 @@ html.dark .light-only {
  * `--shiki-dark` on every span — so the code view ships once instead of twice.
  * Which one shows is decided here, off the class VitePress puts on <html>,
  * rather than off prefers-color-scheme, so it follows the site's own toggle. */
-.gbui-demo-code .shiki,
-.gbui-demo-code .shiki span {
+.gbui-code-body .shiki,
+.gbui-code-body .shiki span {
   color: var(--shiki-light);
 }
 
-html.dark .gbui-demo-code .shiki,
-html.dark .gbui-demo-code .shiki span {
+html.dark .gbui-code-body .shiki,
+html.dark .gbui-code-body .shiki span {
   color: var(--shiki-dark);
 }
 
 /* Colour only. The block keeps the card's own background — a per-span
  * `background-color` would paint a grey box behind every token, which is what
  * the theme's background value is for and not what a code block wants. */
-.gbui-demo-code .shiki {
+.gbui-code-body .shiki {
   background: transparent !important;
 }

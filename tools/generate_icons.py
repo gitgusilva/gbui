@@ -20,13 +20,17 @@ LUCIDE = "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/{}.sv
 NS = "{http://www.w3.org/2000/svg}"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
+# Every icon the toolkit ships, which is what a bare run regenerates. It has to
+# be the whole set: the generator writes the file from this list alone, so a name
+# missing from it is an icon deleted from the library by anyone who runs the
+# script without arguments.
 DEFAULT_ICONS = [
-    "archive", "chart-pie", "check", "chevron-down", "chevron-left", "chevron-right",
-    "chevron-up", "circle-alert",
-    "clock-fading", "download", "eye", "eye-off", "file", "file-minus", "file-plus",
-    "folder", "git-branch",
-    "git-commit-horizontal", "git-merge", "minus", "package", "panel-left", "plus",
-    "refresh-cw", "rotate-ccw", "search", "settings", "terminal", "upload", "x",
+    "archive", "bold", "chart-pie", "check", "chevron-down", "chevron-left", "chevron-right",
+    "chevron-up", "circle-alert", "clock-fading", "download", "eye", "eye-off", "file",
+    "file-minus", "file-plus", "folder", "git-branch", "git-commit-horizontal", "git-merge",
+    "heading", "image", "italic", "link", "list", "list-ordered", "minus", "package",
+    "panel-left", "plus", "quote", "refresh-cw", "rotate-ccw", "search", "settings",
+    "strikethrough", "terminal", "trending-down", "trending-up", "underline", "upload", "x",
 ]
 
 # The constant that turns a quarter circle into a cubic.

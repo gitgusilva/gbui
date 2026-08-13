@@ -85,8 +85,25 @@ struct ComponentInfo {
     std::string_view group;
     /** The header that declares it, as it is included. */
     std::string_view header;
-    /** The doc comment above the declaration, joined into one line. */
+    /**
+     * The doc comment above the declaration, joined into one line.
+     *
+     * Per *overload*, which is why it is often not the sentence a reader
+     * wants: `button`'s first declaration is documented by what it cannot do
+     * without an `Interaction`, which is a poor description of a button. Use
+     * `headerDoc` for the component and this for the signature beside it.
+     */
     std::string_view summary;
+    /**
+     * The first paragraph of the header's own comment — "A button, in the four
+     * variants the design system has."
+     *
+     * One line per *file*, so every overload of a component shares it, and
+     * almost always the better summary. Every header in `widgets/` opens with
+     * one because the house style asks for it; a file that did not would leave
+     * this empty rather than inventing something.
+     */
+    std::string_view headerDoc;
     /** The options struct's name, or empty for a component that takes none. */
     std::string_view optionsType;
     std::vector<PropertyInfo> properties;

@@ -17,5 +17,6 @@ DemoInfo scadaDemo();
 DemoInfo productionDemo();
 DemoInfo gridDemo();
 DemoInfo logisticsDemo();
+DemoInfo marketsDemo();
 
 }  // namespace gbui::demos
