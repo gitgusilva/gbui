@@ -3900,6 +3900,20 @@
         "optional": false
       },
       {
+        "name": "variant",
+        "kind": "Enum",
+        "type": "ButtonVariant",
+        "default": "ButtonVariant::Secondary",
+        "choices": [
+          "Primary",
+          "Secondary",
+          "Ghost",
+          "Danger"
+        ],
+        "doc": "How the buttons are drawn. `Secondary` by default, which gives them a surface and an outline: three bare glyphs floating in a card header read as marks rather than as controls, and a reader has to try one to find out it can be pressed. `Ghost` is the bare version, for a toolbar that sits on top of the plot where a surface would be in the way.",
+        "optional": false
+      },
+      {
         "name": "height",
         "kind": "Number",
         "type": "float",

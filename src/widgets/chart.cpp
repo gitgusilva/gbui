@@ -1036,7 +1036,7 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
     const std::string base = std::string(id);
     if (options.zoomIn) {
         button(ui, input, "",
-               {.variant = ButtonVariant::Ghost,
+               {.variant = options.variant,
                 .leading = Icon::Plus,
                 .disabled = view.span() <= options.minSpan,
                 .height = options.height,
@@ -1046,7 +1046,7 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
     }
     if (options.zoomOut) {
         button(ui, input, "",
-               {.variant = ButtonVariant::Ghost,
+               {.variant = options.variant,
                 .leading = Icon::Minus,
                 .disabled = view.whole(),
                 .height = options.height,
@@ -1056,7 +1056,7 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
     }
     if (options.reset) {
         button(ui, input, "",
-               {.variant = ButtonVariant::Ghost,
+               {.variant = options.variant,
                 .leading = Icon::RotateCcw,
                 .disabled = view.whole(),
                 .height = options.height,

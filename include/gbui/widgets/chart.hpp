@@ -10,6 +10,7 @@
 
 #include "gbui/input/interaction.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/widgets/button.hpp"
 #include "gbui/widgets/scroll.hpp"
 
 namespace gbui {
@@ -365,6 +366,16 @@ struct ChartToolbarOptions {
      */
     double step = 0.4;
     double minSpan = 0.02;
+    /**
+     * How the buttons are drawn.
+     *
+     * `Secondary` by default, which gives them a surface and an outline: three
+     * bare glyphs floating in a card header read as marks rather than as
+     * controls, and a reader has to try one to find out it can be pressed.
+     * `Ghost` is the bare version, for a toolbar that sits on top of the plot
+     * where a surface would be in the way.
+     */
+    ButtonVariant variant = ButtonVariant::Secondary;
     /** The buttons are square, so this is their size. */
     float height = 30.0f;
     /** Bigger than a button with a label would use: the glyph is the whole
