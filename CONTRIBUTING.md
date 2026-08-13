@@ -105,11 +105,21 @@ replaced. It is built twice rather than copied — a copy would carry the root's
 base, and every link inside it would walk back out to whatever the latest docs
 happen to be by then.
 
-Cutting a release is three edits in `docs/.vitepress/versions.ts` and a tag:
+Cutting a release is a changelog entry, two tags and two edits — **in this
+order**, because the order is what went wrong the first time:
 
-1. move the outgoing version into `archived`;
-2. set `current` to the new one, in step with `CMakeLists.txt`;
-3. `git tag v0.3 && git push --tags`.
+1. write the version's section in `CHANGELOG.md`, from the history rather than
+   from memory;
+2. **tag the outgoing version and push the tag first.** An archived version is
+   built from its tag, so listing it in `archived` before that tag exists
+   publishes a dropdown entry that 404s. It has happened: `build_docs.sh` prints
+   "no tag for 0.2, skipping" and carries on, and the live site advertised a
+   version that was not there;
+3. move that version into `archived` in `docs/.vitepress/versions.ts`;
+4. set `current` to the new one, in step with `CMakeLists.txt`;
+5. tag the new version and push it, **then** push the commit — the Pages
+   workflow deploys from `main`, and by then every tag it has to build from is
+   already there.
 
 The archived copy is built **from its tag**, in a worktree, so it is what that
 release actually said rather than today's text wearing an old label — and it is
