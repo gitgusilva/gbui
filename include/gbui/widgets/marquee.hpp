@@ -9,6 +9,24 @@
 
 namespace gbui {
 
+/**
+ * Where a marquee has got to.
+ *
+ * A position rather than a clock, and that is the whole of the difference
+ * between a strip that slides and one that twitches. Derived from a clock, the
+ * position is `fmod(seconds * speed, contentWidth)` — so the *instant* the
+ * content changes width, which for a ticker is every time a number gains a
+ * digit or a sign, the modulus lands somewhere else and the strip jumps
+ * sideways. Advanced by the frame's own delta instead, a change in width moves
+ * only where the next wrap will be.
+ *
+ * The caller's, like every other piece of state here, and stopping it is
+ * `delta = 0`.
+ */
+struct MarqueeState {
+    float offset = 0.0f;
+};
+
 struct MarqueeOptions {
     /** Pixels a second. Negative runs the other way, which is what a right-to
      *  -left reader expects of the same strip. */
@@ -39,17 +57,17 @@ struct MarqueeOptions {
  * moment the reader could see it. Anything narrower than the strip would show
  * the gap on its own, which is what `gap` is measured from rather than added to.
  *
- * **The clock is the caller's**, like every other piece of state here. That is
- * not ceremony: it is what lets a strip stop. Freeze the number while the
- * pointer is over it and the ticker holds still to be read, which is the one
- * interaction a ticker has; pass a running one and it never stops. A component
- * holding its own clock could do neither on request.
+ * `delta` is the frame's own, and **zero stops it**. That is the one
+ * interaction a ticker has: held still while the pointer is over it, a reader
+ * can read a name instead of chasing it. Stopping is the caller's to decide
+ * because only the caller knows what should stop it.
  *
  * The content is built twice per frame, so it should be cheap — a row of
  * labels, not a table. It is laid out in one line: this is a strip, and a strip
  * that wrapped would be a paragraph that moves.
  */
-void marquee(Ui& ui, const Interaction& input, std::string_view id, float seconds,
-             const std::function<void(Ui&)>& content, const MarqueeOptions& options = {});
+void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
+             float delta, const std::function<void(Ui&)>& content,
+             const MarqueeOptions& options = {});
 
 }  // namespace gbui

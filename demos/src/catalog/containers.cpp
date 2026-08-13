@@ -62,10 +62,9 @@ void addContainerExamples(std::vector<Example>& out) {
                    }});
 
     out.push_back({"marquee", [](Ui& ui, const Interaction& input, State& state) {
-                       // The clock is the caller's, which is what lets the
-                       // strip stop: held while the pointer is over it, the
-                       // reader can read a name instead of chasing it.
-                       if (!input.isHovered("catalog.marquee")) state.marquee = state.clock;
+                       // Zero delta stops it: held while the pointer is over
+                       // it, the reader can read a name instead of chasing it.
+                       const bool held = input.isHovered("catalog.marquee");
                        Style bar;
                        bar.direction = Direction::Row;
                        bar.align = Align::Center;
@@ -73,7 +72,8 @@ void addContainerExamples(std::vector<Example>& out) {
                        bar.background = Fill{Token::BgOverlay, 0.6f};
                        bar.radius = 6.0f;
                        auto scope = ui.begin(bar);
-                       marquee(ui, input, "catalog.marquee", state.marquee, [](Ui& lane) {
+                       marquee(ui, input, "catalog.marquee", state.marquee,
+                               held ? 0.0f : state.delta, [](Ui& lane) {
                            for (const std::string_view word :
                                 {"ALPHA 12.40", "BRAVO 8.15", "CHARLIE 61.02", "DELTA 3.77",
                                  "ECHO 45.60"}) {

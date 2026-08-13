@@ -4,8 +4,9 @@
 
 namespace gbui {
 
-void marquee(Ui& ui, const Interaction& input, std::string_view id, float seconds,
-             const std::function<void(Ui&)>& content, const MarqueeOptions& options) {
+void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
+             float delta, const std::function<void(Ui&)>& content,
+             const MarqueeOptions& options) {
     if (!content) return;
 
     const std::string passId = std::string(id) + ".pass";
@@ -37,12 +38,22 @@ void marquee(Ui& ui, const Interaction& input, std::string_view id, float second
     auto scope = ui.begin(strip);
     ui.tag(id);
 
-    // Where the first pass has travelled to. Wrapped at the stride so the
-    // number stays small however long the application has been open — a float
-    // counting pixels since launch loses a pixel of precision an hour in, and
-    // the strip starts to stutter.
-    const float travelled =
-        stride > 1.0f ? std::fmod(seconds * options.speed, stride) : 0.0f;
+    // Advanced, not derived. Wrapped at the stride so the number stays small
+    // however long the application has been open — a float counting pixels
+    // since launch loses a pixel of precision an hour in, and the strip starts
+    // to stutter.
+    //
+    // The wrap is also where a change in the content's width lands, and it
+    // lands harmlessly: the strip carries on from where it was and the next
+    // turn comes a few pixels earlier or later. Computing the position from a
+    // clock instead put that change *under* the strip, which threw it sideways
+    // every time a number gained a digit.
+    state.offset += delta * options.speed;
+    if (stride > 1.0f) {
+        state.offset = std::fmod(state.offset, stride);
+        if (state.offset < 0.0f) state.offset += stride;
+    }
+    const float travelled = state.offset;
 
     for (int copy = 0; copy < 2; ++copy) {
         Style lane;

@@ -49,8 +49,10 @@ struct State {
     double number = 42.0;
     double fraction = 0.62;
     float clock = 0.0f;
-    /** The marquee example's own clock, which stops while it is hovered. */
-    float marquee = 0.0f;
+    /** Seconds since the previous frame, for anything that advances. */
+    float delta = 0.0f;
+    /** Where the marquee example has slid to. It stops while it is hovered. */
+    MarqueeState marquee{};
 
     TextEditState text{"themes/nord", 11, 11};
     TextEditState secret{"hunter2", 7, 7};

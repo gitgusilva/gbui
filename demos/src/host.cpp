@@ -56,6 +56,7 @@ public:
     NodeId build(Frame& frame) override {
         Ui& ui = frame.ui;
         state_.clock = frame.time;
+        state_.delta = frame.delta;
 
         Style page;
         page.direction = Direction::Column;

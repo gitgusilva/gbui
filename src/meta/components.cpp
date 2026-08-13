@@ -311,7 +311,7 @@ std::vector<ComponentInfo> build() {
         "marquee",
         "Containers",
         "gbui/widgets/marquee.hpp",
-        "Draws `content` twice, side by side, sliding. Twice is the whole trick. One copy leaves a hole behind it while it travels; a second, exactly a content's width behind, fills that hole — and because the offset wraps at that same width, the seam between them never arrives at a moment the reader could see it. Anything narrower than the strip would show the gap on its own, which is what `gap` is measured from rather than added to. **The clock is the caller's**, like every other piece of state here. That is not ceremony: it is what lets a strip stop. Freeze the number while the pointer is over it and the ticker holds still to be read, which is the one interaction a ticker has; pass a running one and it never stops. A component holding its own clock could do neither on request. The content is built twice per frame, so it should be cheap — a row of labels, not a table. It is laid out in one line: this is a strip, and a strip that wrapped would be a paragraph that moves.",
+        "Draws `content` twice, side by side, sliding. Twice is the whole trick. One copy leaves a hole behind it while it travels; a second, exactly a content's width behind, fills that hole — and because the offset wraps at that same width, the seam between them never arrives at a moment the reader could see it. Anything narrower than the strip would show the gap on its own, which is what `gap` is measured from rather than added to. `delta` is the frame's own, and **zero stops it**. That is the one interaction a ticker has: held still while the pointer is over it, a reader can read a name instead of chasing it. Stopping is the caller's to decide because only the caller knows what should stop it. The content is built twice per frame, so it should be cheap — a row of labels, not a table. It is laid out in one line: this is a strip, and a strip that wrapped would be a paragraph that moves.",
         "A strip whose contents slide past and come round again.",
         "MarqueeOptions",
         {
@@ -323,7 +323,7 @@ std::vector<ComponentInfo> build() {
         },
         false,
         true,
-        "void marquee(Ui& ui, const Interaction& input, std::string_view id, float seconds, const std::function<void(Ui&)>& content, const MarqueeOptions& options = {});",
+        "void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state, float delta, const std::function<void(Ui&)>& content, const MarqueeOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "beginScroll",
