@@ -14,6 +14,26 @@ named here and the reason for it is in the commit.
 Work towards 0.3 lives on `main` and gets a number when it ships, not commit by
 commit.
 
+## [0.2.1] — 2026-08-13
+
+A packaging fix, released from `0.2.x` rather than from `main`: the branch is
+0.2 and this, and nothing else.
+
+### Fixed
+
+- **A shared build could not run its own executables on Windows.** Windows has
+  no rpath — a program finds a DLL beside itself or on `PATH` — while CMake's
+  multi-config generator puts the library in `build/Release/` and every
+  executable in `build/<dir>/Release/`. The build and the link both succeed and
+  the *loader* fails at startup, which on a machine with no desktop is a dialog
+  nobody can dismiss: the process never returns and never says why. The CI job
+  that builds shared and runs the tests sat for six hours before it was
+  cancelled. The DLLs are copied beside each executable now, on Windows and only
+  when the build is shared.
+- CI grew the ceilings whose absence turned that bug into six hours:
+  `ctest --timeout 180`, so a hung test fails with its own name, and
+  `timeout-minutes` on the job that found it.
+
 ## [0.2] — 2026-08-12
 
 The first version with a published site, a CI pipeline, an installable library
@@ -92,5 +112,6 @@ described from the start; it had never been tagged, which is what this tag fixes
   be written.
 - No image decoding.
 
-[Unreleased]: https://github.com/gitgusilva/gbui/compare/v0.2...HEAD
+[Unreleased]: https://github.com/gitgusilva/gbui/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/gitgusilva/gbui/releases/tag/v0.2.1
 [0.2]: https://github.com/gitgusilva/gbui/releases/tag/v0.2
