@@ -226,6 +226,7 @@ public:
 
         candles_.clear();
         volume_.clear();
+        settled_.clear();
         times_.clear();
         for (long index = oldest; index <= newest; ++index) {
             const float start = static_cast<float>(index) * period;
@@ -249,12 +250,30 @@ public:
             candles_.push_back(candle);
 
             // Volume follows the range — a period that went nowhere traded
-            // little — and the forming one has only earned its elapsed share.
+            // little — but it follows it, it is not made of it.
+            //
+            // Built as a floor times two factors rather than as a sum with the
+            // range dominating it. A minute that trades a fifth of the next
+            // one's does not happen, and the arithmetic that let it made the
+            // series swing forty to one between neighbours: drawn as a line it
+            // came out a comb, every segment running from the baseline to the
+            // top and back, because that is what the numbers said.
             const double range = candle.high - candle.low;
-            const double full =
-                420.0 + 5'600.0 * range + 900.0 * kit::wave(start, 5.5f, 0.0, 1.0);
+            const double quiet = base_ * 0.010;   // what a dull period moves
+            const double activity =
+                0.5 + 0.5 * std::clamp(quiet > 0.0 ? range / quiet : 1.0, 0.0, 2.0);
+            // The session's own rhythm, slower than a candle, so neighbouring
+            // periods belong to the same stretch of the day.
+            const double rhythm = kit::wave(start * 0.4f, seed_ + 2.2f, 0.8, 1.3);
+            const double full = 3'200.0 * activity * rhythm;
+            // The forming period has only earned its elapsed share.
             const double share = period > 0.0f ? (finish - start) / period : 1.0;
             volume_.push_back(full * std::max(0.05, static_cast<double>(share)));
+            // And the same series without the period that is still filling.
+            // A tile reading "volume per period" that ends on a bar a tenth
+            // built ends on a dive every time anyone glances at it, and the
+            // dive is about the clock rather than about the market.
+            if (index < newest) settled_.push_back(volume_.back());
 
             times_.push_back(clockAt(index, period));
         }
@@ -299,6 +318,8 @@ public:
 
     const std::vector<Candle>& candles() const { return candles_; }
     const std::vector<double>& volume() const { return volume_; }
+    /** The same, without the period still filling. */
+    const std::vector<double>& settledVolume() const { return settled_; }
     const std::vector<std::string>& times() const { return times_; }
 
     double last() const { return candles_.empty() ? 0.0 : candles_.back().close; }
@@ -368,6 +389,7 @@ private:
     float seed_ = 3.1f;
     std::vector<Candle> candles_;
     std::vector<double> volume_;
+    std::vector<double> settled_;
     std::vector<std::string> times_;
 };
 
@@ -461,7 +483,7 @@ void Markets::tiles(Ui& ui) {
     kit::statTile(ui, {.label = "VOLUME",
                        .value = kit::compact(feed_.turnover()),
                        .unit = "sh",
-                       .history = &feed_.volume()});
+                       .history = &feed_.settledVolume()});
     kit::statTile(ui, {.label = "SPREAD",
                        .value = kit::format("%.2f", feed_.spread()),
                        .unit = "USD",
