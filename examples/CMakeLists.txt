@@ -25,3 +25,9 @@ target_link_libraries(gbui_app PRIVATE gbui_example_screen)
 # Every interactive component in one window: the widget gallery.
 add_executable(gbui_controls controls/main.cpp)
 target_link_libraries(gbui_controls PRIVATE gbui::gbui)
+
+# The DLLs these need, beside them — see the root CMakeLists.
+gbui_place_runtime_dlls(gbui_panel)
+gbui_place_runtime_dlls(gbui_gallery)
+gbui_place_runtime_dlls(gbui_app)
+gbui_place_runtime_dlls(gbui_controls)
