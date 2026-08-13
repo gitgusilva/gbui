@@ -65,8 +65,14 @@ struct MarqueeOptions {
  * The content is built twice per frame, so it should be cheap — a row of
  * labels, not a table. It is laid out in one line: this is a strip, and a strip
  * that wrapped would be a paragraph that moves.
+ *
+ * Returns true on the frame it came round, which is the one moment a caller may
+ * change the content without the reader seeing it happen: the strip is showing
+ * the beginning of a pass, so a *different* pass beginning there reads as the
+ * next lap rather than as a jump. Changing it at any other time slides
+ * everything already on screen sideways by whatever was added or removed.
  */
-void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
+bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
              float delta, const std::function<void(Ui&)>& content,
              const MarqueeOptions& options = {});
 

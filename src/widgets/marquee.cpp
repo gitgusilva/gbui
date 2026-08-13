@@ -4,10 +4,10 @@
 
 namespace gbui {
 
-void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
+bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state,
              float delta, const std::function<void(Ui&)>& content,
              const MarqueeOptions& options) {
-    if (!content) return;
+    if (!content) return false;
 
     const std::string passId = std::string(id) + ".pass";
     // How wide one pass came out last frame. There is no other way to know: the
@@ -48,10 +48,15 @@ void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
     // turn comes a few pixels earlier or later. Computing the position from a
     // clock instead put that change *under* the strip, which threw it sideways
     // every time a number gained a digit.
+    const float before = state.offset;
     state.offset += delta * options.speed;
+    bool wrapped = false;
     if (stride > 1.0f) {
         state.offset = std::fmod(state.offset, stride);
         if (state.offset < 0.0f) state.offset += stride;
+        // Came round: the offset went backwards without the strip doing so.
+        wrapped = delta != 0.0f && ((options.speed >= 0.0f && state.offset < before) ||
+                                    (options.speed < 0.0f && state.offset > before));
     }
     const float travelled = state.offset;
 
@@ -72,6 +77,7 @@ void marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
         (void)laneScope;
     }
     (void)scope;
+    return wrapped;
 }
 
 }  // namespace gbui

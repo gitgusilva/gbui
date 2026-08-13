@@ -72,7 +72,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        bar.background = Fill{Token::BgOverlay, 0.6f};
                        bar.radius = 6.0f;
                        auto scope = ui.begin(bar);
-                       marquee(ui, input, "catalog.marquee", state.marquee,
+                       (void)marquee(ui, input, "catalog.marquee", state.marquee,
                                held ? 0.0f : state.delta, [](Ui& lane) {
                            for (const std::string_view word :
                                 {"ALPHA 12.40", "BRAVO 8.15", "CHARLIE 61.02", "DELTA 3.77",

@@ -429,9 +429,22 @@ private:
     ChartLink crosshair_{};
     ChartView view_{};
     MarqueeState ticker_{};
-    /** The ticker's cards, newest last. One is added when the clock says so and
-     *  the oldest falls off the end; nothing already on it is ever rewritten. */
+    /**
+     * What the ticker is showing, and what it will show next.
+     *
+     * Two lists rather than one, and this is the whole of what makes the strip
+     * hold still: prints arrive whenever the market says so, but a strip that
+     * takes them *while it is passing* slides everything already on screen
+     * sideways by the width of whatever was added or dropped — which is what a
+     * reader sees as the thing resetting. So the incoming list is built up
+     * quietly and swapped in on the one frame the strip comes round, where a
+     * different pass beginning reads as the next lap.
+     */
     std::vector<Quote> board_;
+    std::vector<Quote> incoming_;
+    /** The strip came round on the last frame, so the next list may be taken
+     *  on now. */
+    bool cameRound_ = false;
     /** When the last card was printed, on the demo's own clock. */
     float lastPrint_ = -1.0f;
     std::size_t nextSymbol_ = 0;
@@ -491,15 +504,18 @@ void Markets::ticker(Ui& ui, const Interaction& input, float seconds, float delt
     while (lastPrint_ < 0.0f || seconds - lastPrint_ >= kEvery) {
         const Watch& one = watchlist_[nextSymbol_ % watchlist_.size()];
         const double trend = one.history.trend();
-        board_.push_back({std::string(one.symbol), "USD " + money(one.history.latest()),
-                         kit::signedPercent(trend), trend >= 0.0});
-        if (board_.size() > kCards) board_.erase(board_.begin());
+        incoming_.push_back({std::string(one.symbol), "USD " + money(one.history.latest()),
+                             kit::signedPercent(trend), trend >= 0.0});
+        if (incoming_.size() > kCards) incoming_.erase(incoming_.begin());
         ++nextSymbol_;
         lastPrint_ = lastPrint_ < 0.0f ? seconds : lastPrint_ + kEvery;
         // A demo left open for an hour must not spend it catching up, the same
         // guard `kit::Rolling` makes for the same reason.
         if (seconds - lastPrint_ > kEvery * static_cast<float>(kCards)) lastPrint_ = seconds;
     }
+
+    // Taken on at the seam, and on the first frame there is nothing to disturb.
+    if (board_.empty() || cameRound_) board_ = incoming_;
 
     Style bar;
     bar.direction = Direction::Row;
@@ -520,7 +536,7 @@ void Markets::ticker(Ui& ui, const Interaction& input, float seconds, float delt
     // name instead of chasing it — which is the whole of what `delta` is for.
     const bool held = input.isHovered("markets.ticker");
 
-    marquee(
+    cameRound_ = marquee(
         ui, input, "markets.ticker", ticker_, held ? 0.0f : delta,
         [&](Ui& lane) {
             for (const Quote& quote : board_) {
