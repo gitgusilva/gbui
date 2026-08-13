@@ -568,7 +568,10 @@ void Markets::ticker(Ui& ui, const Interaction& input, float seconds, float delt
                 (void)cardScope;
             }
         },
-        {.speed = 34.0f, .gap = 24.0f});
+        // No gap of its own: the cards carry five pixels of margin either side,
+        // so ten between them everywhere — and a gap here would apply *only* at
+        // the seam, where it reads as a hole that comes round once a lap.
+        {.speed = 34.0f, .gap = 0.0f});
 }
 
 void Markets::tiles(Ui& ui) {

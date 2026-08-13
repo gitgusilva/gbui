@@ -316,7 +316,7 @@ std::vector<ComponentInfo> build() {
         "MarqueeOptions",
         {
             PropertyInfo{"speed", PropertyKind::Number, "float", "42.0f", {}, "Pixels a second. Negative runs the other way, which is what a right-to -left reader expects of the same strip.", false},
-            PropertyInfo{"gap", PropertyKind::Number, "float", "32.0f", {}, "Between the end of one pass and the start of the next, so a short strip does not read as one long word repeated.", false},
+            PropertyInfo{"gap", PropertyKind::Number, "float", "0.0f", {}, "Between the end of one pass and the start of the next. Set it for content with no spacing of its own — a sentence, which would otherwise read as one long word repeated. Leave it at **zero** for content that already spaces itself, a row of chips or cards: this gap applies at the seam and nowhere else, so anything wider than what the items already put between them is a hole that comes round once a lap and is the one part of a marquee a reader will notice.", false},
             PropertyInfo{"height", PropertyKind::Number, "float", "kAuto", {}, "The strip's own height. Auto takes the content's.", false},
             PropertyInfo{"grow", PropertyKind::Number, "float", "1.0f", {}, "Takes the space left in the row it is in, and does so by default. It has to be told. Both passes are out of the flow — that is how they slide — so the strip has no content to be measured from and would otherwise collapse to nothing and draw an empty band, which is exactly what it did.", false},
             PropertyInfo{"padding", PropertyKind::Edges, "Edges", "", {}, "", false},

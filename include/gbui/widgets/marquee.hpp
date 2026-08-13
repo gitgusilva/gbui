@@ -31,9 +31,17 @@ struct MarqueeOptions {
     /** Pixels a second. Negative runs the other way, which is what a right-to
      *  -left reader expects of the same strip. */
     float speed = 42.0f;
-    /** Between the end of one pass and the start of the next, so a short strip
-     *  does not read as one long word repeated. */
-    float gap = 32.0f;
+    /**
+     * Between the end of one pass and the start of the next.
+     *
+     * Set it for content with no spacing of its own — a sentence, which would
+     * otherwise read as one long word repeated. Leave it at **zero** for
+     * content that already spaces itself, a row of chips or cards: this gap
+     * applies at the seam and nowhere else, so anything wider than what the
+     * items already put between them is a hole that comes round once a lap and
+     * is the one part of a marquee a reader will notice.
+     */
+    float gap = 0.0f;
     /** The strip's own height. Auto takes the content's. */
     float height = kAuto;
     /**
