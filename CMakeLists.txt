@@ -183,6 +183,41 @@ set_target_properties(gbui_meta PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
+# ---------------------------------------------------------------------------
+# Running what was just built, on Windows
+# ---------------------------------------------------------------------------
+#
+# Windows has no rpath. An executable finds a DLL beside itself or on `PATH`,
+# and nowhere else — while the multi-config generator puts the library in
+# `build/<config>/` and every executable in `build/<dir>/<config>/`, which are
+# different directories. Nothing warns: the build succeeds, the link succeeds,
+# and the *loader* fails when the program starts.
+#
+# That failure is worse than it sounds on a machine with no desktop. It is not
+# an error code — it is a dialog nobody is there to dismiss, so the process
+# never returns and never says why. The CI job that builds shared and runs the
+# tests sat for six hours on exactly this and was cancelled, twice, while the
+# static job beside it ran the same tests in under three minutes.
+#
+# So each executable gets the DLLs it needs copied next to it. `copy_if_
+# different` rather than `copy`, so a rebuild that changed nothing does not
+# touch the file and force a relink of whatever else was watching it.
+function(gbui_place_runtime_dlls target)
+    # Tolerant of a target that does not exist, because one of these is behind
+    # an `if`: the browser build has no native runner to put anything beside.
+    if(NOT TARGET ${target} OR NOT WIN32 OR NOT BUILD_SHARED_LIBS)
+        return()
+    endif()
+    foreach(dependency gbui gbui_meta)
+        if(TARGET ${dependency})
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        $<TARGET_FILE:${dependency}> $<TARGET_FILE_DIR:${target}>
+                VERBATIM)
+        endif()
+    endforeach()
+endfunction()
+
 if(GBUI_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

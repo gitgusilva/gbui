@@ -38,4 +38,6 @@ if(NOT MSVC)
     target_compile_options(gbui_tests PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif()
 
+gbui_place_runtime_dlls(gbui_tests)
+
 add_test(NAME gbui COMMAND gbui_tests)

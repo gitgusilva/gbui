@@ -112,3 +112,6 @@ else()
             $<$<BOOL:${GBUI_WERROR}>:-Werror>)
     endif()
 endif()
+
+# The DLLs these need, beside them — see the root CMakeLists.
+gbui_place_runtime_dlls(gbui_demo)

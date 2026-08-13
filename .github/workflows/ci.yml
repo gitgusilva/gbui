@@ -96,7 +96,7 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Test
-        run: ctest --test-dir build --build-config Release --output-on-failure
+        run: ctest --test-dir build --build-config Release --output-on-failure --timeout 180
 
       # Rendering without a display is a property worth checking, not a nicety:
       # it is what lets a build machine produce a frame, and it is how every
@@ -172,6 +172,11 @@ jobs:
   shared:
     name: Shared library · ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # A ceiling, because this is the job that found out what happens without
+    # one: a program that cannot find its DLL on Windows does not fail, it
+    # waits — and the run sat for six hours before anyone cancelled it. Nine
+    # minutes is three times the slowest this has ever legitimately taken.
+    timeout-minutes: 9
     strategy:
       fail-fast: false
       matrix:
@@ -196,7 +201,7 @@ jobs:
             -DGBUI_BUILD_DEMOS=OFF \
             -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
           cmake --build build --config Release --parallel
-          ctest --test-dir build --build-config Release --output-on-failure
+          ctest --test-dir build --build-config Release --output-on-failure --timeout 180
           cmake --install build --config Release
 
       - name: Consume it
@@ -251,7 +256,7 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure --timeout 180
 
   # ---------------------------------------------------------------------------
   # Formatting — on the lines this change touched
