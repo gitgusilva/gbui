@@ -49,6 +49,8 @@ struct State {
     double number = 42.0;
     double fraction = 0.62;
     float clock = 0.0f;
+    /** The marquee example's own clock, which stops while it is hovered. */
+    float marquee = 0.0f;
 
     TextEditState text{"themes/nord", 11, 11};
     TextEditState secret{"hunter2", 7, 7};

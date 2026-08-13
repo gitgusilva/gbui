@@ -3,6 +3,7 @@
 #pragma once
 
 #include "gbui/widgets/box.hpp"
+#include "gbui/widgets/marquee.hpp"
 #include "gbui/widgets/scroll.hpp"
 #include "gbui/widgets/table.hpp"
 #include "gbui/widgets/tabs.hpp"

@@ -298,6 +298,30 @@ are the view's own — so the press, the drag and the paging are still handled b
 `beginScroll`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
+### Marquee
+
+```cpp
+void marquee(Ui&, const Interaction&, id, float seconds,
+             const std::function<void(Ui&)>& content, const MarqueeOptions& = {});
+```
+
+A strip whose contents slide past and come round again — a ticker along the top
+of a trading screen, a status band, a row of logos. The content is drawn
+**twice**, side by side: one copy leaves a hole behind it as it travels and the
+second, exactly a content's width back, fills it, so the seam never arrives at a
+moment anyone could see. It is built twice per frame, so it should be a row of
+labels rather than a table.
+
+**The clock is the caller's**, and that is not ceremony — it is what lets the
+strip stop. Freeze the number while the pointer is over it and the ticker holds
+still to be read, which is the one interaction a ticker has; pass a running one
+and it never stops. A component keeping its own clock could do neither on
+request. `demos/src/markets.cpp` is one line for the whole of that.
+
+Both passes are out of the flow, which is how they slide and also why the strip
+takes its size from `grow` and its height by stretching: there is no content in
+the flow to measure either from, and an unsized one collapses to an empty band.
+
 ## Table
 
 `#include "gbui/widgets/table.hpp"`

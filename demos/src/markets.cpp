@@ -398,6 +398,7 @@ public:
     NodeId build(Frame& frame) override;
 
 private:
+    void ticker(Ui& ui, const Interaction& input, float seconds);
     void tiles(Ui& ui);
     void pricePanel(Ui& ui, const Interaction& input);
     void bookPanel(Ui& ui);
@@ -410,6 +411,8 @@ private:
     // and they show one window, so sweeping a range on either zooms the pair.
     ChartLink crosshair_{};
     ChartView view_{};
+    /** The ticker's own clock, which stops while it is being read. */
+    float tickerClock_ = 0.0f;
     std::size_t timeframe_ = 0;
     ScrollState page_{};
     TableState tape_{};
@@ -447,6 +450,73 @@ constexpr std::array<float, 4> kPeriods = {1.1f, 1.7f, 2.6f, 4.0f};
 /** A price, always with its two decimals: a ladder where 184.5 sits above
  *  184.48 is a ladder a reader has to parse rather than scan. */
 std::string money(double value) { return kit::format("%.2f", value); }
+
+/**
+ * The tape along the top: every name on the desk, sliding past.
+ *
+ * The one thing on this screen that is not about the company selected — a
+ * trading floor has a board, and the board carries the market whatever the
+ * desk is looking at. It stops while the pointer is over it, which is the only
+ * interaction a ticker has and the reason `marquee` takes the clock rather
+ * than keeping one.
+ */
+void Markets::ticker(Ui& ui, const Interaction& input, float seconds) {
+    Style bar;
+    bar.direction = Direction::Row;
+    bar.align = Align::Center;
+    bar.gap = 14.0f;
+    bar.height = 38.0f;
+    bar.shrink = 0.0f;
+    bar.padding = Edges::symmetric(0.0f, 14.0f);
+    bar.background = Fill{Token::BgElevated};
+    auto scope = ui.begin(bar);
+
+    kit::pill(ui, "LIVE", {.tone = kit::Tone::Ok});
+    kit::field(ui, "LAST UPDATED", feed_.times().empty() ? "" : feed_.times().back(),
+               Token::Text, FontRole::Mono);
+    kit::rule(ui, Direction::Row);
+
+    // Held while the pointer is over the strip, so a reader can stop it on a
+    // name instead of chasing it. The clock is ours to pass, which is what
+    // makes that one line rather than a feature of the component.
+    const bool held = input.isHovered("markets.ticker");
+    tickerClock_ = held ? tickerClock_ : seconds;
+
+    marquee(
+        ui, input, "markets.ticker", tickerClock_,
+        [&](Ui& lane) {
+            for (const Watch& one : watchlist_) {
+                const double trend = one.history.trend();
+                Style quote;
+                quote.direction = Direction::Row;
+                quote.align = Align::Center;
+                quote.gap = 8.0f;
+                quote.shrink = 0.0f;
+                quote.height = 24.0f;
+                quote.padding = Edges::symmetric(0.0f, 12.0f);
+                quote.margin = Edges::symmetric(0.0f, 5.0f);
+                quote.radius = 12.0f;
+                quote.background = Fill{Token::BgOverlay, 0.7f};
+                quote.border = Border{1.0f, Fill{Token::Border}};
+                auto quoteScope = lane.begin(quote);
+
+                text(lane, one.symbol,
+                     {.color = Token::TextMuted,
+                      .weight = FontWeight::SemiBold,
+                      .role = FontRole::Mono,
+                      .size = 10.5f});
+                text(lane, "USD " + money(one.history.latest()),
+                     {.color = Token::TextStrong,
+                      .weight = FontWeight::SemiBold,
+                      .role = FontRole::Mono,
+                      .size = 11.5f});
+                kit::pill(lane, kit::signedPercent(trend),
+                          {.tone = trend >= 0.0 ? kit::Tone::Ok : kit::Tone::Alarm, .size = 9.5f});
+                (void)quoteScope;
+            }
+        },
+        {.speed = 34.0f, .gap = 24.0f});
+}
 
 void Markets::tiles(Ui& ui) {
     // Keyed by the company, not by the tile. An eased value slides from where
@@ -846,6 +916,7 @@ NodeId Markets::build(Frame& frame) {
         button(ui, input, "SELL",
                {.variant = ButtonVariant::Ghost, .leading = Icon::Minus, .id = "markets.sell"});
     }
+    ticker(ui, input, frame.time);
     kit::rule(ui, Direction::Column);
 
     {

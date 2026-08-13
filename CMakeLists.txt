@@ -54,6 +54,7 @@ set(GBUI_SOURCES
     src/widgets/label.cpp
     src/widgets/hyperlink.cpp
     src/widgets/listRow.cpp
+    src/widgets/marquee.cpp
     src/widgets/menu.cpp
     src/widgets/modal.cpp
     src/widgets/numberField.cpp

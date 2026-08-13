@@ -61,6 +61,40 @@ void addContainerExamples(std::vector<Example>& out) {
                                    });
                    }});
 
+    out.push_back({"marquee", [](Ui& ui, const Interaction& input, State& state) {
+                       // The clock is the caller's, which is what lets the
+                       // strip stop: held while the pointer is over it, the
+                       // reader can read a name instead of chasing it.
+                       if (!input.isHovered("catalog.marquee")) state.marquee = state.clock;
+                       Style bar;
+                       bar.direction = Direction::Row;
+                       bar.align = Align::Center;
+                       bar.height = 34.0f;
+                       bar.background = Fill{Token::BgOverlay, 0.6f};
+                       bar.radius = 6.0f;
+                       auto scope = ui.begin(bar);
+                       marquee(ui, input, "catalog.marquee", state.marquee, [](Ui& lane) {
+                           for (const std::string_view word :
+                                {"ALPHA 12.40", "BRAVO 8.15", "CHARLIE 61.02", "DELTA 3.77",
+                                 "ECHO 45.60"}) {
+                               Style chip;
+                               chip.direction = Direction::Row;
+                               chip.align = Align::Center;
+                               chip.height = 22.0f;
+                               chip.shrink = 0.0f;
+                               chip.padding = Edges::symmetric(0.0f, 10.0f);
+                               chip.margin = Edges::symmetric(0.0f, 5.0f);
+                               chip.radius = 11.0f;
+                               chip.background = Fill{Token::BgElevated};
+                               auto chipScope = lane.begin(chip);
+                               text(lane, word,
+                                    {.color = Token::Text, .role = FontRole::Mono, .size = 11.0f});
+                               (void)chipScope;
+                           }
+                       });
+                       (void)scope;
+                   }});
+
     out.push_back({"tabs", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<TabItem> pages = {
                            {.label = "History"}, {.label = "Changes"}, {.label = "Stashes"}};
