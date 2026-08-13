@@ -23,7 +23,11 @@ import { createHighlighter } from 'shiki'
 const here = dirname(fileURLToPath(import.meta.url))
 const demosDir = resolve(here, '../../../demos')
 
-const ORDER = ['analytics', 'weather', 'scada', 'production', 'grid', 'logistics'] as const
+// The same order the gallery uses, and it has to *be* the same: a screen
+// missing from this list has no source in the viewer at all, which is how the
+// trading desk shipped with a Run button and nothing to read beside it.
+const ORDER = ['markets', 'analytics', 'weather', 'scada', 'production', 'grid',
+               'logistics'] as const
 
 export declare const data: Record<string, string>
 
