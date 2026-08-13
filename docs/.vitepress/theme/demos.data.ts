@@ -23,8 +23,8 @@ const here = dirname(fileURLToPath(import.meta.url))
 const demosDir = resolve(here, '../../../demos')
 
 /** The order the gallery shows them in — the same one `registry.cpp` uses. */
-const ORDER = ['analytics', 'weather', 'scada', 'production', 'grid', 'logistics',
-               'markets'] as const
+const ORDER = ['markets', 'analytics', 'weather', 'scada', 'production', 'grid',
+               'logistics'] as const
 
 /** The demos directory, as a drawn tree. */
 export declare const tree: string

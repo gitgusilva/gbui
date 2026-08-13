@@ -33,56 +33,12 @@ features:
 
 ## Have a look at it
 
-<GbuiDemo id="analytics" :height="560" />
+<GbuiDemo id="markets" :height="600" />
 
 A real application screen and the C++ that draws it. Press Run and it is the
-same source compiled to WebAssembly, rasterised on the CPU — there is no DOM
-inside that rectangle. [Five more, and how it is put together](/demos).
+same source compiled to WebAssembly, laid out and rasterised on the CPU — there
+is no DOM inside that rectangle, no elements and no CSS. What you are pointing
+at is a display list.
 
-## In thirty seconds
-
-```cpp
-#include "gbui/scene/ui.hpp"
-#include "gbui/widgets/components.hpp"
-
-Arena arena;                          // owns every node
-Ui ui(arena);
-{
-    auto panel = beginPanel(ui, {.direction = Direction::Column});
-    sectionHeading(ui, "UNSTAGED (1)");
-    {
-        auto row = beginListRow(ui, {.selected = true});
-        icon(ui, Icon::FilePlus, {.color = Token::Modified});
-        text(ui, "themes/nord/theme.json", {.grow = 1.0f});
-        badge(ui, "M");
-    }
-    button(ui, "COMMIT", {.variant = ButtonVariant::Primary, .block = true});
-}
-```
-
-That tree is then laid out into a rectangle, recorded into a display list and
-handed to a painter. Those three steps are the whole of the library, and
-[Architecture](/guide/architecture) explains why they are separate.
-
-## Status
-
-Version 0.2, and honest about what it is: young, small enough to read, and
-already carrying a real application screen.
-
-**What works today.** Flexbox with min-content sizing, wrapping, percentages and
-out-of-flow positioning; logical pixels, so a 200% display is a property of the
-output rather than something a component knows about; theming from the GitBox
-theme registry, with Material, Cupertino and Fluent palettes built in; a
-software rasteriser with antialiasing, gradients and clipping; real text through
-stb_truetype, wrapped or elided by the same function layout used; vector icons;
-an SVG backend for review; a window and an event loop on SDL2; the whole
-interaction layer — hover, press, click, focus, `:focus-visible`, focus-within,
-Tab traversal, wheel routing and per-node cursors; an animation clock; and
-over fifty components, from a button to a table, a rich-text editor and nine
-kinds of chart.
-
-**What does not exist yet.** An accessibility tree and the bridge a screen
-reader needs; text shaping, so Arabic, Devanagari and emoji are wrong; a GPU
-painter; and a code editor with syntax
-highlighting. Each of those is named in the header of the module that would own
-it rather than half-built.
+[Six more screens](/demos) · [How it is put together](/guide/architecture) ·
+[Every component](/components)

@@ -7,13 +7,14 @@
 namespace gbui::demos {
 
 const std::vector<DemoInfo>& catalogue() {
-    // Built once, on first use, and in the order the gallery reads best:
-    // the familiar screen first, the two process screens together, the two
-    // operational ones after them, and the market desk last — it is the one
-    // whose chart is still moving while the reader looks at it.
+    // Built once, on first use, and in the order the gallery reads best: the
+    // market desk first, because it is the one still moving while the reader
+    // looks at it; then the familiar dashboard, the two process screens
+    // together, and the two operational ones after them.
     static const std::vector<DemoInfo> entries = {
-        analyticsDemo(), weatherDemo(),    scadaDemo(), productionDemo(),
-        gridDemo(),      logisticsDemo(), marketsDemo(),
+        marketsDemo(), analyticsDemo(), weatherDemo(),
+        scadaDemo(),   productionDemo(), gridDemo(),
+        logisticsDemo(),
     };
     return entries;
 }
