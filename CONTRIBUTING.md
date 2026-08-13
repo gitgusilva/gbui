@@ -121,6 +121,11 @@ order**, because the order is what went wrong the first time:
    workflow deploys from `main`, and by then every tag it has to build from is
    already there.
 
+A **patch** release is cut from its own branch, never from `main`: branch at the
+tag it fixes, cherry-pick the fix, bump the patch number, tag. `main` is the
+next minor version and has no business in a patch — 0.2.1 is 0.2 and one fix,
+which is the only thing that makes it safe to take.
+
 The archived copy is built **from its tag**, in a worktree, so it is what that
 release actually said rather than today's text wearing an old label — and it is
 also why a version leaves `archived` only when its directory is deleted, never
