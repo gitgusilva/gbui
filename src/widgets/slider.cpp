@@ -67,7 +67,7 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
     row.maxHeight = options.height;
     row.opacity = opacityFor(options.disabled);
 
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id).focusable(!options.disabled);
 
     {
@@ -77,7 +77,7 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
         track.height = options.height;
         track.align = Align::Center;
         track.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
-        auto trackScope = ui.begin(track);
+        auto trackScope = ui.scope(track);
         ui.tag(trackId).cursor(track.cursorHint);
 
         // The rail is one node spanning the whole track, so the fill can never
@@ -135,7 +135,7 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
         Style valueBox;
         valueBox.width = 48.0f;
         valueBox.shrink = 0.0f;
-        auto valueScope = ui.begin(valueBox);
+        auto valueScope = ui.scope(valueBox);
         text(ui, formatNumber(value, options.decimals, {}),
              {.color = Token::TextMuted, .size = 11.0f, .align = TextAlign::End});
         (void)valueScope;

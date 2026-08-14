@@ -5,18 +5,18 @@
 namespace gbui::demos::catalog {
 
 void addContainerExamples(std::vector<Example>& out) {
-    out.push_back({"beginBox", [](Ui& ui, const Interaction&, State&) {
-                       // `ui.begin(Style{…})` builds any box the layout engine
-                       // can express; `beginBox` is the ergonomics, and the
+    out.push_back({"box", [](Ui& ui, const Interaction&, State&) {
+                       // `ui.scope(Style{…})` builds any box the layout engine
+                       // can express; `box` is the ergonomics, and the
                        // presets are the boxes an application actually repeats.
-                       auto card = beginBox(ui, BoxStyle::card({.gap = 6.0f}));
+                       auto card = box(ui, BoxStyle::card({.gap = 6.0f}));
                        sectionHeading(ui, "A CARD");
                        text(ui, "Padding, a border and a radius.", {.color = Token::TextMuted});
                    }});
 
-    out.push_back({"beginScroll", [](Ui& ui, const Interaction& input, State& state) {
-                       auto view = beginScroll(ui, input, "catalog.scroll", state.scroll,
-                                               {.gap = 2.0f, .height = 140.0f});
+    out.push_back({"scrollArea", [](Ui& ui, const Interaction& input, State& state) {
+                       auto view = scrollArea(ui, input, "catalog.scroll", state.scroll,
+                                              {.gap = 2.0f, .height = 140.0f});
                        for (int i = 1; i <= 30; ++i) {
                            text(ui, "row " + std::to_string(i), {.color = Token::TextMuted});
                        }
@@ -34,11 +34,11 @@ void addContainerExamples(std::vector<Example>& out) {
                        outer.padding = Edges::symmetric(0.0f, 10.0f);
                        outer.background = Fill{Token::BgOverlay, 0.4f};
                        outer.radius = 6.0f;
-                       auto box = ui.begin(outer);
+                       auto box = ui.scope(outer);
                        ui.tag("catalog.bar.box");
                        {
-                           auto view = beginScroll(ui, input, "catalog.bar", state.scroll2,
-                                                   {.scrollbar = false, .gap = 2.0f});
+                           auto view = scrollArea(ui, input, "catalog.bar", state.scroll2,
+                                                  {.scrollbar = false, .gap = 2.0f});
                            for (int i = 1; i <= 30; ++i) {
                                text(ui, "row " + std::to_string(i), {.color = Token::TextMuted});
                            }
@@ -55,7 +55,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        virtualList(ui, input, "catalog.virtual", state.listScroll,
                                    {.count = 50000, .rowHeight = 26.0f, .height = 140.0f},
                                    [](Ui& rowUi, std::size_t index) {
-                                       auto row = beginListRow(rowUi, {.height = 26.0f});
+                                       auto row = listRow(rowUi, {.height = 26.0f});
                                        text(rowUi, "commit " + std::to_string(index),
                                             {.role = FontRole::Mono, .size = 11.5f});
                                    });
@@ -71,7 +71,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        bar.height = 34.0f;
                        bar.background = Fill{Token::BgOverlay, 0.6f};
                        bar.radius = 6.0f;
-                       auto scope = ui.begin(bar);
+                       auto scope = ui.scope(bar);
                        (void)marquee(ui, input, "catalog.marquee", state.marquee,
                                held ? 0.0f : state.delta, [](Ui& lane) {
                            for (const std::string_view word :
@@ -86,7 +86,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                chip.margin = Edges::symmetric(0.0f, 5.0f);
                                chip.radius = 11.0f;
                                chip.background = Fill{Token::BgElevated};
-                               auto chipScope = lane.begin(chip);
+                               auto chipScope = lane.scope(chip);
                                text(lane, word,
                                     {.color = Token::Text, .role = FontRole::Mono, .size = 11.0f});
                                (void)chipScope;

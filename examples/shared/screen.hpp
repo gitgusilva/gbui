@@ -65,7 +65,7 @@ inline NodeId statusPill(Ui& ui, FileStatus status, float size = 18.0f) {
     style.background = Fill{look.color, 0.20f};
     style.shrink = 0.0f;  // a fixed marker never gives up its width
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     text(ui, look.letter,
          {.color = look.color, .weight = FontWeight::SemiBold, .size = 11.0f});
     return scope.id();
@@ -81,7 +81,7 @@ inline NodeId field(Ui& ui, std::string_view placeholder, float height = 32.0f,
     style.background = Fill{Token::Bg};
     style.border = Border{1.0f, Fill{Token::BorderStrong}};
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     if (leading) {
         icon(ui, *leading, {.color = Token::TextMuted, .size = 14.0f});
         Style spacing;
@@ -100,7 +100,7 @@ inline void graphDot(Ui& ui, const Theme& theme, std::size_t lane, bool merge) {
     cell.shrink = 0.0f;
     cell.align = Align::Center;
     cell.justify = Justify::Center;
-    auto scope = ui.begin(cell);
+    auto scope = ui.scope(cell);
 
     Style dot;
     dot.width = merge ? 10.0f : 7.0f;
@@ -124,7 +124,7 @@ inline void titleBar(Ui& ui) {
     bar.padding = Edges::symmetric(0.0f, 10.0f);
     bar.background = Fill{Token::BgElevated};
     bar.radius = 0.0f;
-    auto scope = ui.begin(bar);
+    auto scope = ui.scope(bar);
 
     badge(ui, "Default");
 
@@ -138,7 +138,7 @@ inline void titleBar(Ui& ui) {
     tab.background = Fill{Token::BgOverlay};
     tab.shrink = 0.0f;
     {
-        auto t = ui.begin(tab);
+        auto t = ui.scope(tab);
         Style dot;
         dot.width = 7.0f;
         dot.height = 7.0f;
@@ -156,14 +156,14 @@ inline void titleBar(Ui& ui) {
 }
 
 inline void toolBar(Ui& ui) {
-    auto scope = beginToolbar(ui, {.height = 46.0f, .gap = 10.0f});
+    auto scope = toolbar(ui, {.height = 46.0f, .gap = 10.0f});
 
     {
         Style group;
         group.direction = Direction::Column;
         group.gap = 1.0f;
         group.shrink = 0.0f;
-        auto g = ui.begin(group);
+        auto g = ui.scope(group);
         text(ui, "repository", {.color = Token::TextMuted, .size = 10.0f});
         text(ui, "gitbox-themes v", {.color = Token::TextStrong, .weight = FontWeight::Medium});
         (void)g;
@@ -173,7 +173,7 @@ inline void toolBar(Ui& ui) {
         group.direction = Direction::Column;
         group.gap = 1.0f;
         group.shrink = 0.0f;
-        auto g = ui.begin(group);
+        auto g = ui.scope(group);
         text(ui, "branch", {.color = Token::TextMuted, .size = 10.0f});
         text(ui, "main v", {.color = Token::TextStrong, .weight = FontWeight::Medium});
         (void)g;
@@ -199,7 +199,7 @@ inline void sideBar(Ui& ui, const ScreenState& state) {
     side.padding = Edges::symmetric(8.0f, 0.0f);
     side.gap = 2.0f;
     side.radius = 0.0f;
-    auto scope = ui.begin(side);
+    auto scope = ui.scope(side);
 
     struct View {
         const char* label;
@@ -211,7 +211,7 @@ inline void sideBar(Ui& ui, const ScreenState& state) {
                           {"Stashes", nullptr, Icon::Archive}};
     for (int i = 0; i < 3; ++i) {
         const std::string tag = std::string("sidebar.view.") + views[i].label;
-        auto row = beginListRow(ui, {.selected = i == 1,
+        auto row = listRow(ui, {.selected = i == 1,
                                      .hovered = state.hovered == tag,
                                      .height = 30.0f,
                                      .id = tag});
@@ -228,20 +228,20 @@ inline void sideBar(Ui& ui, const ScreenState& state) {
         Style pad;
         pad.height = 8.0f;
         pad.padding = Edges::symmetric(0.0f, 12.0f);
-        auto p = ui.begin(pad);
+        auto p = ui.scope(pad);
         (void)p;
     }
     {
         Style wrap;
         wrap.padding = Edges::symmetric(0.0f, 12.0f);
-        auto w = ui.begin(wrap);
+        auto w = ui.scope(wrap);
         field(ui, "Search...", 28.0f, Icon::Search);
         (void)w;
     }
     {
         Style pad;
         pad.height = 8.0f;
-        auto p = ui.begin(pad);
+        auto p = ui.scope(pad);
         (void)p;
     }
 
@@ -258,14 +258,14 @@ inline void sideBar(Ui& ui, const ScreenState& state) {
 
     for (const auto& section : sections) {
         {
-            auto heading = beginListRow(ui, {.height = 24.0f});
+            auto heading = listRow(ui, {.height = 24.0f});
             sectionHeading(ui, section.label);
             (void)heading;
         }
         for (const char* item : section.items) {
             const bool current = std::string_view(item) == "main";
             const std::string tag = std::string("sidebar.branch.") + item;
-            auto row = beginListRow(ui, {.selected = current,
+            auto row = listRow(ui, {.selected = current,
                                          .hovered = state.hovered == tag,
                                          .height = 26.0f,
                                          .id = tag});
@@ -288,7 +288,7 @@ inline void changesPane(Ui& ui, const ScreenState& state) {
     pane.shrink = 0.0f;
     pane.background = Fill{Token::Bg};
     pane.radius = 0.0f;
-    auto scope = ui.begin(pane);
+    auto scope = ui.scope(pane);
 
     struct Change {
         FileStatus status;
@@ -301,14 +301,14 @@ inline void changesPane(Ui& ui, const ScreenState& state) {
     };
 
     {
-        auto header = beginListRow(ui, {.height = 28.0f});
+        auto header = listRow(ui, {.height = 28.0f});
         sectionHeading(ui, "UNSTAGED (3)");
         (void)header;
     }
     divider(ui, Direction::Column);
     for (int i = 0; i < 3; ++i) {
         const std::string tag = std::string("changes.file.") + unstaged[i].path;
-        auto row = beginListRow(ui, {.selected = i == 0,
+        auto row = listRow(ui, {.selected = i == 0,
                                      .hovered = state.hovered == tag,
                                      .height = 28.0f,
                                      .gap = 8.0f,
@@ -321,17 +321,17 @@ inline void changesPane(Ui& ui, const ScreenState& state) {
     {
         Style pad;
         pad.height = 10.0f;
-        auto p = ui.begin(pad);
+        auto p = ui.scope(pad);
         (void)p;
     }
     {
-        auto header = beginListRow(ui, {.height = 28.0f});
+        auto header = listRow(ui, {.height = 28.0f});
         sectionHeading(ui, "STAGED (1)");
         (void)header;
     }
     divider(ui, Direction::Column);
     {
-        auto row = beginListRow(ui, {.height = 28.0f, .gap = 8.0f});
+        auto row = listRow(ui, {.height = 28.0f, .gap = 8.0f});
         statusPill(ui, FileStatus::Deleted);
         text(ui, "themes/legacy/theme.json", {.grow = 1.0f});
     }
@@ -346,7 +346,7 @@ inline void changesPane(Ui& ui, const ScreenState& state) {
         commitBox.padding = Edges::all(10.0f);
         commitBox.background = Fill{Token::BgElevated};
         commitBox.radius = 0.0f;
-        auto box = ui.begin(commitBox);
+        auto box = ui.scope(commitBox);
         sectionHeading(ui, "COMMIT MESSAGE");
         field(ui, "Summary (required)");
         button(ui, "COMMIT", {.variant = ButtonVariant::Primary,
@@ -366,10 +366,10 @@ inline void diffPane(Ui& ui, const Theme& theme, const ScreenState& state) {
     pane.background = Fill{Token::Bg};
     pane.overflow = Overflow::Hidden;
     pane.radius = 0.0f;
-    auto scope = ui.begin(pane);
+    auto scope = ui.scope(pane);
 
     {
-        auto header = beginListRow(ui, {.height = 30.0f, .gap = 10.0f});
+        auto header = listRow(ui, {.height = 30.0f, .gap = 10.0f});
         sectionHeading(ui, "THEMES/NORD/THEME.JSON");
         spacer(ui);
         badge(ui, "FILE");
@@ -408,14 +408,14 @@ inline void diffPane(Ui& ui, const Theme& theme, const ScreenState& state) {
         row.radius = 0.0f;
         if (line.kind == '+') row.background = Fill{Token::Added, 0.16f};
         if (line.kind == '-') row.background = Fill{Token::Removed, 0.16f};
-        auto r = ui.begin(row);
+        auto r = ui.scope(row);
 
         Style gutter;
         gutter.width = 26.0f;
         gutter.shrink = 0.0f;
         gutter.justify = Justify::End;
         {
-            auto g = ui.begin(gutter);
+            auto g = ui.scope(gutter);
             text(ui, std::to_string(number++),
                  {.color = Token::TextMuted, .role = FontRole::Mono, .size = 11.0f});
             (void)g;
@@ -429,7 +429,7 @@ inline void diffPane(Ui& ui, const Theme& theme, const ScreenState& state) {
 
     divider(ui, Direction::Column);
     {
-        auto header = beginListRow(ui, {.height = 28.0f});
+        auto header = listRow(ui, {.height = 28.0f});
         sectionHeading(ui, "HISTORY");
         (void)header;
     }
@@ -447,7 +447,7 @@ inline void diffPane(Ui& ui, const Theme& theme, const ScreenState& state) {
     };
     for (const auto& row : history) {
         const std::string tag = std::string("history.commit.") + row.subject;
-        auto r = beginListRow(ui, {.hovered = state.hovered == tag,
+        auto r = listRow(ui, {.hovered = state.hovered == tag,
                                    .height = 26.0f,
                                    .gap = 8.0f,
                                    .id = tag});
@@ -468,7 +468,7 @@ inline void statusBar(Ui& ui) {
     bar.padding = Edges::symmetric(0.0f, 10.0f);
     bar.background = Fill{Token::BgElevated};
     bar.radius = 0.0f;
-    auto scope = ui.begin(bar);
+    auto scope = ui.scope(bar);
 
     icon(ui, Icon::Terminal, {.color = Token::TextMuted, .size = 13.0f});
     text(ui, "Command Log", {.color = Token::TextMuted, .size = 11.0f});
@@ -485,13 +485,13 @@ inline NodeId buildScreen(Ui& ui, const Theme& theme, const ScreenState& state =
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     titleBar(ui);
     toolBar(ui);
     divider(ui, Direction::Column);
     {
-        auto body = ui.beginRow({.grow = 1.0f, .basis = 0.0f});
+        auto body = ui.row({.grow = 1.0f, .basis = 0.0f});
         sideBar(ui, state);
         divider(ui, Direction::Row);
         changesPane(ui, state);

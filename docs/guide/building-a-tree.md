@@ -7,10 +7,10 @@ nesting of your code is the nesting of the interface.
 Arena arena;
 Ui ui(arena);
 {
-    auto column = ui.beginColumn({.gap = 8.0f, .padding = Edges::all(12.0f)});
+    auto column = ui.column({.gap = 8.0f, .padding = Edges::all(12.0f)});
     text(ui, "UNSTAGED (1)");
     {
-        auto row = ui.beginRow({.gap = 6.0f, .align = Align::Center});
+        auto row = ui.row({.gap = 6.0f, .align = Align::Center});
         text(ui, "theme.json", {.grow = 1.0f});
         badge(ui, "M");
     }                    // the row closes here
@@ -26,7 +26,7 @@ also means an early `return` cannot leave one open.
 Every property has a default, so designated initialisers say only what differs:
 
 ```cpp
-ui.beginRow({.justify = Justify::SpaceBetween, .height = 40.0f});
+ui.row({.justify = Justify::SpaceBetween, .height = 40.0f});
 ```
 
 C++ requires designated initialisers in declaration order. If the compiler
@@ -46,7 +46,7 @@ if (isAuto(style.width)) { /* … */ }
 ## The kinds of node
 
 ```cpp
-ui.begin(style);                       // a container; returns a Scope
+ui.scope(style);                       // a container; returns a Scope
 ui.add(style);                         // a leaf: a spacer, a rule, a swatch
 ui.label("text", textStyle, style);    // a leaf with text
 ui.vector(pathData, style, fill, 2);   // a leaf with vector content — an icon

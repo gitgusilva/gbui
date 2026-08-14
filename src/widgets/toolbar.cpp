@@ -4,7 +4,7 @@
 
 namespace gbui {
 
-Ui::Scope beginToolbar(Ui& ui, const ToolbarOptions& options) {
+Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options) {
     Style style;
     style.direction = Direction::Row;
     style.align = Align::Center;
@@ -20,7 +20,7 @@ Ui::Scope beginToolbar(Ui& ui, const ToolbarOptions& options) {
         // its rule as a sibling. Callers get the border by adding
         // divider(ui, Direction::Column) after the toolbar.
     }
-    return ui.begin(style);
+    return ui.scope(style);
 }
 
 }  // namespace gbui

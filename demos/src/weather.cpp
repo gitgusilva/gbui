@@ -206,7 +206,7 @@ void Weather::current(Ui& ui) {
     // The card carries the sky, in the colour the reading earns. Two stops of
     // one token, so the whole thing still re-themes.
     const Token sky = skyToken(temperature);
-    auto card = kit::beginCard(ui, {.title = "CURRENT OBSERVATION",
+    auto card = kit::card(ui, {.title = "CURRENT OBSERVATION",
                                     .note = "12:50 UTC",
                                     .gap = 14.0f,
                                     .width = 300.0f,
@@ -217,7 +217,7 @@ void Weather::current(Ui& ui) {
         row.direction = Direction::Row;
         row.align = Align::Center;
         row.gap = 10.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         {
             // The reading refuses to shrink. Everything else in this row can
             // give up width; a temperature elided to "1…" is worse than no
@@ -227,7 +227,7 @@ void Weather::current(Ui& ui) {
             reading.align = Align::Center;
             reading.gap = 6.0f;
             reading.shrink = 0.0f;
-            auto readingScope = ui.begin(reading);
+            auto readingScope = ui.scope(reading);
             // A gradient *across the run*: the one place on these screens
             // where the number is allowed to be the picture as well as the
             // value.
@@ -240,7 +240,7 @@ void Weather::current(Ui& ui) {
             unit.direction = Direction::Column;
             unit.gap = 2.0f;
             unit.shrink = 0.0f;
-            auto unitScope = ui.begin(unit);
+            auto unitScope = ui.scope(unit);
             text(ui, "°C", {.color = Token::TextMuted, .size = 16.0f});
             text(ui, kit::format("feels %.0f°", temperature - 2.4),
                  {.color = Token::TextMuted, .size = 11.0f});
@@ -262,13 +262,13 @@ void Weather::current(Ui& ui) {
         band.direction = Direction::Column;
         band.gap = 3.0f;
         band.shrink = 0.0f;
-        auto bandScope = ui.begin(band);
+        auto bandScope = ui.scope(band);
         sunArc(ui, clock_);
         {
             Style row;
             row.direction = Direction::Row;
             row.align = Align::Center;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             text(ui, "06:12", {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
             spacer(ui);
             text(ui, kit::format("daylight %.0f%%", dayFraction(clock_) * 100.0),
@@ -286,13 +286,13 @@ void Weather::current(Ui& ui) {
         grid.wrap = true;
         grid.gap = 14.0f;
         grid.crossGap = 12.0f;
-        auto gridScope = ui.begin(grid);
+        auto gridScope = ui.scope(grid);
 
         const auto cell = [&](std::string_view label, const std::string& value) {
             Style item;
             item.width = 108.0f;
             item.shrink = 0.0f;
-            auto itemScope = ui.begin(item);
+            auto itemScope = ui.scope(item);
             kit::field(ui, label, value, Token::TextStrong, FontRole::Mono);
         };
         cell("WIND", kit::format("%.0f km/h", wind_.latest()));
@@ -310,14 +310,14 @@ void Weather::observations(Ui& ui) {
     column.gap = 12.0f;
     column.shrink = 0.0f;
     column.minWidth = 0.0f;
-    auto scope = ui.begin(column);
+    auto scope = ui.scope(column);
 
     {
         Style row;
         row.direction = Direction::Row;
         row.gap = 12.0f;
         row.shrink = 0.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         kit::statTile(ui, {.label = "PRESSURE",
                            .value = kit::format("%.0f", pressure_.latest()),
                            .unit = "hPa",
@@ -343,7 +343,7 @@ void Weather::observations(Ui& ui) {
 
 void Weather::trends(Ui& ui, const Interaction& input) {
     {
-        auto card = kit::beginCard(ui, {.title = "TEMPERATURE AND DEW POINT",
+        auto card = kit::card(ui, {.title = "TEMPERATURE AND DEW POINT",
                                         .note = "last 6 hours · 10 min steps",
                                         .grow = 1.0f,
                                         .minWidth = 320.0f});
@@ -356,7 +356,7 @@ void Weather::trends(Ui& ui, const Interaction& input) {
     }
     {
         auto card =
-            kit::beginCard(ui, {.title = "RAINFALL", .note = "mm per hour", .width = 300.0f});
+            kit::card(ui, {.title = "RAINFALL", .note = "mm per hour", .width = 300.0f});
         const std::vector<Series> series = {
             {.name = "Rainfall", .values = rainfall_, .color = Token::Graph6}};
         barChart(
@@ -369,13 +369,13 @@ void Weather::trends(Ui& ui, const Interaction& input) {
 }
 
 void Weather::forecast(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(
+    auto card = kit::card(
         ui, {.title = "SEVEN DAY", .note = kModels[model_], .gap = 2.0f, .width = 322.0f});
 
     for (std::size_t i = 0; i < week_.size(); ++i) {
         const Day& day = week_[i];
         const std::string tag = "weather.day." + std::string(day.name);
-        auto row = kit::beginEntry(
+        auto row = kit::entry(
             ui, {.id = tag, .hovered = input.isHovered(tag), .height = 32.0f, .gap = 8.0f});
         text(ui, day.name,
              {.color = i == 0 ? Token::TextStrong : Token::Text,
@@ -398,7 +398,7 @@ void Weather::forecast(Ui& ui, const Interaction& input) {
             chance.gap = 6.0f;
             chance.width = 66.0f;
             chance.shrink = 0.0f;
-            auto chanceScope = ui.begin(chance);
+            auto chanceScope = ui.scope(chance);
             {
                 Style track;
                 track.width = 34.0f;
@@ -408,7 +408,7 @@ void Weather::forecast(Ui& ui, const Interaction& input) {
                 track.alignSelf = Align::Center;
                 track.background = Fill{Token::BgOverlay};
                 track.overflow = Overflow::Hidden;
-                auto trackScope = ui.begin(track);
+                auto trackScope = ui.scope(track);
 
                 Style fill;
                 fill.width = Length::percent(static_cast<float>(day.rainChance));
@@ -436,18 +436,18 @@ void Weather::forecast(Ui& ui, const Interaction& input) {
 }
 
 void Weather::network(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "STATION NETWORK",
+    auto card = kit::card(ui, {.title = "STATION NETWORK",
                                     .note = "8 reporting · 1 alert",
                                     .gap = 0.0f,
                                     .grow = 1.0f,
                                     .height = 264.0f});
 
-    auto list = beginScroll(ui, input, "weather.stations", stationScroll_, {.gap = 1.0f});
+    auto list = scrollArea(ui, input, "weather.stations", stationScroll_, {.gap = 1.0f});
     for (std::size_t i = 0; i < stations_.size(); ++i) {
         const Station& entry = stations_[i];
         const std::string tag = "weather.station." + std::string(entry.code);
         {
-            auto row = kit::beginEntry(ui, {.id = tag,
+            auto row = kit::entry(ui, {.id = tag,
                                             .selected = i == station_,
                                             .hovered = input.isHovered(tag),
                                             .height = 30.0f});
@@ -483,17 +483,17 @@ NodeId Weather::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
         const Station& here = stations_[station_];
-        auto header = kit::beginHeader(ui, Icon::ClockFading, "Aurora Weather Desk", here.name);
+        auto header = kit::header(ui, Icon::ClockFading, "Aurora Weather Desk", here.name);
         spacer(ui);
         {
             Style strip;
             strip.width = 186.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kModels) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "weather.model", items, model_,
@@ -525,7 +525,7 @@ NodeId Weather::build(Frame& frame) {
         const float pulse = 0.5f + 0.5f * std::sin(ui.now() * 2.0f);
         banner.background = Fill{Token::Removed, 0.12f + 0.10f * pulse};
         banner.radius = 0.0f;
-        auto bannerScope = ui.begin(banner);
+        auto bannerScope = ui.scope(banner);
         icon(ui, Icon::CircleAlert, {.color = Token::Removed, .size = 15.0f});
         kit::beacon(ui, kit::Tone::Alarm, true, 7.0f);
         text(ui, "BIKF Keflavík — gale warning in force until 21:00 UTC",
@@ -538,16 +538,16 @@ NodeId Weather::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "weather.page", page_,
-                                {.padding = Edges::all(14.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "weather.page", page_,
+                               {.padding = Edges::all(14.0f), .gap = 12.0f});
 
         {
             Style row;
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             current(ui);
             {
                 Style middle;
@@ -556,7 +556,7 @@ NodeId Weather::build(Frame& frame) {
                 middle.grow = 1.0f;
                 middle.basis = 0.0f;
                 middle.minWidth = 0.0f;
-                auto middleScope = ui.begin(middle);
+                auto middleScope = ui.scope(middle);
                 observations(ui);
                 {
                     Style charts;
@@ -564,7 +564,7 @@ NodeId Weather::build(Frame& frame) {
                     charts.gap = 12.0f;
                     charts.grow = 1.0f;
                     charts.basis = 0.0f;
-                    auto chartScope = ui.begin(charts);
+                    auto chartScope = ui.scope(charts);
                     trends(ui, input);
                 }
             }
@@ -575,14 +575,14 @@ NodeId Weather::build(Frame& frame) {
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             network(ui, input);
         }
     }
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::RefreshCw, "METAR 12:50Z · TAF 12:00Z", kit::Tone::Ok);
         kit::statusItem(ui, Icon::Download, std::string(kModels[model_]) + " run 06Z");
         spacer(ui);

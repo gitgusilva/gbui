@@ -38,7 +38,7 @@ struct Combo {
         arena.reset();
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.gap = 6.0f, .padding = Edges::all(10.0f)});
+            auto root = ui.column({.gap = 6.0f, .padding = Edges::all(10.0f)});
             const SelectResult result =
                 select(ui, input, "sel", items, value, state, options);
             chosen = result.chosen;
@@ -253,7 +253,7 @@ TEST("a date picker draws a whole month and reports the day clicked") {
         Ui rebuilt(arena);
         DatePickerResult result;
         {
-            auto column = rebuilt.beginColumn({.width = 300.0f});
+            auto column = rebuilt.column({.width = 300.0f});
             DatePickerOptions options;
             options.minimum = Date{2026, 8, 5};
             options.maximum = Date{2026, 8, 20};
@@ -329,7 +329,7 @@ TEST("a colour picker's rails can be turned off one at a time") {
         ColorPickerState state;
         state.set(Color{37, 99, 235});
         {
-            auto column = ui.beginColumn({.width = 300.0f});
+            auto column = ui.column({.width = 300.0f});
             colorPicker(ui, input, "pick", state, options);
             (void)column;
         }
@@ -432,7 +432,7 @@ TEST("twelve-hour is a display, so the stored hour does not move") {
         Ui rebuilt(arena);
         TimePickerResult result;
         {
-            auto column = rebuilt.beginColumn({.width = 320.0f});
+            auto column = rebuilt.column({.width = 320.0f});
             TimePickerOptions options;
             options.use24Hour = use24Hour;
             result = timePicker(rebuilt, input, "clock", value, state, options);

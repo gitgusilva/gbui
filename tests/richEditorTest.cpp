@@ -37,7 +37,7 @@ Rect caretAfter(const std::string& text, std::size_t caret) {
         ui.setMeasure(measureWith(fonts), theme.typography());
         NodeId root;
         {
-            auto column = ui.beginColumn({});
+            auto column = ui.column({});
             richEditor(ui, input, "ed", document, state, {.showToolbar = false});
             root = column.id();
         }

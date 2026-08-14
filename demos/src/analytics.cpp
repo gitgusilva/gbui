@@ -109,7 +109,7 @@ void Analytics::kpis(Ui& ui) {
     row.direction = Direction::Row;
     row.gap = 12.0f;
     row.shrink = 0.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
 
     // The headline tile carries a wash of its own tone; the three beside it do
     // not. A row where every tile is tinted has no headline.
@@ -148,7 +148,7 @@ void Analytics::kpis(Ui& ui) {
 }
 
 void Analytics::revenuePanel(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "REVENUE VS FORECAST",
+    auto card = kit::card(ui, {.title = "REVENUE VS FORECAST",
                                     .note = "drag to zoom · shift-drag to pan",
                                     .gap = 6.0f,
                                     .grow = 1.6f,
@@ -181,7 +181,7 @@ void Analytics::revenuePanel(Ui& ui, const Interaction& input) {
         note.direction = Direction::Row;
         note.align = Align::Center;
         note.shrink = 0.0f;
-        auto noteScope = ui.begin(note);
+        auto noteScope = ui.scope(note);
         spacer(ui);
         text(ui, "peak " + kit::format("$%.0f", revenue_.peak()),
              {.color = Token::TextMuted, .role = FontRole::Mono, .size = 11.0f});
@@ -189,7 +189,7 @@ void Analytics::revenuePanel(Ui& ui, const Interaction& input) {
 }
 
 void Analytics::mixPanel(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "CHANNEL MIX", .grow = 1.0f, .minWidth = 240.0f});
+    auto card = kit::card(ui, {.title = "CHANNEL MIX", .grow = 1.0f, .minWidth = 240.0f});
 
     const std::vector<Slice> slices = {
         {.name = "Direct", .value = 38.0},     {.name = "Partner", .value = 24.0},
@@ -202,7 +202,7 @@ void Analytics::mixPanel(Ui& ui, const Interaction& input) {
 
 void Analytics::accountsPanel(Ui& ui, const Interaction& input) {
     auto card =
-        kit::beginCard(ui, {.title = "TOP ACCOUNTS",
+        kit::card(ui, {.title = "TOP ACCOUNTS",
                             .note = kit::format("%.0f of 1 284", static_cast<double>(rows_.size())),
                             .gap = 0.0f,
                             .grow = 1.0f,
@@ -327,17 +327,17 @@ NodeId Analytics::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto header = kit::beginHeader(ui, Icon::ChartPie, "Meridian",
+        auto header = kit::header(ui, Icon::ChartPie, "Meridian",
                                        "Revenue intelligence · workspace: acme-eu");
         spacer(ui);
         {
             Style strip;
             strip.width = 240.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kRanges) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "analytics.range", items, range_,
@@ -363,9 +363,9 @@ NodeId Analytics::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "analytics.page", page_,
-                                {.padding = Edges::all(14.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "analytics.page", page_,
+                               {.padding = Edges::all(14.0f), .gap = 12.0f});
 
         kpis(ui);
         {
@@ -374,7 +374,7 @@ NodeId Analytics::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 300.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             revenuePanel(ui, input);
             mixPanel(ui, input);
         }
@@ -383,14 +383,14 @@ NodeId Analytics::build(Frame& frame) {
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             accountsPanel(ui, input);
         }
     }
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::RefreshCw, "synced 12s ago", kit::Tone::Ok);
         kit::statusItem(ui, Icon::Terminal, "warehouse: snowflake-eu-1");
         spacer(ui);

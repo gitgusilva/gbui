@@ -20,7 +20,7 @@ void addOverlayExamples(std::vector<Example>& out) {
     out.push_back({"menuItem", [](Ui& ui, const Interaction& input, State& state) {
                        // Drawn inline here rather than inside a popover, which
                        // is what a menu item *is*: a row, not a window.
-                       auto panel = beginPanel(ui, {.padding = Edges::symmetric(4.0f, 0.0f)});
+                       auto panelScope = panel(ui, {.padding = Edges::symmetric(4.0f, 0.0f)});
                        if (menuItem(ui, input, "catalog.menu.stage", "Stage file",
                                     {.leading = Icon::FilePlus, .shortcut = "Ctrl+S"})) {
                            state.on = !state.on;
@@ -32,7 +32,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                    }});
 
     out.push_back({"menuSeparator", [](Ui& ui, const Interaction& input, State&) {
-                       auto panel = beginPanel(ui, {.padding = Edges::symmetric(4.0f, 0.0f)});
+                       auto panelScope = panel(ui, {.padding = Edges::symmetric(4.0f, 0.0f)});
                        menuItem(ui, input, "catalog.sep.copy", "Copy");
                        menuSeparator(ui);
                        menuItem(ui, input, "catalog.sep.delete", "Delete");
@@ -47,7 +47,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        tooltip(ui, input, "catalog.tip.anchor", "Fetches every remote");
                    }});
 
-    out.push_back({"beginPopover", [](Ui& ui, const Interaction& input, State& state) {
+    out.push_back({"popover", [](Ui& ui, const Interaction& input, State& state) {
                        button(
                            ui, input, state.popoverOpen ? "CLOSE" : "OPEN",
                            {.variant = ButtonVariant::Secondary, .id = "catalog.popover.anchor"});
@@ -55,20 +55,20 @@ void addOverlayExamples(std::vector<Example>& out) {
                            state.popoverOpen = !state.popoverOpen;
                        }
                        if (state.popoverOpen) {
-                           auto popover =
-                               beginPopover(ui, input, "catalog.popover", "catalog.popover.anchor");
+                           auto popoverScope =
+                               popover(ui, input, "catalog.popover", "catalog.popover.anchor");
                            sectionHeading(ui, "REMOTE");
                            text(ui, "origin/main", {.color = Token::TextMuted});
                        }
                    }});
 
-    out.push_back({"beginModal", [](Ui& ui, const Interaction& input, State& state) {
+    out.push_back({"modal", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "DISCARD ALL",
                               {.variant = ButtonVariant::Danger, .id = "catalog.modal.open"});
                        if (input.clicked("catalog.modal.open")) state.modalOpen = true;
                        if (!state.modalOpen) return;
 
-                       auto dialog = beginModal(
+                       auto dialog = modal(
                            ui, input, "catalog.modal", "Discard all changes?", state.modalAt,
                            {.width = 360.0f, .icon = Icon::CircleAlert, .danger = true});
                        // The position comes back updated, so dragging survives
@@ -76,27 +76,27 @@ void addOverlayExamples(std::vector<Example>& out) {
                        state.modalAt = dialog.result.position;
                        if (dialog.result.dismissed) state.modalOpen = false;
 
-                       auto body = ui.beginColumn({.padding = Edges::all(16.0f)});
+                       auto body = ui.column({.padding = Edges::all(16.0f)});
                        text(ui, "This cannot be undone.",
                             {.overflow = TextOverflow::Wrap, .lineHeight = 1.5f});
                    }});
 
-    out.push_back({"beginModalActions", [](Ui& ui, const Interaction& input, State& state) {
+    out.push_back({"modalActions", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "OPEN DIALOG",
                               {.variant = ButtonVariant::Secondary, .id = "catalog.actions.open"});
                        if (input.clicked("catalog.actions.open")) state.modalOpen = true;
                        if (!state.modalOpen) return;
 
-                       auto dialog = beginModal(ui, input, "catalog.actions", "Push to origin?",
-                                                state.modalAt, {.width = 340.0f});
+                       auto dialog = modal(ui, input, "catalog.actions", "Push to origin?",
+                                           state.modalAt, {.width = 340.0f});
                        state.modalAt = dialog.result.position;
                        if (dialog.result.dismissed) state.modalOpen = false;
                        {
-                           auto body = ui.beginColumn({.padding = Edges::all(16.0f)});
+                           auto body = ui.column({.padding = Edges::all(16.0f)});
                            text(ui, "3 commits ahead.", {.color = Token::TextMuted});
                        }
                        // The row of buttons at the foot, pushed to the right.
-                       auto actions = beginModalActions(ui);
+                       auto actions = modalActions(ui);
                        button(
                            ui, input, "CANCEL",
                            {.variant = ButtonVariant::Secondary, .id = "catalog.actions.cancel"});

@@ -63,8 +63,8 @@ void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const Scro
     ui.tag(thumbId).cursor(thumb.cursorHint);
 }
 
-Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
-                      const ScrollOptions& options) {
+Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
+                     const ScrollOptions& options) {
     const ScrollAxis axis = options.resolvedAxis();
     const bool scrolls = axis != ScrollAxis::None;
     const bool vertical = axis == ScrollAxis::Vertical;
@@ -179,7 +179,7 @@ Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, Scr
             viewport.width = bounded(contentFrame.width, options.minWidth, options.maxWidth);
         }
     }
-    auto scope = ui.begin(viewport);
+    auto scope = ui.scope(viewport);
     ui.tag(id).focusable(options.focusable);
 
     // ---- the bar ----------------------------------------------------------
@@ -232,7 +232,7 @@ Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, Scr
             (options.scrollbar && state.scrollable() ? options.scrollbarWidth : 0.0f);
     }
 
-    auto contentScope = ui.begin(content);
+    auto contentScope = ui.scope(content);
     ui.tag(contentId);
     // The content scope closes both boxes when the caller is done with it, and
     // the viewport scope gives up its own pop — otherwise it would fire the

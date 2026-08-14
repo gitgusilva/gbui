@@ -22,7 +22,7 @@ std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::str
     const bool actionable = !options.forId.empty() && !options.disabled && !options.readOnly;
     box.cursorHint = actionable ? Cursor::Pointer : Cursor::Default;
 
-    auto scope = ui.begin(box);
+    auto scope = ui.scope(box);
     ui.tag(id).cursor(box.cursorHint);
     gbui::text(ui, text, {.color = options.color, .size = options.size});
     if (options.required) {

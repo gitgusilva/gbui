@@ -150,7 +150,7 @@ float knobTravel(Animator& animator, bool on) {
     ui.setAnimator(&animator);
 
     {
-        auto column = ui.beginColumn({.width = 200.0f});
+        auto column = ui.column({.width = 200.0f});
         (void)switchToggle(ui, input, "s", on, {});
         (void)column;
     }
@@ -198,7 +198,7 @@ TEST("without an animator a switch still lands on its target") {
     Theme theme = Theme::dark();
     Interaction input;
     {
-        auto column = ui.beginColumn({.width = 200.0f});
+        auto column = ui.column({.width = 200.0f});
         (void)switchToggle(ui, input, "s", true, {});
         (void)column;
     }

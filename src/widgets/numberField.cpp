@@ -66,7 +66,7 @@ NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view
     if (focused && editable) box.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
     box.overflow = Overflow::Hidden;
 
-    auto scope = ui.begin(box);
+    auto scope = ui.scope(box);
     ui.tag(id).focusable(!options.disabled);
 
     const std::string decrementId = std::string(id) + ".decrement";
@@ -83,7 +83,7 @@ NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view
         button.radius = 3.0f;
         button.background = input.isHovered(buttonId) ? Fill{Token::SurfaceHover} : Fill{};
         button.cursorHint = Cursor::Pointer;
-        auto buttonScope = ui.begin(button);
+        auto buttonScope = ui.scope(button);
         ui.tag(buttonId).cursor(Cursor::Pointer);
         icon(ui, glyph, {.color = Token::TextMuted, .size = std::min(12.0f, height - 2.0f)});
         (void)buttonScope;
@@ -109,7 +109,7 @@ NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view
         column.width = 16.0f;
         column.shrink = 0.0f;
         column.gap = 1.0f;
-        auto columnScope = ui.begin(column);
+        auto columnScope = ui.scope(column);
         const float half = (controlHeight - 10.0f) / 2.0f;
         stepButton(incrementId, Icon::ChevronDown, options.step, 16.0f, half);
         stepButton(decrementId, Icon::ChevronDown, -options.step, 16.0f, half);

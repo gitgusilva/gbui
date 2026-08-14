@@ -36,7 +36,7 @@ void addChartExamples(std::vector<Example>& out) {
                        row.gap = 8.0f;
                        row.shrink = 0.0f;
                        {
-                           auto scope = ui.begin(row);
+                           auto scope = ui.scope(row);
                            text(ui, "the same view the gestures move",
                                 {.color = Token::TextMuted, .size = 11.0f, .grow = 1.0f});
                            chartToolbar(ui, input, "catalog.zoom", state.view);
@@ -131,7 +131,7 @@ void addChartExamples(std::vector<Example>& out) {
                        row.direction = Direction::Row;
                        row.align = Align::Center;
                        row.gap = 4.0f;
-                       auto scope = ui.begin(row);
+                       auto scope = ui.scope(row);
 
                        const std::vector<Series> both = {
                            {.name = "gbui", .values = {92, 88, 95, 90, 74, 68}},

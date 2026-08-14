@@ -19,7 +19,7 @@ TEST("space refused by a max-width goes to the others, not to waste") {
     Ui ui(arena);
     NodeId capped, free;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         capped = ui.add({.grow = 1.0f, .basis = 0.0f, .maxWidth = 60.0f});
         free = ui.add({.grow = 1.0f, .basis = 0.0f});
         (void)row;

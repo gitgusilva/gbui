@@ -189,7 +189,7 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     const bool ripple = wantsInk && input && !options.disabled && !options.id.empty();
     if (ripple) style.overflow = Overflow::Hidden;
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     if (!options.id.empty()) ui.tag(options.id);
     // On the button itself, not only on a tagged one: an unnamed button is
     // still a button under the pointer.

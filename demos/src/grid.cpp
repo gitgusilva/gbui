@@ -93,7 +93,7 @@ private:
 constexpr std::array<std::string_view, 3> kHorizons = {"LIVE", "DAY", "WEEK"};
 
 void Grid::balance(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "DEMAND AND GENERATION",
+    auto card = kit::card(ui, {.title = "DEMAND AND GENERATION",
                                     .note = "MW · 30 s resolution",
                                     .grow = 1.5f,
                                     .minWidth = 340.0f});
@@ -126,7 +126,7 @@ void Grid::balance(Ui& ui, const Interaction& input) {
         row.align = Align::Center;
         row.gap = 16.0f;
         row.shrink = 0.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         const double imbalance = generation_.latest() - demand_.latest();
         text(ui, "SYSTEM IMBALANCE", {.color = Token::TextMuted, .size = 10.0f});
         text(ui, kit::format("%+.0f MW", imbalance),
@@ -142,7 +142,7 @@ void Grid::balance(Ui& ui, const Interaction& input) {
 }
 
 void Grid::prices(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "DAY-AHEAD SETTLEMENT",
+    auto card = kit::card(ui, {.title = "DAY-AHEAD SETTLEMENT",
                                     .note = "EUR/MWh · hourly",
                                     .grow = 1.0f,
                                     .minWidth = 300.0f});
@@ -155,7 +155,7 @@ void Grid::prices(Ui& ui, const Interaction& input) {
 }
 
 void Grid::mix(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "GENERATION MIX", .width = 306.0f});
+    auto card = kit::card(ui, {.title = "GENERATION MIX", .width = 306.0f});
     const std::vector<Slice> slices = {
         {.name = "Wind", .value = 1'180.0, .color = Token::Graph6},
         {.name = "Nuclear", .value = 940.0, .color = Token::Graph4},
@@ -168,7 +168,7 @@ void Grid::mix(Ui& ui, const Interaction& input) {
 }
 
 void Grid::feeders(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "FEEDERS · SUBSTATION MARSH LANE",
+    auto card = kit::card(ui, {.title = "FEEDERS · SUBSTATION MARSH LANE",
                                     .note = "33 kV busbar A",
                                     .gap = 0.0f,
                                     .grow = 1.0f,
@@ -240,7 +240,7 @@ void Grid::feeders(Ui& ui, const Interaction& input) {
 }
 
 void Grid::ties(Ui& ui) {
-    auto card = kit::beginCard(
+    auto card = kit::card(
         ui,
         {.title = "INTERCONNECTORS", .note = "positive is import", .gap = 12.0f, .width = 250.0f});
     for (const Interconnector& tie : ties_) {
@@ -269,17 +269,17 @@ NodeId Grid::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto header = kit::beginHeader(ui, Icon::Terminal, "Voltway Grid Operations",
+        auto header = kit::header(ui, Icon::Terminal, "Voltway Grid Operations",
                                        "Region North-East · control area NE-2 · UTC+1");
         spacer(ui);
         {
             Style strip;
             strip.width = 200.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kHorizons) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "grid.horizon", items, horizon_,
@@ -298,16 +298,16 @@ NodeId Grid::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "grid.page", page_,
-                                {.padding = Edges::all(12.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "grid.page", page_,
+                               {.padding = Edges::all(12.0f), .gap = 12.0f});
 
         {
             Style row;
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             kit::statTile(ui, {.label = "SYSTEM DEMAND",
                                .value = kit::compact(demand_.latest()),
                                .unit = "MW",
@@ -341,7 +341,7 @@ NodeId Grid::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 288.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             balance(ui, input);
             prices(ui, input);
         }
@@ -350,7 +350,7 @@ NodeId Grid::build(Frame& frame) {
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             feeders(ui, input);
             mix(ui, input);
             ties(ui);
@@ -359,7 +359,7 @@ NodeId Grid::build(Frame& frame) {
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::RefreshCw, "SCADA telemetry 2 s", kit::Tone::Ok);
         kit::statusItem(ui, Icon::ClockFading, "state estimator converged 00:04 ago",
                         kit::Tone::Ok);

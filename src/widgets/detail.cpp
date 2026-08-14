@@ -123,7 +123,7 @@ bool activated(const Interaction& input, std::string_view id, bool disabled) {
 }
 
 /** Opens the row a control and its label share. */
-Ui::Scope beginControlRow(Ui& ui, std::string_view id, bool disabled) {
+Ui::Scope controlRow(Ui& ui, std::string_view id, bool disabled) {
     Style row;
     row.direction = Direction::Row;
     row.align = Align::Center;
@@ -131,7 +131,7 @@ Ui::Scope beginControlRow(Ui& ui, std::string_view id, bool disabled) {
     // The whole row is the target — clicking the label toggles the control —
     // so the whole row says so, and says when it will not.
     row.cursorHint = disabled ? Cursor::NotAllowed : Cursor::Pointer;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id).focusable(!disabled).cursor(row.cursorHint);
     return scope;
 }
@@ -161,8 +161,8 @@ PlacementOptions placementOptionsFrom(const FloatingOptions& options) {
 }
 
 /** Opens an absolutely positioned surface in a layer above the content. */
-Ui::Scope beginFloating(Ui& ui, const Rect& rect, Layer layer, const Edges& padding,
-                        float gapBetweenItems, Direction direction, float maxHeight) {
+Ui::Scope floating(Ui& ui, const Rect& rect, Layer layer, const Edges& padding,
+                   float gapBetweenItems, Direction direction, float maxHeight) {
     Style surface;
     surface.position = Position::Fixed;
     surface.layer = layer;
@@ -176,7 +176,7 @@ Ui::Scope beginFloating(Ui& ui, const Rect& rect, Layer layer, const Edges& padd
     surface.maxHeight = maxHeight;
     surface.background = Fill{Token::BgOverlay};
     surface.border = Border{1.0f, Fill{Token::BorderStrong}};
-    return ui.begin(surface);
+    return ui.scope(surface);
 }
 
 /** Rough size of a floating box before layout has run.

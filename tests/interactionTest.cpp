@@ -22,7 +22,7 @@ struct Scene {
 
     Scene() {
         {
-            auto row = ui.beginRow({.gap = 0});
+            auto row = ui.row({.gap = 0});
             ui.add({.width = 100.0f, .height = 40.0f});
             ui.tag("first").focusable();
             ui.add({.width = 100.0f, .height = 40.0f});
@@ -186,7 +186,7 @@ Cursor cursorOver(const std::function<void(Ui&, const Interaction&)>& build) {
         arena.reset();
         Ui rebuilt(arena);
         {
-            auto column = rebuilt.beginColumn({.width = 200.0f});
+            auto column = rebuilt.column({.width = 200.0f});
             build(rebuilt, input);
             (void)column;
         }
@@ -232,7 +232,7 @@ TEST("a drag keeps its cursor after the pointer leaves the control") {
     Ui ui(arena);
     Theme theme = Theme::dark();
     {
-        auto row = ui.beginRow({.gap = 0});
+        auto row = ui.row({.gap = 0});
         ui.add({.width = 40.0f, .height = 40.0f});
         ui.tag("thumb").cursor(Cursor::Grabbing);
         ui.add({.width = 160.0f, .height = 40.0f});  // plain space beside it
@@ -276,7 +276,7 @@ TEST("focus falls to the nearest surviving ancestor, not off the tree") {
         Arena arena;
         Ui ui(arena);
         {
-            auto list = ui.beginColumn({.width = 100.0f});
+            auto list = ui.column({.width = 100.0f});
             ui.tag("list").focusable();
             if (withRow) {
                 ui.add({.width = 100.0f, .height = 20.0f});
@@ -311,7 +311,7 @@ TEST("a popup outside its parent's frame is still hittable") {
     {
         // A short row, with a popup hanging under it that is placed *below* the
         // row on purpose — which is what every dropdown in this toolkit is.
-        auto row = ui.beginRow({.height = 30.0f});
+        auto row = ui.row({.height = 30.0f});
         ui.add({.width = 200.0f, .height = 30.0f});
         ui.tag("box");
 

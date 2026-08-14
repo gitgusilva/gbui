@@ -7,7 +7,7 @@ vocabulary is deliberately identical.
 ## Direction, justify, align
 
 ```cpp
-ui.beginRow({.justify = Justify::SpaceBetween, .align = Align::Center});
+ui.row({.justify = Justify::SpaceBetween, .align = Align::Center});
 ```
 
 - `Direction::Row` lays children out along x, `Column` along y. The chosen axis
@@ -42,8 +42,8 @@ any space was shared.
 Every size is a `Length`, which is either an absolute number or a share:
 
 ```cpp
-ui.begin({.width = 240.0f});                                    // 240 pixels
-ui.begin({.width = Length::percent(25), .maxWidth = 320.0f});   // a quarter, up to 320
+ui.scope({.width = 240.0f});                                    // 240 pixels
+ui.scope({.width = Length::percent(25), .maxWidth = 320.0f});   // a quarter, up to 320
 ```
 
 `Length` converts implicitly from `float`, so a plain number still means pixels
@@ -76,7 +76,7 @@ defined way to survive being too small:
 ## Wrapping
 
 ```cpp
-ui.beginRow({.gap = 6.0f, .wrap = true, .alignContent = AlignContent::Start,
+ui.row({.gap = 6.0f, .wrap = true, .alignContent = AlignContent::Start,
              .crossGap = 8.0f});
 ```
 
@@ -121,8 +121,8 @@ overflows the box it was given.
 ## Out of the flow
 
 ```cpp
-ui.begin({.position = Position::Absolute, .left = 12.0f, .top = 4.0f});
-ui.begin({.position = Position::Fixed, .layer = Layer::Overlay, …});
+ui.scope({.position = Position::Absolute, .left = 12.0f, .top = 4.0f});
+ui.scope({.position = Position::Fixed, .layer = Layer::Overlay, …});
 ```
 
 `Absolute` is measured from the **parent's content box** — a caret in its field,

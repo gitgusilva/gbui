@@ -7,7 +7,7 @@ Everything the library does is one of three stages, always in this order:
 ```cpp
 Arena arena;                                  // 1. build   — what exists
 Ui ui(arena);
-{ auto root = ui.beginColumn({}); /* … */ }
+{ auto root = ui.column({}); /* … */ }
 
 layout(arena, ui.root(), viewport, context);  // 2. layout  — where it goes
 record(arena, ui.root(), theme, list);        // 3. paint   — what to draw
@@ -88,7 +88,7 @@ namespace gbui::charts { ... }       // a module large enough to own its vocabul
 | Thing | Style | Example |
 | --- | --- | --- |
 | Types | `CamelCase` | `DisplayList`, `NodeId` |
-| Functions and methods | `camelBack` | `beginListRow`, `intrinsicMainSize` |
+| Functions and methods | `camelBack` | `listRow`, `intrinsicMainSize` |
 | Private members | trailing underscore | `contours_` |
 | Constants | `k` prefix | `kAuto`, `kMenuItemHeight` |
 | Files | named for the symbol, same case | `numberField.hpp` declares `numberField()` |

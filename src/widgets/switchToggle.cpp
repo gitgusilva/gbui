@@ -21,7 +21,7 @@ bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on
     const float travel = ui.animate(id, "on", on ? 1.0f : 0.0f,
                                     {.duration = 0.18f, .easing = Easing::EaseOut});
 
-    auto row = beginControlRow(ui, id, options.disabled);
+    auto row = controlRow(ui, id, options.disabled);
     {
         const Design& design = ui.design();
         // The caller can still pin a size; unset, the design decides — which is
@@ -48,7 +48,7 @@ bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on
         // The track is the accent when the switch is on, so the ring cannot be
         // its border either — same reasoning as the checkbox.
         if (ring) track.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
-        auto scope = ui.begin(track);
+        auto scope = ui.scope(track);
 
         // The accent arrives as a wash over the base rather than as a second
         // colour, because the builder has no theme and so cannot interpolate
@@ -83,7 +83,7 @@ bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on
         knob.shrink = 0.0f;
         knob.radius = knobSize / 2.0f;
         knob.background = Fill{Token::TextMuted};
-        auto knobScope = ui.begin(knob);
+        auto knobScope = ui.scope(knob);
         // The knob takes the accent's foreground when the track is filled, so a
         // theme with a pale accent still shows it — faded in the same way.
         if (travel > 0.0f && !options.disabled) {

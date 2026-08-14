@@ -239,7 +239,7 @@ ChartView view;        // one window
 Style stack;
 stack.direction = Direction::Column;
 stack.gap = 0.0f;      // one plot area
-auto panes = ui.begin(stack);
+auto panes = ui.scope(stack);
 candlestickChart(ui, input, "price", candles, view, {.link = &crosshair, ...});
 barChart(ui, input, "volume", volume, view, {.link = &crosshair, ...});
 ```

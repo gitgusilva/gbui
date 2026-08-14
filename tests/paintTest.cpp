@@ -19,7 +19,7 @@ DisplayList recordShapes(std::vector<Shape> shapes) {
     Arena arena;
     Ui ui(arena);
     {
-        auto root = ui.beginColumn({});
+        auto root = ui.column({});
         ui.draw({.width = 100.0f, .height = 100.0f}, std::move(shapes));
         (void)root;
     }
@@ -81,7 +81,7 @@ TEST("opacity scales every stop of a shape's gradient") {
     Arena arena;
     Ui ui(arena);
     {
-        auto root = ui.beginColumn({});
+        auto root = ui.column({});
         Style style;
         style.width = 100.0f;
         style.height = 100.0f;

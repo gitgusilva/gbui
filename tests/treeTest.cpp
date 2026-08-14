@@ -81,9 +81,9 @@ TEST("a scope closes its container even when a return skips the end") {
     Ui ui(arena);
     NodeId sibling;
     {
-        auto column = ui.beginColumn();
+        auto column = ui.column();
         {
-            auto row = ui.beginRow();
+            auto row = ui.row();
             ui.add({});
             (void)row;
         }
@@ -98,15 +98,15 @@ TEST("components build the tree they claim to") {
     Arena arena;
     Ui ui(arena);
     {
-        auto panel = beginPanel(ui);
+        auto panelScope = panel(ui);
         sectionHeading(ui, "UNSTAGED (1)");
         {
-            auto row = beginListRow(ui, {.selected = true, .id = "row.theme"});
+            auto row = listRow(ui, {.selected = true, .id = "row.theme"});
             text(ui, "theme.json");
             (void)row;
         }
         button(ui, "COMMIT", {.variant = ButtonVariant::Primary, .block = true});
-        (void)panel;
+        (void)panelScope;
     }
 
     const Theme theme = Theme::dark();
@@ -139,9 +139,9 @@ TEST("a transparent subtree costs no draw commands") {
     Arena arena;
     Ui ui(arena);
     {
-        auto root = ui.beginColumn({.background = Fill{Token::Bg}});
+        auto root = ui.column({.background = Fill{Token::Bg}});
         {
-            auto hidden = ui.beginColumn({.background = Fill{Token::Accent}, .opacity = 0.0f});
+            auto hidden = ui.column({.background = Fill{Token::Accent}, .opacity = 0.0f});
             ui.label("invisible");
             (void)hidden;
         }
@@ -167,10 +167,10 @@ TEST("a naming scope prefixes what qualify returns") {
     CHECK_EQ(ui.qualify("plain"), std::string_view("plain"));
 
     {
-        auto outer = ui.beginIds("scada");
+        auto outer = ui.ids("scada");
         CHECK_EQ(ui.qualify("hold"), std::string_view("scada.hold"));
         {
-            auto inner = ui.beginIds("tank");
+            auto inner = ui.ids("tank");
             CHECK_EQ(ui.qualify("clearwell"), std::string_view("scada.tank.clearwell"));
             CHECK_EQ(ui.idPrefix(), std::string_view("scada.tank"));
         }
@@ -187,7 +187,7 @@ TEST("a qualified name survives the call it was built in") {
     Ui ui(arena);
     std::string_view held;
     {
-        auto scope = ui.beginIds("outer");
+        auto scope = ui.ids("outer");
         held = ui.qualify("thing");
         (void)scope;
     }
@@ -199,7 +199,7 @@ TEST("a qualified name survives the call it was built in") {
 TEST("an empty scope name changes nothing") {
     Arena arena;
     Ui ui(arena);
-    auto scope = ui.beginIds("");
+    auto scope = ui.ids("");
     CHECK_EQ(ui.qualify("a"), std::string_view("a"));
     (void)scope;
 }

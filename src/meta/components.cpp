@@ -109,7 +109,7 @@ std::vector<ComponentInfo> build() {
         "NodeId image(Ui& ui, const Bitmap& source, const ImageOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginListRow",
+        "listRow",
         "Components",
         "gbui/widgets/listRow.hpp",
         "Opens a row. Returns a Scope, so its contents are written inside the braces. `selected` washes the row in the accent at 18%, `hovered` uses `surfaceHover`, and both are passed in — components hold no state.",
@@ -125,10 +125,10 @@ std::vector<ComponentInfo> build() {
         },
         true,
         false,
-        "Ui::Scope beginListRow(Ui& ui, const ListRowOptions& options = {});",
+        "Ui::Scope listRow(Ui& ui, const ListRowOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginPanel",
+        "panel",
         "Components",
         "gbui/widgets/panel.hpp",
         "",
@@ -145,7 +145,7 @@ std::vector<ComponentInfo> build() {
         },
         true,
         false,
-        "Ui::Scope beginPanel(Ui& ui, const PanelOptions& options = {});",
+        "Ui::Scope panel(Ui& ui, const PanelOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "divider",
@@ -251,7 +251,7 @@ std::vector<ComponentInfo> build() {
         "NodeId text(Ui& ui, std::string_view value, const TextOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginToolbar",
+        "toolbar",
         "Components",
         "gbui/widgets/toolbar.hpp",
         "",
@@ -266,10 +266,10 @@ std::vector<ComponentInfo> build() {
         },
         true,
         false,
-        "Ui::Scope beginToolbar(Ui& ui, const ToolbarOptions& options = {});",
+        "Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginBox",
+        "box",
         "Containers",
         "gbui/widgets/box.hpp",
         "Opens a container. Everything until the returned scope dies is inside it.",
@@ -305,7 +305,7 @@ std::vector<ComponentInfo> build() {
         },
         true,
         false,
-        "Ui::Scope beginBox(Ui& ui, const BoxOptions& options = {});",
+        "Ui::Scope box(Ui& ui, const BoxOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "marquee",
@@ -326,7 +326,7 @@ std::vector<ComponentInfo> build() {
         "bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState& state, float delta, const std::function<void(Ui&)>& content, const MarqueeOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginScroll",
+        "scrollArea",
         "Containers",
         "gbui/widgets/scroll.hpp",
         "Opens a scroll container. The content is laid out at its natural size and clipped to the viewport, and the offset moves it. Wheel over the container scrolls it; Page Up, Page Down, Home and End do too when it has focus; the bar can be dragged. Everything drawn inside costs a node, so this is a *scrolling* view and not a *virtualised* one — 50 000 rows here really do build 50 000 nodes. When the rows are uniform, `virtualList` builds only the visible ones — see virtualList.hpp.",
@@ -352,13 +352,13 @@ std::vector<ComponentInfo> build() {
         },
         true,
         true,
-        "Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const ScrollOptions& options = {});",
+        "Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const ScrollOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "scrollbar",
         "Containers",
         "gbui/widgets/scroll.hpp",
-        "Draws the bar for a scroll view that is not where the bar belongs. A bar normally lives inside the view it drives, and `beginScroll` puts it there. A table is the case that forced this one out: its rows scroll vertically *inside* a box that scrolls horizontally, so the row view's own right-hand edge is out at the end of the widest column, and the bar drawn against it is a bar the reader has to scroll sideways to find. A browser has no such problem, because both bars belong to the visible box; this is how a caller says the same thing here. `box` is in the current container's coordinates — where the bar should be, not where the content is. The ids are the view's own, so the press, the drag and the paging are still handled by `beginScroll`: this draws, it does not behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you use it, or there will be two.",
+        "Draws the bar for a scroll view that is not where the bar belongs. A bar normally lives inside the view it drives, and `scrollArea` puts it there. A table is the case that forced this one out: its rows scroll vertically *inside* a box that scrolls horizontally, so the row view's own right-hand edge is out at the end of the widest column, and the bar drawn against it is a bar the reader has to scroll sideways to find. A browser has no such problem, because both bars belong to the visible box; this is how a caller says the same thing here. `box` is in the current container's coordinates — where the bar should be, not where the content is. The ids are the view's own, so the press, the drag and the paging are still handled by `scrollArea`: this draws, it does not behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you use it, or there will be two.",
         "A scroll container.",
         "",
         {},
@@ -824,7 +824,7 @@ std::vector<ComponentInfo> build() {
         "void menuSeparator(Ui& ui);",
     });
     out.push_back(ComponentInfo{
-        "beginModal",
+        "modal",
         "Overlays",
         "gbui/widgets/modal.hpp",
         "The caller supplies the position so dragging survives the tree being rebuilt, and gets it back updated.",
@@ -840,10 +840,10 @@ std::vector<ComponentInfo> build() {
         },
         false,
         true,
-        "Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, Vec2 position, const ModalOptions& options = {});",
+        "Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, Vec2 position, const ModalOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "beginModalActions",
+        "modalActions",
         "Overlays",
         "gbui/widgets/modal.hpp",
         "The row of buttons at the foot of a dialog, pushed to the right.",
@@ -852,10 +852,10 @@ std::vector<ComponentInfo> build() {
         {},
         true,
         false,
-        "Ui::Scope beginModalActions(Ui& ui);",
+        "Ui::Scope modalActions(Ui& ui);",
     });
     out.push_back(ComponentInfo{
-        "beginPopover",
+        "popover",
         "Overlays",
         "gbui/widgets/popover.hpp",
         "Returns a scope, so its contents are written inside the braces like any other container.",
@@ -875,7 +875,7 @@ std::vector<ComponentInfo> build() {
         },
         true,
         true,
-        "Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});",
+        "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "select",

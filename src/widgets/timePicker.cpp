@@ -100,7 +100,7 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
     row.direction = Direction::Row;
     row.gap = 6.0f;
     row.height = options.height;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id);
 
     /** One scrolling column of values, with the chosen one kept in view. */
@@ -129,14 +129,14 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
         frame.shrink = 0.0f;
         frame.border = Border{1.0f, Fill{Token::Border}};
         frame.radius = 6.0f;
-        auto frameScope = ui.begin(frame);
+        auto frameScope = ui.scope(frame);
 
         ScrollOptions view;
         view.axis = ScrollAxis::Vertical;
         view.gap = 2.0f;
         view.padding = Edges::all(4.0f);
         view.scrollbarWidth = 6.0f;
-        auto scrollScope = beginScroll(ui, input, columnId, scroll, view);
+        auto scrollScope = scrollArea(ui, input, columnId, scroll, view);
 
         for (std::size_t i = 0; i < values.size(); ++i) {
             const int value = values[i];
@@ -158,7 +158,7 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
             cell.opacity = enabled ? 1.0f : 0.35f;
             cell.cursorHint = enabled ? Cursor::Pointer : Cursor::NotAllowed;
 
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             ui.tag(rowId).cursor(cell.cursorHint);
             text(ui, labelFor(value),
                  {.color = chosen ? Token::AccentFg : Token::Text,
@@ -226,7 +226,7 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
         half.gap = 4.0f;
         half.width = options.columnWidth;
         half.shrink = 0.0f;
-        auto halfScope = ui.begin(half);
+        auto halfScope = ui.scope(half);
         for (int side = 0; side < 2; ++side) {
             const bool afternoon = side == 1;
             const std::string sideId = std::string(id) + (afternoon ? ".pm" : ".am");
@@ -243,7 +243,7 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
             if (chosen) cell.background = Fill{Token::Accent};
             else if (input.isHovered(sideId)) cell.background = Fill{Token::SurfaceHover};
             cell.cursorHint = Cursor::Pointer;
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             ui.tag(sideId).cursor(Cursor::Pointer);
             text(ui, afternoon ? options.locale.pm : options.locale.am,
                  {.color = chosen ? Token::AccentFg : Token::Text,

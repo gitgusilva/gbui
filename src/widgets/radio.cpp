@@ -13,7 +13,7 @@ bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected,
     const bool hovered = input.isHovered(id);
     const bool focusRing = input.isFocusVisible(id);
 
-    auto row = beginControlRow(ui, id, options.disabled);
+    auto row = controlRow(ui, id, options.disabled);
     {
         const float side = options.size > 0.0f ? options.size : ui.design().radioSize;
         Style ring;
@@ -35,7 +35,7 @@ bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected,
         if (focusRing && selected && !options.disabled) {
             ring.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
         }
-        auto scope = ui.begin(ring);
+        auto scope = ui.scope(ring);
         if (selected) {
             Style dot;
             const float dotSize = side * 0.42f;

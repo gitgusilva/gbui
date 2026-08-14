@@ -12,8 +12,8 @@ namespace gbui {
 // What this shares with its siblings, rather than a copy in each.
 using namespace detail;
 
-Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id,
-                       std::string_view anchorId, const PopoverOptions& options) {
+Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
+                  std::string_view anchorId, const PopoverOptions& options) {
     const Rect anchor = input.frameOf(anchorId);
     const float width = options.matchAnchorWidth && anchor.width > 0.0f
                             ? anchor.width
@@ -53,10 +53,9 @@ Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id,
     // gap; with one they belong to the scrolled content, or the padding would
     // scroll away with it.
     const bool scrolls = options.scrollState != nullptr && options.scroll != ScrollAxis::None;
-    auto scope = beginFloating(ui, Rect{placed.rect.x, placed.rect.y, width, 0.0f}, Layer::Overlay,
-                               scrolls ? Edges{} : options.padding,
-                               scrolls ? 0.0f : options.gapBetweenItems, Direction::Column,
-                               ceiling);
+    auto scope = floating(ui, Rect{placed.rect.x, placed.rect.y, width, 0.0f}, Layer::Overlay,
+                          scrolls ? Edges{} : options.padding,
+                          scrolls ? 0.0f : options.gapBetweenItems, Direction::Column, ceiling);
     ui.tag(id);
     if (!scrolls) return scope;
 
@@ -71,8 +70,8 @@ Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id,
     inner.maxHeight = isAuto(ceiling) ? kAuto : ceiling - options.padding.vertical();
     // The surface owns the keyboard stop, not the view inside it.
     inner.focusable = false;
-    auto view = beginScroll(ui, input, std::string(id) + ".view", *options.scrollState, inner);
-    // One scope closes both, the same way `beginScroll` hands back one for its
+    auto view = scrollArea(ui, input, std::string(id) + ".view", *options.scrollState, inner);
+    // One scope closes both, the same way `scrollArea` hands back one for its
     // viewport and its content.
     view.adopt();
     scope.disown();

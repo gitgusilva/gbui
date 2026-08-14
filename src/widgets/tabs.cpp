@@ -82,12 +82,12 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
     if (options.rule) {
         // A rule along the strip's trailing edge. `Border` is all four sides,
         // so the rule is padding plus a node rather than a border — the same
-        // reason `beginToolbar` grew a divider instead of a bottom border.
+        // reason `toolbar` grew a divider instead of a bottom border.
         strip.padding = vertical ? Edges{0.0f, 1.0f, 0.0f, 0.0f}
                                  : Edges{0.0f, 0.0f, 1.0f, 0.0f};
     }
 
-    auto scope = ui.begin(strip);
+    auto scope = ui.scope(strip);
     ui.tag(id).focusable();
 
     const Rect stripFrame = input.frameOf(id);
@@ -106,7 +106,7 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
             heading.justify = Justify::Start;
             heading.shrink = 0.0f;
             heading.padding = Edges{i == 0 ? 2.0f : 10.0f, 10.0f, 4.0f, 12.0f};
-            auto headingScope = ui.begin(heading);
+            auto headingScope = ui.scope(heading);
             text(ui, item.group,
                  {.color = Token::TextMuted, .weight = FontWeight::SemiBold, .size = 10.0f,
                   .overflow = TextOverflow::Ellipsis});
@@ -142,7 +142,7 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
             tab.outline = Outline{2.0f, 1.0f, Fill{Token::Accent}};
         }
 
-        auto tabScope = ui.begin(tab);
+        auto tabScope = ui.scope(tab);
         ui.tag(tabId).cursor(tab.cursorHint);
 
         const Token label = item.disabled ? Token::TextMuted
@@ -211,7 +211,7 @@ void tabPanels(Ui& ui, std::size_t selected,
             panel.shrink = 0.0f;
             panel.overflow = Overflow::Hidden;
         }
-        auto scope = ui.begin(panel);
+        auto scope = ui.scope(panel);
         panels[i](ui);
         (void)scope;
     }

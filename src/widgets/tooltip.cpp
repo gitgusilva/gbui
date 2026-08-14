@@ -74,7 +74,7 @@ void tooltip(Ui& ui, const Interaction& input, std::string_view anchorId, std::s
     surface.background = Fill{Token::BgOverlay};
     surface.border = Border{kBorder, Fill{Token::BorderStrong}};
 
-    auto scope = ui.begin(surface);
+    auto scope = ui.scope(surface);
     ui.tag(id).ignoresPointer();
     gbui::text(ui, text,
                {.color = Token::TextStrong, .size = kFontSize,

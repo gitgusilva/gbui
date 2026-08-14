@@ -75,9 +75,9 @@ destruction.
 ```cpp
 Ui ui(arena);
 
-Ui::Scope begin(const Style&);
-Ui::Scope beginRow(Style = {});
-Ui::Scope beginColumn(Style = {});
+Ui::Scope scope(const Style&);
+Ui::Scope row(Style = {});
+Ui::Scope column(Style = {});
 
 NodeId add(const Style&);                                   // a leaf
 NodeId label(std::string_view, TextStyle = {}, Style = {}); // text

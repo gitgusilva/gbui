@@ -104,7 +104,7 @@ private:
 constexpr std::array<std::string_view, 3> kViews = {"TODAY", "WEEK", "MONTH"};
 
 void Logistics::punctuality(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "DELIVERY PUNCTUALITY",
+    auto card = kit::card(ui, {.title = "DELIVERY PUNCTUALITY",
                                     .note = "minutes late against distance · dot size is pallets",
                                     .grow = 1.5f,
                                     .minWidth = 340.0f});
@@ -121,7 +121,7 @@ void Logistics::punctuality(Ui& ui, const Interaction& input) {
 }
 
 void Logistics::zones(Ui& ui) {
-    auto card = kit::beginCard(ui, {.title = "PICK ZONE OCCUPANCY",
+    auto card = kit::card(ui, {.title = "PICK ZONE OCCUPANCY",
                                     .note = "of rack capacity",
                                     .gap = 12.0f,
                                     .width = 268.0f});
@@ -149,18 +149,18 @@ void Logistics::zones(Ui& ui) {
 }
 
 void Logistics::docks(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "DOCK SCHEDULE",
+    auto card = kit::card(ui, {.title = "DOCK SCHEDULE",
                                     .note = "next 2 hours",
                                     .gap = 0.0f,
                                     .grow = 1.0f,
                                     .height = 292.0f,
                                     .minWidth = 300.0f});
 
-    auto list = beginScroll(ui, input, "logistics.docks", dockScroll_, {.gap = 1.0f});
+    auto list = scrollArea(ui, input, "logistics.docks", dockScroll_, {.gap = 1.0f});
     for (const Dock& dock : docks_) {
         const std::string tag = "logistics.dock." + std::string(dock.bay);
         auto row =
-            kit::beginEntry(ui, {.id = tag, .hovered = input.isHovered(tag), .height = 36.0f});
+            kit::entry(ui, {.id = tag, .hovered = input.isHovered(tag), .height = 36.0f});
         kit::statusDot(ui, dock.tone);
         text(ui, dock.bay,
              {.color = Token::TextStrong,
@@ -173,7 +173,7 @@ void Logistics::docks(Ui& ui, const Interaction& input) {
             column.gap = 1.0f;
             column.grow = 1.0f;
             column.minWidth = 0.0f;
-            auto columnScope = ui.begin(column);
+            auto columnScope = ui.scope(column);
             text(ui, dock.carrier, {.color = Token::Text, .size = 11.5f});
             text(ui, dock.window,
                  {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
@@ -183,7 +183,7 @@ void Logistics::docks(Ui& ui, const Interaction& input) {
 }
 
 void Logistics::fleet(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "FLEET",
+    auto card = kit::card(ui, {.title = "FLEET",
                                     .note = "8 vehicles · 1 delayed",
                                     .gap = 0.0f,
                                     .grow = 1.0f,
@@ -281,17 +281,17 @@ NodeId Logistics::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto header = kit::beginHeader(ui, Icon::Package, "Portway Control Tower",
+        auto header = kit::header(ui, Icon::Package, "Portway Control Tower",
                                        "DC Rotterdam-Zuid · 42 bays · 168 vehicles");
         spacer(ui);
         {
             Style strip;
             strip.width = 220.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kViews) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "logistics.view", items, view_,
@@ -314,16 +314,16 @@ NodeId Logistics::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "logistics.page", page_,
-                                {.padding = Edges::all(12.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "logistics.page", page_,
+                               {.padding = Edges::all(12.0f), .gap = 12.0f});
 
         {
             Style row;
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             kit::statTile(ui,
                           {.label = "ON-TIME DELIVERY",
                            .value = kit::format("%.1f%%", onTime_.latest()),
@@ -352,7 +352,7 @@ NodeId Logistics::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 300.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             punctuality(ui, input);
             zones(ui);
         }
@@ -361,7 +361,7 @@ NodeId Logistics::build(Frame& frame) {
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             fleet(ui, input);
             docks(ui, input);
         }
@@ -369,7 +369,7 @@ NodeId Logistics::build(Frame& frame) {
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::RefreshCw, "telematics live · 168 of 168", kit::Tone::Ok);
         kit::statusItem(ui, Icon::Folder, "WMS Blue Yonder · TMS Portway");
         spacer(ui);

@@ -16,20 +16,20 @@ NodeId Ui::attach(const Style& style) {
     return id;
 }
 
-Ui::Scope Ui::begin(const Style& style) {
+Ui::Scope Ui::scope(const Style& style) {
     const NodeId id = attach(style);
     stack_.push_back(id);
     return Scope(*this, id);
 }
 
-Ui::Scope Ui::beginRow(Style style) {
+Ui::Scope Ui::row(Style style) {
     style.direction = Direction::Row;
-    return begin(style);
+    return scope(style);
 }
 
-Ui::Scope Ui::beginColumn(Style style) {
+Ui::Scope Ui::column(Style style) {
     style.direction = Direction::Column;
-    return begin(style);
+    return scope(style);
 }
 
 NodeId Ui::add(const Style& style) { return attach(style); }
@@ -68,7 +68,7 @@ Ui& Ui::tag(std::string_view id) {
     return *this;
 }
 
-Ui::IdScope Ui::beginIds(std::string_view name) {
+Ui::IdScope Ui::ids(std::string_view name) {
     const std::size_t restoreTo = idPrefix_.size();
     if (!name.empty()) {
         if (!idPrefix_.empty()) idPrefix_ += '.';

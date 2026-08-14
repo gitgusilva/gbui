@@ -200,7 +200,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
     Style panel;
     panel.direction = Direction::Column;
     panel.gap = 8.0f;
-    auto scope = ui.begin(panel);
+    auto scope = ui.scope(panel);
     ui.tag(id);
 
     // ---- the header --------------------------------------------------------
@@ -209,7 +209,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
         header.direction = Direction::Row;
         header.align = Align::Center;
         header.gap = 4.0f;
-        auto headerScope = ui.begin(header);
+        auto headerScope = ui.scope(header);
 
         button(ui, "", {.leading = Icon::ChevronLeft, .height = 26.0f, .id = previousId});
         if (input.clicked(previousId)) state.visible = monthShifted(state.visible, -1);
@@ -224,7 +224,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             title.grow = 1.0f;
             title.basis = 0.0f;
             title.justify = Justify::Center;
-            auto titleScope = ui.begin(title);
+            auto titleScope = ui.scope(title);
             const std::string label =
                 std::string(
                     options.locale.months[static_cast<std::size_t>(state.visible.month - 1)]) +
@@ -243,14 +243,14 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
     Style grid;
     grid.direction = Direction::Column;
     grid.gap = options.gap;
-    auto gridScope = ui.begin(grid);
+    auto gridScope = ui.scope(grid);
     ui.tag(gridId).focusable();
 
     const auto weekRow = [&] {
         Style row;
         row.direction = Direction::Row;
         row.gap = options.gap;
-        return ui.begin(row);
+        return ui.scope(row);
     };
 
     {
@@ -263,7 +263,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             cell.shrink = 0.0f;
             cell.justify = Justify::Center;
             cell.align = Align::Center;
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             text(ui, options.locale.weekdays[static_cast<std::size_t>(weekday)],
                  {.color = Token::TextMuted, .weight = FontWeight::SemiBold, .size = 11.0f});
             (void)cellScope;
@@ -304,7 +304,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             cell.opacity = enabled ? 1.0f : 0.4f;
             cell.cursorHint = enabled ? Cursor::Pointer : Cursor::NotAllowed;
 
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             ui.tag(dayId).cursor(cell.cursorHint);
             const Token colour = isSelected ? Token::AccentFg
                                  : outside  ? Token::TextMuted
@@ -370,7 +370,7 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
     trigger.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
     {
-        auto scope = ui.begin(trigger);
+        auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
         icon(ui, Icon::ClockFading, {.color = Token::TextMuted, .size = 14.0f});
         // The placeholder is muted and the value is not, which is the whole of
@@ -389,7 +389,7 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
             clear.align = Align::Center;
             if (input.isHovered(clearId)) clear.background = Fill{Token::SurfaceHover};
             clear.cursorHint = Cursor::Pointer;
-            auto clearScope = ui.begin(clear);
+            auto clearScope = ui.scope(clear);
             ui.tag(clearId).cursor(Cursor::Pointer);
             icon(ui, Icon::X, {.color = Token::TextMuted, .size = 11.0f});
             (void)clearScope;
@@ -408,18 +408,18 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
     if (activated(input, triggerId, false)) state.open = !state.open;
     if (!state.open) return result;
 
-    PopoverOptions popover;
-    popover.placement = Placement::Bottom;
-    popover.minWidth = 240.0f;
-    popover.maxWidth = 320.0f;
-    popover.padding = Edges::all(10.0f);
-    // Scrolls inside rather than overflowing. `beginPopover` already works out
+    PopoverOptions popoverOptions;
+    popoverOptions.placement = Placement::Bottom;
+    popoverOptions.minWidth = 240.0f;
+    popoverOptions.maxWidth = 320.0f;
+    popoverOptions.padding = Edges::all(10.0f);
+    // Scrolls inside rather than overflowing. `popover` already works out
     // how much room there is and caps the box at it; without a scroll that cap
     // is just a clip, and a calendar opened near the bottom of the window loses
     // its last week with no way to reach it.
-    popover.scroll = ScrollAxis::Vertical;
+    popoverOptions.scroll = ScrollAxis::Vertical;
 
-    auto surface = beginPopover(ui, input, std::string(id) + ".popover", triggerId, popover);
+    auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     const DatePickerResult picked =
         datePicker(ui, input, std::string(id) + ".calendar", selected, state, options);
     if (picked.chosen) {

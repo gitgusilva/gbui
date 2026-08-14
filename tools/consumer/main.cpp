@@ -16,7 +16,7 @@ int main() {
     gbui::Arena arena;
     gbui::Ui ui(arena);
     {
-        auto column = ui.beginColumn({.gap = 8.0f,
+        auto column = ui.column({.gap = 8.0f,
                                       .padding = gbui::Edges::all(12.0f),
                                       .background = gbui::Fill{gbui::Token::Bg}});
         gbui::text(ui, "Linked against gbui", {.color = gbui::Token::TextStrong});

@@ -297,7 +297,7 @@ struct CardOptions {
 
 /** A titled surface. Everything on these screens that is not a bar lives in
  *  one, which is what makes seven unrelated industries look like one product. */
-inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
+inline Ui::Scope card(Ui& ui, const CardOptions& options = {}) {
     Style outer;
     outer.direction = Direction::Column;
     outer.gap = options.title.empty() ? 0.0f : 10.0f;
@@ -313,14 +313,14 @@ inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
     outer.basis = options.grow > 0.0f ? Length{0.0f} : Length{};
     outer.overflow = Overflow::Hidden;
 
-    auto scope = ui.begin(outer);
+    auto scope = ui.scope(outer);
     if (!options.title.empty()) {
         Style header;
         header.direction = Direction::Row;
         header.align = Align::Center;
         header.gap = 8.0f;
         header.shrink = 0.0f;
-        auto headerScope = ui.begin(header);
+        auto headerScope = ui.scope(header);
         sectionHeading(ui, options.title);
         if (!options.note.empty()) {
             spacer(ui);
@@ -344,7 +344,7 @@ inline Ui::Scope beginCard(Ui& ui, const CardOptions& options = {}) {
     body.grow = 1.0f;
     body.minWidth = 0.0f;
     body.minHeight = 0.0f;
-    auto bodyScope = ui.begin(body);
+    auto bodyScope = ui.scope(body);
 
     // The inner scope closes both: see the note on `adopt` in ui.hpp.
     bodyScope.adopt();
@@ -377,7 +377,7 @@ inline NodeId pill(Ui& ui, std::string_view value, const PillOptions& options = 
     // with gradients in them is a screen that shimmers.
     if (options.solid) style.backgroundGradient = wash(token, 1.0f, 0.72f, 160.0f);
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     text(ui, value,
          {.color = options.solid ? Token::AccentFg : token,
           .weight = FontWeight::SemiBold,
@@ -516,14 +516,14 @@ inline NodeId statTile(Ui& ui, const StatOptions& options) {
     tile.basis = 0.0f;
     tile.minWidth = 0.0f;
     tile.overflow = Overflow::Hidden;
-    auto scope = ui.begin(tile);
+    auto scope = ui.scope(tile);
 
     {
         Style row;
         row.direction = Direction::Row;
         row.align = Align::Center;
         row.gap = 6.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         if (options.tone != Tone::Neutral) statusDot(ui, options.tone, 7.0f);
         text(
             ui, options.label,
@@ -534,7 +534,7 @@ inline NodeId statTile(Ui& ui, const StatOptions& options) {
         row.direction = Direction::Row;
         row.align = Align::Center;
         row.gap = 8.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         {
             // Value and unit share a baseline-ish row of their own, so the
             // sparkline on the far side does not stretch the number's line box.
@@ -543,7 +543,7 @@ inline NodeId statTile(Ui& ui, const StatOptions& options) {
             pair.align = Align::Center;
             pair.gap = 3.0f;
             pair.shrink = 0.0f;
-            auto pairScope = ui.begin(pair);
+            auto pairScope = ui.scope(pair);
             text(ui, options.value,
                  {.color = Token::TextStrong,
                   .weight = FontWeight::SemiBold,
@@ -565,7 +565,7 @@ inline NodeId statTile(Ui& ui, const StatOptions& options) {
         row.direction = Direction::Row;
         row.align = Align::Center;
         row.gap = 4.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         icon(ui, options.trendTone == Tone::Alarm ? Icon::ChevronDown : Icon::ChevronUp,
              {.color = toneToken(options.trendTone), .size = 13.0f});
         text(ui, options.trend, {.color = toneToken(options.trendTone), .size = 11.0f});
@@ -616,7 +616,7 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
     column.justify = Justify::Center;
     column.grow = options.grow;
     column.minWidth = 0.0f;
-    auto scope = ui.begin(column);
+    auto scope = ui.scope(column);
 
     // With neither a label nor a reading there is nothing to put above the
     // bar, and an empty row would still take a line — which is exactly the
@@ -626,7 +626,7 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
         row.direction = Direction::Row;
         row.align = Align::Center;
         row.gap = 8.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         text(ui, options.label, {.color = Token::Text, .size = 11.5f, .grow = 1.0f});
         if (options.showValue) {
             text(ui, format(options.valueFormat, reading),
@@ -650,7 +650,7 @@ inline NodeId meter(Ui& ui, const MeterOptions& options) {
         track.radius = options.height / 2.0f;
         track.background = Fill{Token::BgOverlay};
         track.overflow = Overflow::Hidden;
-        auto trackScope = ui.begin(track);
+        auto trackScope = ui.scope(track);
 
         Style fill;
         fill.width = Length::percent(fraction * 100.0f);
@@ -732,7 +732,7 @@ inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
     stack.shrink = 0.0f;
     stack.justify = Justify::Center;
     stack.align = Align::Center;
-    auto scope = ui.begin(stack);
+    auto scope = ui.scope(stack);
     {
         // The arcs, filling the stack, with the readout absolutely positioned
         // over them — the dial is art and the numbers are text, and keeping
@@ -751,13 +751,13 @@ inline NodeId gauge(Ui& ui, const GaugeOptions& options) {
         readout.align = Align::Center;
         readout.justify = Justify::Center;
         readout.gap = 1.0f;
-        auto readoutScope = ui.begin(readout);
+        auto readoutScope = ui.scope(readout);
         {
             Style row;
             row.direction = Direction::Row;
             row.align = Align::Center;
             row.gap = 2.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             text(ui, format(options.valueFormat, reading),
                  {.color = Token::TextStrong,
                   .weight = FontWeight::SemiBold,
@@ -785,7 +785,7 @@ inline NodeId field(Ui& ui, std::string_view label, std::string_view value,
     column.gap = 2.0f;
     column.shrink = 1.0f;
     column.minWidth = 0.0f;
-    auto scope = ui.begin(column);
+    auto scope = ui.scope(column);
     text(ui, label, {.color = Token::TextMuted, .size = 10.0f});
     text(ui, value, {.color = color, .weight = FontWeight::Medium, .role = role, .size = 12.5f});
     return scope.id();
@@ -794,8 +794,8 @@ inline NodeId field(Ui& ui, std::string_view label, std::string_view value,
 /** The bar across the top of every screen here: an icon, a title, whatever the
  *  screen wants on the right. Returns the scope, so the right-hand side is
  *  written by the caller after a `spacer`. */
-inline Ui::Scope beginHeader(Ui& ui, Icon glyph, std::string_view title,
-                             std::string_view subtitle = {}) {
+inline Ui::Scope header(Ui& ui, Icon glyph, std::string_view title,
+                        std::string_view subtitle = {}) {
     Style bar;
     bar.direction = Direction::Row;
     bar.align = Align::Center;
@@ -805,7 +805,7 @@ inline Ui::Scope beginHeader(Ui& ui, Icon glyph, std::string_view title,
     bar.padding = Edges::symmetric(0.0f, 16.0f);
     bar.background = Fill{Token::BgElevated};
     bar.radius = 0.0f;
-    auto scope = ui.begin(bar);
+    auto scope = ui.scope(bar);
 
     {
         Style mark;
@@ -817,7 +817,7 @@ inline Ui::Scope beginHeader(Ui& ui, Icon glyph, std::string_view title,
         mark.justify = Justify::Center;
         mark.background = Fill{Token::Accent, 0.18f};
         mark.backgroundGradient = wash(Token::Accent, 0.30f, 0.10f, 145.0f);
-        auto markScope = ui.begin(mark);
+        auto markScope = ui.scope(mark);
         icon(ui, glyph, {.color = Token::Accent, .size = 17.0f});
     }
     {
@@ -826,7 +826,7 @@ inline Ui::Scope beginHeader(Ui& ui, Icon glyph, std::string_view title,
         titles.gap = 1.0f;
         titles.shrink = 1.0f;
         titles.minWidth = 0.0f;
-        auto titleScope = ui.begin(titles);
+        auto titleScope = ui.scope(titles);
         text(ui, title,
              {.color = Token::TextStrong, .weight = FontWeight::SemiBold, .size = 14.0f});
         if (!subtitle.empty()) {
@@ -841,7 +841,7 @@ inline void rule(Ui& ui, Direction containerDirection) { divider(ui, containerDi
 
 /** The bar along the bottom: small, muted, and full of the things nobody looks
  *  at until something is wrong. */
-inline Ui::Scope beginStatusBar(Ui& ui) {
+inline Ui::Scope statusBar(Ui& ui) {
     Style bar;
     bar.direction = Direction::Row;
     bar.align = Align::Center;
@@ -851,7 +851,7 @@ inline Ui::Scope beginStatusBar(Ui& ui) {
     bar.padding = Edges::symmetric(0.0f, 14.0f);
     bar.background = Fill{Token::BgElevated};
     bar.radius = 0.0f;
-    return ui.begin(bar);
+    return ui.scope(bar);
 }
 
 inline NodeId statusItem(Ui& ui, Icon glyph, std::string_view value, Tone tone = Tone::Neutral) {
@@ -860,7 +860,7 @@ inline NodeId statusItem(Ui& ui, Icon glyph, std::string_view value, Tone tone =
     row.align = Align::Center;
     row.gap = 5.0f;
     row.shrink = 0.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     icon(ui, glyph, {.color = toneToken(tone), .size = 12.0f});
     text(ui, value, {.color = Token::TextMuted, .size = 10.5f});
     return scope.id();
@@ -875,8 +875,8 @@ struct EntryOptions {
     float gap = 10.0f;
 };
 
-inline Ui::Scope beginEntry(Ui& ui, const EntryOptions& options) {
-    return beginListRow(ui, {.selected = options.selected,
+inline Ui::Scope entry(Ui& ui, const EntryOptions& options) {
+    return listRow(ui, {.selected = options.selected,
                              .hovered = options.hovered,
                              .height = options.height,
                              .padding = Edges::symmetric(0.0f, 10.0f),

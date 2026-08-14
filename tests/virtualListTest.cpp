@@ -37,7 +37,7 @@ Run build(ScrollState& state, const VirtualListOptions& options, int passes = 2)
         Ui ui(arena);
         run.built.clear();
         {
-            auto root = ui.beginColumn({.width = kWindow.width, .height = kWindow.height});
+            auto root = ui.column({.width = kWindow.width, .height = kWindow.height});
             run.slice = virtualList(ui, input, "list", state, options,
                                     [&](Ui&, std::size_t index) { run.built.push_back(index); });
             (void)root;
@@ -193,7 +193,7 @@ Walk walkWith(Key key, int frames, const VirtualListOptions& options) {
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = kWindow.width, .height = kWindow.height});
+            auto root = ui.column({.width = kWindow.width, .height = kWindow.height});
             if (input.isFocusedWithin("list")) {
                 const std::size_t before = walk.selected;
                 for (const KeyEvent& event : input.keys()) {

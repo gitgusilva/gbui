@@ -216,7 +216,7 @@ void sectionTitle(Ui& ui, std::string_view title, std::string_view module = {}) 
     row.direction = Direction::Row;
     row.align = Align::Center;
     row.gap = 10.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     text(ui, title, {.color = Token::TextStrong, .weight = FontWeight::SemiBold});
     if (!module.empty()) {
         Style chip;
@@ -225,7 +225,7 @@ void sectionTitle(Ui& ui, std::string_view title, std::string_view module = {}) 
         chip.shrink = 0.0f;
         chip.background = Fill{Token::BgElevated};
         chip.border = Border{1.0f, Fill{Token::Border}};
-        auto chipScope = ui.begin(chip);
+        auto chipScope = ui.scope(chip);
         text(ui, module,
              {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
         (void)chipScope;
@@ -234,19 +234,19 @@ void sectionTitle(Ui& ui, std::string_view title, std::string_view module = {}) 
 }
 
 /** A labelled row: the name on the left, the control on the right. */
-Ui::Scope beginField(Ui& ui, std::string_view label) {
+Ui::Scope field(Ui& ui, std::string_view label) {
     Style row;
     row.direction = Direction::Row;
     row.align = Align::Center;
     row.gap = 12.0f;
     // A floor, so the row grows when the type does.
     row.minHeight = 34.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     {
         Style name;
         name.width = 130.0f;
         name.shrink = 0.0f;
-        auto nameScope = ui.begin(name);
+        auto nameScope = ui.scope(name);
         text(ui, label, {.color = Token::TextMuted, .size = 12.0f});
         (void)nameScope;
     }
@@ -257,7 +257,7 @@ Ui::Scope beginField(Ui& ui, std::string_view label) {
 // a panel can be found without counting braces.
 
 void togglesTab(Ui& ui, const Interaction& input, Model& model) {
-    auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 14.0f});
+    auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 14.0f});
     sectionTitle(ui, "Checkbox, radio, switch", "widgets/checkbox · radio · switchToggle");
 
     if (checkbox(ui, input, "controls.tags", model.showTags, {.label = "Show tags in graph"})) {
@@ -295,57 +295,57 @@ void togglesTab(Ui& ui, const Interaction& input, Model& model) {
     if (switchToggle(ui, input, "controls.autofetch.off", false,
                      {.disabled = true, .label = "Disabled switch"})) {
     }
-    (void)panel;
+    (void)panelScope;
 }
 
 void textTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Fields", "widgets/textField");
         {
-            auto field = beginField(ui, "Repository");
+            auto fieldScope = field(ui, "Repository");
             textField(ui, input, "controls.name", model.name,
                       {.placeholder = "name", .leading = Icon::Folder, .grow = 1.0f});
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Access token");
+            auto fieldScope = field(ui, "Access token");
             // The eye is on by default; the model owns whether it is showing.
             const TextFieldResult result =
                 textField(ui, input, "controls.token", model.token,
                           {.placeholder = "paste a token", .password = true,
                            .revealed = model.tokenRevealed, .grow = 1.0f});
             if (result.toggledReveal) model.tokenRevealed = !model.tokenRevealed;
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Branch");
+            auto fieldScope = field(ui, "Branch");
             const SelectResult result =
                 select(ui, input, "controls.branch", model.branches, model.branch,
                        model.branchList, {.grow = 1.0f});
             if (result.chosen) model.branch = result.chosen;
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Read-only");
+            auto fieldScope = field(ui, "Read-only");
             TextEditState readOnly{"origin/main", 0, 0};
             textField(ui, input, "controls.readonly", readOnly, {.readOnly = true, .grow = 1.0f});
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Disabled");
+            auto fieldScope = field(ui, "Disabled");
             TextEditState off{"", 0, 0};
             textField(ui, input, "controls.disabledfield", off,
                       {.placeholder = "not editable", .disabled = true, .grow = 1.0f});
-            (void)field;
+            (void)fieldScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Weights and wrapping", "widgets/text · layout/textWrap");
         {
-            auto row = ui.beginRow({.align = Align::Center, .gap = 12.0f});
+            auto row = ui.row({.align = Align::Center, .gap = 12.0f});
             text(ui, "Regular");
             text(ui, "Medium", {.weight = FontWeight::Medium});
             gbui::strong(ui, "Strong");
@@ -391,64 +391,64 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
              "in a narrow pane wants.",
              {.color = Token::TextMuted, .size = 12.0f, .overflow = TextOverflow::Wrap,
               .maxLines = 2, .lineHeight = 1.5f});
-        (void)panel;
+        (void)panelScope;
     }
 }
 
 void numbersTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Numbers and ranges", "widgets/numberField · slider");
         {
-            auto field = beginField(ui, "Auto-fetch");
+            auto fieldScope = field(ui, "Auto-fetch");
             const auto result = numberField(ui, input, "controls.minutes", model.fetchMinutes,
                                             {.minimum = 0, .maximum = 60, .step = 1,
                                              .suffix = " min"});
             if (result.changed) model.fetchMinutes = result.value;
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Contrast");
+            auto fieldScope = field(ui, "Contrast");
             const auto result = slider(ui, input, "controls.contrast", model.contrast,
                                        {.showValue = true});
             if (result.changed) model.contrast = result.value;
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Steps of 0.25");
+            auto fieldScope = field(ui, "Steps of 0.25");
             const auto result = slider(ui, input, "controls.stepped", model.stepped,
                                        {.step = 0.25, .showValue = true});
             if (result.changed) model.stepped = result.value;
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Disabled");
+            auto fieldScope = field(ui, "Disabled");
             // Discarded on purpose: a disabled control has nothing to report.
             (void)slider(ui, input, "controls.disabledslider", 0.4, {.disabled = true});
-            (void)field;
+            (void)fieldScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Progress", "widgets/progress");
         {
-            auto field = beginField(ui, "Determinate");
+            auto fieldScope = field(ui, "Determinate");
             progressBar(ui, {.value = model.contrast});
-            (void)field;
+            (void)fieldScope;
         }
         {
-            auto field = beginField(ui, "Indeterminate");
+            auto fieldScope = field(ui, "Indeterminate");
             progressBar(ui, {.value = -1.0, .phase = model.clock});
-            (void)field;
+            (void)fieldScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
 }
 
 void listsTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f, .grow = 1.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f, .grow = 1.0f});
         sectionTitle(ui, "Virtualised history", "widgets/virtualList · scroll · listRow");
 
         // Arrow keys walk the selection and keep it on screen. The list is the
@@ -477,12 +477,12 @@ void listsTab(Ui& ui, const Interaction& input, Model& model) {
             frame.height = 320.0f;
             frame.shrink = 0.0f;
             frame.border = Border{1.0f, Fill{Token::Border}};
-            auto frameScope = ui.begin(frame);
+            auto frameScope = ui.scope(frame);
             model.shown = virtualList(
                 ui, input, "controls.history", model.history, historyOptions(),
                 [&](Ui& ui, std::size_t index) {
                     const std::string tag = commitTag(index);
-                    auto row = beginListRow(ui, {.selected = model.commit == index,
+                    auto row = listRow(ui, {.selected = model.commit == index,
                                                  .hovered = input.isHovered(tag),
                                                  .height = kCommitRowHeight,
                                                  .padding = Edges::symmetric(0.0f, 8.0f),
@@ -499,12 +499,12 @@ void listsTab(Ui& ui, const Interaction& input, Model& model) {
         text(ui, std::to_string(kCommits) + " commits, " + std::to_string(model.shown.count) +
                      " rows built — click it, then use the arrows",
              {.color = Token::TextMuted, .size = 11.0f});
-        (void)panel;
+        (void)panelScope;
     }
     {
         // A card built from the box preset, with a gradient behind its heading —
         // both of them are one option each.
-        auto panel = beginBox(ui, BoxStyle::card({.gap = 10.0f}));
+        auto panelScope = box(ui, BoxStyle::card({.gap = 10.0f}));
         {
             BoxOptions banner_options;
             banner_options.align = Align::Center;
@@ -513,7 +513,7 @@ void listsTab(Ui& ui, const Interaction& input, Model& model) {
             banner_options.backgroundGradient =
                 Gradient::linear(Fill{Token::Accent}, Fill{Token::Accent, 0.0f}, 90.0f);
             banner_options.radius = 6.0f;
-            auto banner = beginBox(ui, banner_options);
+            auto banner = box(ui, banner_options);
             text(ui, "Scroll and gradients",
                  {.color = Token::TextStrong, .weight = FontWeight::SemiBold});
             (void)banner;
@@ -524,9 +524,9 @@ void listsTab(Ui& ui, const Interaction& input, Model& model) {
             Style frame;
             frame.height = 96.0f;
             frame.border = Border{1.0f, Fill{Token::Border}};
-            auto frameScope = ui.begin(frame);
-            auto scroll = beginScroll(ui, input, "controls.log", model.log,
-                                      {.padding = Edges::all(8.0f), .gap = 2.0f});
+            auto frameScope = ui.scope(frame);
+            auto scroll = scrollArea(ui, input, "controls.log", model.log,
+                                     {.padding = Edges::all(8.0f), .gap = 2.0f});
             for (int i = 1; i <= 24; ++i) {
                 text(ui, "git fetch origin --prune  (" + std::to_string(i) + ")",
                      {.color = i % 4 == 0 ? Token::TextMuted : Token::Text,
@@ -537,12 +537,12 @@ void listsTab(Ui& ui, const Interaction& input, Model& model) {
         }
         text(ui, "wheel over the log; hover its bar, then drag it",
              {.color = Token::TextMuted, .size = 11.0f});
-        (void)panel;
+        (void)panelScope;
     }
 }
 
 void editorTab(Ui& ui, const Interaction& input, Model& model) {
-    auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+    auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
     sectionTitle(ui, "Rich text", "widgets/richEditor");
 
     // The toolbar is the caller's to compose: the default set, plus a button of
@@ -568,18 +568,18 @@ void editorTab(Ui& ui, const Interaction& input, Model& model) {
     text(ui, "click a block to edit it, type, and Return splits it; the last button is this "
              "application's own, not the toolkit's",
          {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-    (void)panel;
+    (void)panelScope;
 }
 
 void tableTab(Ui& ui, const Interaction& input, Model& model) {
     // An explicit height, not `grow`: this page scrolls, and inside a scroll
     // there is no leftover to grow into — the content is as tall as it says it
     // is and the view moves it.
-    auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+    auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
     sectionTitle(ui, "Per-developer statistics", "widgets/table");
 
     {
-        auto row = ui.beginRow({.gap = 16.0f});
+        auto row = ui.row({.gap = 16.0f});
         if (checkbox(ui, input, "controls.table.rowlines", model.tableRowLines, {.label = "Row lines"})) {
             model.tableRowLines = !model.tableRowLines;
         }
@@ -663,7 +663,7 @@ void tableTab(Ui& ui, const Interaction& input, Model& model) {
                   {.text = " — click a header to sort, drag a divider to resize, click a row or "
                            "use the arrows",
                    .color = Token::TextMuted, .size = 11.0f}});
-    (void)panel;
+    (void)panelScope;
 }
 
 // ---------------------------------------------------------------------------
@@ -758,7 +758,7 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
             : 0.55f;
 
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "What a transition is here", "anim/animator");
         text(ui,
              "The model is CSS's `transition`, not a keyframe timeline: a component names a "
@@ -768,7 +768,7 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
 
         {
-            auto row = ui.beginRow({.align = Align::Center, .gap = 14.0f});
+            auto row = ui.row({.align = Align::Center, .gap = 14.0f});
             text(ui, "duration", {.color = Token::TextMuted, .size = 11.0f});
             const auto picked = slider(ui, input, "motion.duration", model.motionDuration,
                                        {.minimum = 0.0, .maximum = 1.2, .width = 190.0f});
@@ -781,14 +781,14 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
         text(ui, "zero is not a special case — it just makes every change immediate, which is "
                  "how a component opts out without the call site changing shape",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
 
 
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         {
-            auto head = ui.beginRow({.align = Align::Center, .gap = 12.0f});
+            auto head = ui.row({.align = Align::Center, .gap = 12.0f});
             sectionTitle(ui, "The curves", "anim/easing");
             ui.add({.grow = 1.0f});
             button(ui, input, model.motionPlaying ? "Play back" : "Play",
@@ -807,7 +807,7 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
             track.height = 42.0f;
             track.radius = 6.0f;
             track.background = Fill{Token::BgElevated};
-            auto trackScope = ui.begin(track);
+            auto trackScope = ui.scope(track);
             Style box;
             box.position = Position::Absolute;
             box.left = 6.0f + t * 240.0f;
@@ -824,7 +824,7 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
         grid.direction = Direction::Row;
         grid.wrap = true;
         grid.gap = 14.0f;
-        auto gridScope = ui.begin(grid);
+        auto gridScope = ui.scope(grid);
         for (std::size_t i = 0; i < curveGallery().size(); ++i) {
             const Curve& curve = curveGallery()[i];
             const std::string id = "motion.curve." + std::to_string(i);
@@ -840,7 +840,7 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
             if (chosen) cell.background = Fill{Token::Accent, 0.16f};
             else if (input.isHovered(id)) cell.background = Fill{Token::SurfaceHover};
             {
-                auto cellScope = ui.begin(cell);
+                auto cellScope = ui.scope(cell);
                 ui.tag(id).cursor(Cursor::Pointer);
                 curvePlot(ui, curve, phase);
                 text(ui, curve.name,
@@ -859,16 +859,16 @@ void motionTab(Ui& ui, const Interaction& input, Model& model) {
                  "taller than the unit square. Fine for a position; wrong for an opacity, which "
                  "would clip.",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
 
 }
 
 void chartsTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         {
-            auto head = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+            auto head = ui.row({.align = Align::Center, .gap = 10.0f});
             sectionTitle(ui, "Frame time, live", "widgets/chart");
             ui.add({.grow = 1.0f});
             if (switchToggle(ui, input, "controls.fps.pause", model.fpsPaused,
@@ -924,15 +924,15 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
                    "paced by the display, so the frame time is the refresh interval and says "
                    "more about the monitor than about us. Hover the plot to read a sample.",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         {
             // The control sits above the plot and hard right, where a chart's
             // own controls live — not below it in the prose, where it reads as
             // part of the caption.
-            auto head = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+            auto head = ui.row({.align = Align::Center, .gap = 10.0f});
             sectionTitle(ui, "Two series, one scale", "widgets/chart — lineChart");
             ui.add({.grow = 1.0f});
             // Always there, disabled when there is nothing to undo. A control
@@ -1003,10 +1003,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
                    "draw a new one",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
         (void)churn;
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Commits per weekday", "widgets/chart — barChart");
 
         Series thisWeek;
@@ -1024,7 +1024,7 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
              .shape = model.lollipops ? BarShape::Lollipop : BarShape::Bar,
              .categories = days});
         {
-            auto row = ui.beginRow({.align = Align::Center, .gap = 16.0f});
+            auto row = ui.row({.align = Align::Center, .gap = 16.0f});
             if (checkbox(ui, input, "controls.bars.stack", model.stackBars, {.label = "Stacked"})) {
                 model.stackBars = !model.stackBars;
             }
@@ -1040,10 +1040,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
                  : std::string("grouped compares the series, stacked compares the totals; the "
                                "same call draws both"),
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Lines changed per release", "widgets/chart — barChart");
 
         Series sizes;
@@ -1055,10 +1055,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
                   .categoryAxis = 46.0f});
         text(ui, "horizontal, because the category names are words rather than numbers",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Open pull requests, daily range", "widgets/chart — candlestickChart");
 
         // Open/high/low/close over ten days: how many were open at the start of
@@ -1082,10 +1082,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
         }
         text(ui, caption, {.color = Token::TextMuted, .size = 11.0f,
                            .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Commits by weekday and hour", "widgets/chart — heatmap");
 
         // Seven rows of twenty-four: the shape a contribution grid takes, and
@@ -1120,10 +1120,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
         }
         text(ui, caption,
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Review time against change size", "widgets/chart — scatterChart");
 
         // Two continuous quantities against each other: how big a pull request
@@ -1153,10 +1153,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
         }
         text(ui, caption,
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Files, churn and how many touched them",
                      "widgets/chart — scatterChart with weights");
 
@@ -1171,10 +1171,10 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
         text(ui, "the third value is the dot's area, not its radius — mapping it to the radius "
                  "would make a doubled value look four times bigger",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
         sectionTitle(ui, "Share of the work", "widgets/chart — donutChart");
 
         // No colours named: they come from the design's chart palette, so the
@@ -1200,20 +1200,20 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
                               "angle and radius, not by bounding box");
         text(ui, caption,
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
 }
 
 void pickersTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Colour", "widgets/colorPicker · core/color");
         {
             Style row;
             row.direction = Direction::Row;
             row.gap = 24.0f;
             row.align = Align::Start;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
 
             // The full picker: hue, alpha and a row of the theme's own colours.
             const ColorPickerResult picked =
@@ -1228,7 +1228,7 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
                 side.gap = 10.0f;
                 side.grow = 1.0f;
                 side.basis = 0.0f;
-                auto sideScope = ui.begin(side);
+                auto sideScope = ui.scope(side);
 
                 // A big swatch, so the choice is visible away from the square.
                 Style preview;
@@ -1247,10 +1247,10 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
                 {
                     // The same picker behind a swatch, which is what a form
                     // wants: it borrows the space instead of owning it.
-                    auto field = beginField(ui, "Project colour");
+                    auto fieldScope = field(ui, "Project colour");
                     colorField(ui, input, "controls.projectcolour", model.projectColour,
                                {{.alpha = false, .width = 220.0f}});
-                    (void)field;
+                    (void)fieldScope;
                 }
 
                 divider(ui, Direction::Column);
@@ -1266,10 +1266,10 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
             }
             (void)rowScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Date and time together", "widgets/dateTimePicker");
         {
             // The pair behind one input, which is how a due date is asked for
@@ -1287,7 +1287,7 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
             row.direction = Direction::Row;
             row.gap = 20.0f;
             row.align = Align::Start;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
 
             DateTimePickerOptions options;
             options.time.use24Hour = false;   // twelve-hour, with the AM/PM column
@@ -1303,7 +1303,7 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
                 side.gap = 6.0f;
                 side.grow = 1.0f;
                 side.basis = 0.0f;
-                auto sideScope = ui.begin(side);
+                auto sideScope = ui.scope(side);
                 // One pattern spanning both halves — the formatter hands each
                 // run of letters to whichever of the two owns it.
                 const std::string patterns[] = {"dd/MM/yyyy HH:mm", "EEE, d MMM 'at' h:mm a",
@@ -1322,17 +1322,17 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
             }
             (void)rowScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Date", "widgets/datePicker · timePicker");
         {
             Style row;
             row.direction = Direction::Row;
             row.gap = 24.0f;
             row.align = Align::Start;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
 
             // Bounded to a window around today, so the disabled days are
             // visible rather than theoretical.
@@ -1349,7 +1349,7 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
                 side.gap = 8.0f;
                 side.grow = 1.0f;
                 side.basis = 0.0f;
-                auto sideScope = ui.begin(side);
+                auto sideScope = ui.scope(side);
                 // The same date through four patterns, which is what makes the
                 // display format the caller's decision rather than the widget's.
                 CalendarLocale ptBr;
@@ -1398,17 +1398,17 @@ void pickersTab(Ui& ui, const Interaction& input, Model& model) {
             }
             (void)rowScope;
         }
-        (void)panel;
+        (void)panelScope;
     }
 }
 
 /** An element: it draws one thing and reports one press. */
 void buttonsTab(Ui& ui, const Interaction& input, Model& model) {
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "Variants", "widgets/button");
         {
-            auto row = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+            auto row = ui.row({.align = Align::Center, .gap = 10.0f});
             // No `.ripple` here: what a press looks like is the design's call,
             // so switching design above turns the ink on for all of them at
             // once.
@@ -1423,13 +1423,13 @@ void buttonsTab(Ui& ui, const Interaction& input, Model& model) {
         text(ui, "press one — Material throws ink from the point you pressed, the others "
                  "change the surface",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     {
-        auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+        auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
         sectionTitle(ui, "With an icon, and as a hyperlink", "widgets/button · icon · hyperlink");
         {
-            auto row = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+            auto row = ui.row({.align = Align::Center, .gap = 10.0f});
             button(ui, input, "COMMIT", {.leading = Icon::GitCommitHorizontal,
                                          .id = "controls.b6"});
             button(ui, input, "PUSH", {.variant = ButtonVariant::Secondary,
@@ -1444,17 +1444,17 @@ void buttonsTab(Ui& ui, const Interaction& input, Model& model) {
         text(ui, "a hyperlink is an element too: it is a label that reports a follow, and it "
                  "takes the pointer and the focus ring of one",
              {.color = Token::TextMuted, .size = 11.0f, .overflow = TextOverflow::Wrap});
-        (void)panel;
+        (void)panelScope;
     }
     (void)model;
 }
 
 /** Components: each owns a layer of its own and state the application holds. */
 void overlaysTab(Ui& ui, const Interaction& input, Model& model) {
-    auto panel = beginPanel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
+    auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 12.0f});
     sectionTitle(ui, "Dialogs, menus and tooltips", "widgets/modal · menu · popover · tooltip");
     {
-        auto row = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+        auto row = ui.row({.align = Align::Center, .gap = 10.0f});
         if (button(ui, input, "OPEN DIALOG",
                    {.leading = Icon::CircleAlert, .id = "controls.opendialog"});
             input.clicked("controls.opendialog")) {
@@ -1463,7 +1463,7 @@ void overlaysTab(Ui& ui, const Interaction& input, Model& model) {
         (void)row;
     }
     tooltip(ui, input, "controls.opendialog", "Opens a draggable modal on the Modal layer.");
-    (void)panel;
+    (void)panelScope;
 }
 
 NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
@@ -1472,7 +1472,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
     window.background = Fill{Token::Bg};
     window.padding = Edges::all(20.0f);
     window.gap = 14.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     text(ui, "gbui controls",
          {.color = Token::TextStrong, .weight = FontWeight::Bold, .size = 18.0f});
@@ -1484,14 +1484,14 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
     // only the palette and the `Design` handed to the builder change, which is
     // the whole point of showing them side by side.
     {
-        auto row = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+        auto row = ui.row({.align = Align::Center, .gap = 10.0f});
         text(ui, "DESIGN", {.color = Token::TextMuted, .weight = FontWeight::SemiBold,
                             .size = 11.0f});
         {
             Style box;
             box.width = 190.0f;
             box.shrink = 0.0f;
-            auto boxScope = ui.begin(box);
+            auto boxScope = ui.scope(box);
             const SelectResult chosen =
                 select(ui, input, "controls.design", model.designNames, model.design,
                        model.designList, {.grow = 1.0f});
@@ -1504,7 +1504,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             Style box;
             box.width = 170.0f;
             box.shrink = 0.0f;
-            auto boxScope = ui.begin(box);
+            auto boxScope = ui.scope(box);
             const SelectResult chosen =
                 select(ui, input, "controls.font", model.fontNames, model.fontFamily,
                        model.fontList, {.grow = 1.0f});
@@ -1515,7 +1515,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             Style stepper;
             stepper.width = 118.0f;
             stepper.shrink = 0.0f;
-            auto stepperScope = ui.begin(stepper);
+            auto stepperScope = ui.scope(stepper);
             const auto result = numberField(ui, input, "controls.uisize", model.fontSize,
                                             {.minimum = 9, .maximum = 22, .step = 1,
                                              .suffix = " px"});
@@ -1568,7 +1568,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
         body.gap = 20.0f;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
+        auto bodyScope = ui.scope(body);
 
         if (const auto chosen =
                 tabs(ui, input, "controls.tabs", pages, model.tab,
@@ -1586,9 +1586,9 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
         page.direction = Direction::Column;
         page.grow = 1.0f;
         page.basis = 0.0f;
-        auto pageScope = ui.begin(page);
-        auto pageScroll = beginScroll(ui, input, "controls.page", model.page,
-                                      {.padding = Edges{0.0f, 6.0f, 0.0f, 0.0f}, .gap = 16.0f});
+        auto pageScope = ui.scope(page);
+        auto pageScroll = scrollArea(ui, input, "controls.page", model.page,
+                                     {.padding = Edges{0.0f, 6.0f, 0.0f, 0.0f}, .gap = 16.0f});
         // `lazy`, which is not the default: a gallery has eleven pages and
         // only one is ever read, so building the other ten every frame buys
         // nothing. An application whose tabs need their off-screen geometry —
@@ -1617,7 +1617,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
         footer.direction = Direction::Row;
         footer.align = Align::Center;
         footer.gap = 10.0f;
-        auto scope = ui.begin(footer);
+        auto scope = ui.scope(footer);
         const std::string summary = "merge=" + std::to_string(model.mergeStyle) +
                                     "  tags=" + (model.showTags ? "on" : "off") +
                                     "  name=" + model.name.text;
@@ -1631,9 +1631,8 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
     // The modal is built last so it is written after everything it covers —
     // though the layer, not the order, is what actually puts it on top.
     if (model.confirmOpen) {
-        auto dialog = beginModal(ui, input, "controls.confirm", "Discard all changes?",
-                                 model.confirmAt,
-                                 {.width = 380.0f, .icon = Icon::CircleAlert, .danger = true});
+        auto dialog = modal(ui, input, "controls.confirm", "Discard all changes?", model.confirmAt,
+                            {.width = 380.0f, .icon = Icon::CircleAlert, .danger = true});
         model.confirmAt = dialog.result.position;
         if (dialog.result.dismissed) model.confirmOpen = false;
 
@@ -1642,7 +1641,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             body.direction = Direction::Column;
             body.padding = Edges::all(16.0f);
             body.gap = 8.0f;
-            auto bodyScope = ui.begin(body);
+            auto bodyScope = ui.scope(body);
             // One sentence, wrapped to the dialog. It used to be two `text`
             // calls split by hand at the width the dialog happened to be.
             text(ui, "This cannot be undone. Every modified file in the working tree goes "
@@ -1653,7 +1652,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             (void)bodyScope;
         }
         {
-            auto actions = beginModalActions(ui);
+            auto actions = modalActions(ui);
             if (button(ui, "CANCEL", {.variant = ButtonVariant::Secondary,
                                       .id = "controls.confirm.cancel"});
                 input.clicked("controls.confirm.cancel")) {

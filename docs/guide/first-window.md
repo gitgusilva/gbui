@@ -43,7 +43,7 @@ int main() {
         Ui ui(arena);
         ui.setMeasure(measureWith(fonts, scale), theme.typography());
         {
-            auto column = ui.beginColumn({.justify = Justify::Center,
+            auto column = ui.column({.justify = Justify::Center,
                                           .align = Align::Center,
                                           .gap = 12.0f,
                                           .background = Fill{Token::Bg}});
@@ -106,7 +106,7 @@ A namespace alias is the two-line answer, and the name is yours to pick:
 namespace gb = gbui;
 
 void commitBox(gb::Ui& u, const gb::Interaction& in) {
-    auto panel = gb::beginPanel(u, {.direction = gb::Direction::Column});
+    auto panel = gb::panel(u, {.direction = gb::Direction::Column});
     gb::sectionHeading(u, "COMMIT MESSAGE");
     gb::button(u, in, "COMMIT", {.variant = gb::ButtonVariant::Primary, .block = true});
 }
@@ -130,7 +130,7 @@ arena — last frame's. That is not a compromise: it is the tree that was on
 screen when the pointer went down. Components then ask about themselves by tag
 while the new tree is being built. See [Input and focus](/guide/input).
 
-**Build.** `Ui` writes nodes into the `Arena`. The braces matter: `beginColumn`
+**Build.** `Ui` writes nodes into the `Arena`. The braces matter: `column`
 returns a scope guard that closes the container when it goes out of scope, so
 the shape of the code is the shape of the UI. `setMeasure` hands the builder the
 same measurer layout will use, which is what lets a text field put its caret at

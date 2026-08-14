@@ -121,7 +121,7 @@ public:
         // nothing — which is a fair description of the first draft of this
         // harness.
         page.direction = Direction::Column;
-        auto root = ui.begin(page);
+        auto root = ui.scope(page);
         lineChart(ui, input_, "c", series_, view_, {.axisWidth = 0.0f, .height = 120.0f}, zoom_);
         (void)root;
 
@@ -237,7 +237,7 @@ public:
         const std::vector<Series> series = {{.name = "s", .values = {4.0, 8.0, 2.0, 6.0}}};
         Style page;
         page.direction = Direction::Column;
-        auto root = ui.begin(page);
+        auto root = ui.scope(page);
         top_ = barChart(ui, input_, "top", series,
                         {.axisWidth = 0.0f, .height = 100.0f,
                          .categoryAxis = 0.0f, .link = &link_});
@@ -335,7 +335,7 @@ public:
         const std::vector<Series> series = {{.name = "s", .values = values_}};
         Style page;
         page.direction = Direction::Column;
-        auto root = ui.begin(page);
+        auto root = ui.scope(page);
         barChart(ui, input_, "top", series, view_,
                  {.axisWidth = 0.0f, .height = 100.0f, .categoryAxis = 0.0f});
         barChart(ui, input_, "bottom", series, view_,
@@ -462,7 +462,7 @@ public:
 
         Style page;
         page.direction = Direction::Row;
-        auto root = ui.begin(page);
+        auto root = ui.scope(page);
         chartToolbar(ui, input_, "t", view_);
         (void)root;
 

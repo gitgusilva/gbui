@@ -64,14 +64,14 @@ public:
         page.padding = Edges::all(20.0f);
         page.background = Fill{Token::Bg};
         page.radius = 0.0f;
-        auto root = ui.begin(page);
+        auto root = ui.scope(page);
 
         {
             Style header;
             header.direction = Direction::Column;
             header.gap = 4.0f;
             header.shrink = 0.0f;
-            auto headerScope = ui.begin(header);
+            auto headerScope = ui.scope(header);
             text(ui, example_.component,
                  {.color = Token::TextStrong,
                   .weight = FontWeight::SemiBold,
@@ -105,7 +105,7 @@ public:
             stage.minHeight = 0.0f;
             stage.background = Fill{Token::BgElevated};
             stage.border = Border{1.0f, Fill{Token::Border}};
-            auto stageScope = ui.begin(stage);
+            auto stageScope = ui.scope(stage);
             example_.build(ui, frame.input, state_);
         }
 
@@ -317,7 +317,7 @@ NodeId Host::buildTree(MeasureText& measure, const Theme& theme) {
                 time_,
                 lastDelta_,
                 {static_cast<float>(width_), static_cast<float>(height_)}};
-    const NodeId root = demo_ ? demo_->build(frame) : ui.begin(Style{}).id();
+    const NodeId root = demo_ ? demo_->build(frame) : ui.scope(Style{}).id();
 
     LayoutContext context;
     context.theme = &theme;

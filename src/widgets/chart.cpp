@@ -141,7 +141,7 @@ void drawReadoutPanel(Ui& ui, const Rect& plotFrame, float atX, std::optional<fl
     // Above the plot's own marks, and never a pointer target: a readout that
     // can be hovered chases itself around the chart.
     panel.zIndex = 2;
-    auto panelScope = ui.begin(panel);
+    auto panelScope = ui.scope(panel);
     ui.ignoresPointer();
 
     if (config.body) {
@@ -156,7 +156,7 @@ void drawReadoutPanel(Ui& ui, const Rect& plotFrame, float atX, std::optional<fl
             lineStyle.direction = Direction::Row;
             lineStyle.align = Align::Center;
             lineStyle.gap = 6.0f;
-            auto line = ui.begin(lineStyle);
+            auto line = ui.scope(lineStyle);
             if (swatches && row.color) {
                 Style dot;
                 dot.width = 8.0f;
@@ -252,7 +252,7 @@ int drawLegend(Ui& ui, const Interaction& input, std::string_view id,
     row.height = legend.height;
     row.shrink = 0.0f;
     row.wrap = true;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
 
     for (std::size_t i = 0; i < entries.size(); ++i) {
         if (entries[i].name.empty()) continue;
@@ -275,7 +275,7 @@ int drawLegend(Ui& ui, const Interaction& input, std::string_view id,
             else if (input.isHovered(entryId)) key.background = Fill{Token::SurfaceHover, 0.5f};
             key.opacity = focused < 0 || picked ? 1.0f : 0.55f;
         }
-        auto keyScope = ui.begin(key);
+        auto keyScope = ui.scope(key);
         if (legend.focused) ui.tag(entryId).cursor(Cursor::Pointer);
 
         Style swatch;
@@ -662,7 +662,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
         column.direction = Direction::Column;
         column.height = options.height + options.legend.height;
         column.gap = 2.0f;
-        outer.emplace(ui.begin(column));
+        outer.emplace(ui.scope(column));
         ui.tag(id);
     }
 
@@ -675,7 +675,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
     } else {
         frame.height = options.height;
     }
-    auto scope = ui.begin(frame);
+    auto scope = ui.scope(frame);
     if (!showLegend) ui.tag(id);
 
     // ---- the axis ----------------------------------------------------------
@@ -684,7 +684,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
         Style axis;
         axis.width = axisWidth;
         axis.shrink = 0.0f;
-        auto axisScope = ui.begin(axis);
+        auto axisScope = ui.scope(axis);
         // Positioned rather than stacked: a label belongs beside its own
         // gridline, and a column would space them evenly instead.
         for (const double at : ticks) {
@@ -697,7 +697,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
             slot.top = (1.0f - scale.fraction(at)) * plotFrame.height - 7.0f;
             slot.width = axisWidth;
             slot.justify = Justify::End;
-            auto slotScope = ui.begin(slot);
+            auto slotScope = ui.scope(slot);
             text(ui, buffer, {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::End});
             (void)slotScope;
         }
@@ -792,7 +792,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
     // offered, and nobody drags at a chart to find out.
     if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
     if (window.takesWheel) plot.overflow = Overflow::Scroll;
-    auto plotScope = ui.begin(plot);
+    auto plotScope = ui.scope(plot);
     ui.tag(plotId);
 
     Style marks;
@@ -1017,7 +1017,7 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
     row.align = Align::Center;
     row.gap = 2.0f;
     row.shrink = 0.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
 
     // Zooming about the *middle*, where the wheel zooms about the pointer.
     // There is no pointer in a button press — the reader is looking at the
@@ -1124,7 +1124,7 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
     row.height = options.height;
     row.shrink = 0.0f;
     row.gap = 6.0f;
-    auto rowScope = ui.begin(row);
+    auto rowScope = ui.scope(row);
     ui.tag(id);
 
     if (options.axisWidth > 0.0f) {
@@ -1203,7 +1203,7 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
     Style box;
     box.grow = 1.0f;
     box.basis = 0.0f;
-    auto boxScope = ui.begin(box);
+    auto boxScope = ui.scope(box);
 
     Style strip;
     strip.width = Length::percent(100);
@@ -1229,7 +1229,7 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
             grip.zIndex = 1;
             grip.cursorHint = Cursor::ResizeHorizontal;
             grip.justify = Justify::Center;
-            auto gripScope = ui.begin(grip);
+            auto gripScope = ui.scope(grip);
             ui.tag(tag).cursor(Cursor::ResizeHorizontal);
             Style bar;
             bar.width = input.isHovered(tag) || input.dragging() == tag ? 4.0f : 2.5f;
@@ -1349,7 +1349,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
     outer.direction = Direction::Column;
     outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
-    auto outerScope = ui.begin(outer);
+    auto outerScope = ui.scope(outer);
     ui.tag(id);
 
     {
@@ -1358,13 +1358,13 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
         top.grow = 1.0f;
         top.basis = 0.0f;
         top.gap = 6.0f;
-        auto topScope = ui.begin(top);
+        auto topScope = ui.scope(top);
 
         if (sideWidth > 0.0f) {
             Style axis;
             axis.width = sideWidth;
             axis.shrink = 0.0f;
-            auto axisScope = ui.begin(axis);
+            auto axisScope = ui.scope(axis);
             if (plotFrame.height > 0.0f) {
                 if (flat) {
                     const float slot = plotFrame.height / static_cast<float>(std::max<std::size_t>(samples, 1));
@@ -1376,7 +1376,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
                         cell.top = (static_cast<float>(i) + 0.5f) * slot - 7.0f;
                         cell.width = sideWidth;
                         cell.justify = Justify::End;
-                        auto cellScope = ui.begin(cell);
+                        auto cellScope = ui.scope(cell);
                         text(ui, categoryLabel(i),
                              {.color = Token::TextMuted, .size = 10.0f,
                               .align = TextAlign::End, .overflow = TextOverflow::Ellipsis});
@@ -1399,7 +1399,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
                                       0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                         slot.width = sideWidth;
                         slot.justify = Justify::End;
-                        auto slotScope = ui.begin(slot);
+                        auto slotScope = ui.scope(slot);
                         text(ui, buffer,
                              {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::End});
                         (void)slotScope;
@@ -1542,7 +1542,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
         plot.basis = 0.0f;
         if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
         if (window.takesWheel) plot.overflow = Overflow::Scroll;
-        auto plotScope = ui.begin(plot);
+        auto plotScope = ui.scope(plot);
         ui.tag(plotId);
 
         Style marks;
@@ -1581,7 +1581,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
         bottom.height = bottomHeight;
         bottom.shrink = 0.0f;
         bottom.gap = 6.0f;
-        auto bottomScope = ui.begin(bottom);
+        auto bottomScope = ui.scope(bottom);
 
         if (sideWidth > 0.0f) {
             Style spacer;
@@ -1593,7 +1593,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
         Style strip;
         strip.grow = 1.0f;
         strip.basis = 0.0f;
-        auto stripScope = ui.begin(strip);
+        auto stripScope = ui.scope(strip);
         if (flat) {
             for (const double at : ticks) {
                 char buffer[32];
@@ -1604,7 +1604,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
                 cell.top = 0.0f;
                 cell.width = 40.0f;
                 cell.justify = Justify::Center;
-                auto cellScope = ui.begin(cell);
+                auto cellScope = ui.scope(cell);
                 text(ui, buffer,
                      {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::Center});
                 (void)cellScope;
@@ -1655,7 +1655,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
                 cell.top = 0.0f;
                 cell.width = room;
                 cell.justify = justify;
-                auto cellScope = ui.begin(cell);
+                auto cellScope = ui.scope(cell);
                 text(ui, categoryLabel(i),
                      {.color = result.hoveredIndex == static_cast<int>(i) ? Token::Text
                                                                          : Token::TextMuted,
@@ -1774,7 +1774,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
     outer.direction = Direction::Column;
     outer.height = options.height;
     outer.gap = 4.0f;
-    auto outerScope = ui.begin(outer);
+    auto outerScope = ui.scope(outer);
     ui.tag(id);
 
     {
@@ -1783,13 +1783,13 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
         top.grow = 1.0f;
         top.basis = 0.0f;
         top.gap = 6.0f;
-        auto topScope = ui.begin(top);
+        auto topScope = ui.scope(top);
 
         if (axisWidth > 0.0f && plotFrame.height > 0.0f) {
             Style axis;
             axis.width = axisWidth;
             axis.shrink = 0.0f;
-            auto axisScope = ui.begin(axis);
+            auto axisScope = ui.scope(axis);
             for (const double at : ticks) {
                 char buffer[32];
                 std::snprintf(buffer, sizeof(buffer), std::string(options.valueFormat).c_str(), at);
@@ -1805,7 +1805,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
                                       0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                 slot.width = axisWidth;
                 slot.justify = Justify::End;
-                auto slotScope = ui.begin(slot);
+                auto slotScope = ui.scope(slot);
                 text(ui, buffer,
                      {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::End});
                 (void)slotScope;
@@ -1884,7 +1884,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
         plot.basis = 0.0f;
         if (window.sweep.offered) plot.cursorHint = Cursor::Crosshair;
         if (window.takesWheel) plot.overflow = Overflow::Scroll;
-        auto plotScope = ui.begin(plot);
+        auto plotScope = ui.scope(plot);
         ui.tag(plotId);
 
         Style marks;
@@ -1948,7 +1948,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
         bottom.height = options.categoryAxis;
         bottom.shrink = 0.0f;
         bottom.gap = 6.0f;
-        auto bottomScope = ui.begin(bottom);
+        auto bottomScope = ui.scope(bottom);
         if (axisWidth > 0.0f) {
             Style spacer;
             spacer.width = axisWidth;
@@ -1958,7 +1958,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
         Style strip;
         strip.grow = 1.0f;
         strip.basis = 0.0f;
-        auto stripScope = ui.begin(strip);
+        auto stripScope = ui.scope(strip);
         const float slot = plotFrame.width / static_cast<float>(samples);
         for (std::size_t i = 0; i < samples; ++i) {
             // The caller's categories, at the caller's index: `candles` may be
@@ -1971,7 +1971,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
             cell.top = 0.0f;
             cell.width = slot;
             cell.justify = Justify::Center;
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             text(ui, options.categories[at],
                  {.color = result.hoveredIndex == static_cast<int>(i) ? Token::Text
                                                                       : Token::TextMuted,
@@ -2081,7 +2081,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
     outer.direction = Direction::Column;
     outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
-    auto outerScope = ui.begin(outer);
+    auto outerScope = ui.scope(outer);
     ui.tag(id);
 
     {
@@ -2090,13 +2090,13 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         top.grow = 1.0f;
         top.basis = 0.0f;
         top.gap = 6.0f;
-        auto topScope = ui.begin(top);
+        auto topScope = ui.scope(top);
 
         if (axisWidth > 0.0f && plotFrame.height > 0.0f) {
             Style axis;
             axis.width = axisWidth;
             axis.shrink = 0.0f;
-            auto axisScope = ui.begin(axis);
+            auto axisScope = ui.scope(axis);
             for (const double at : yTicks) {
                 char buffer[32];
                 std::snprintf(buffer, sizeof(buffer), std::string(options.valueFormat).c_str(), at);
@@ -2107,7 +2107,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
                                       0.0f, std::max(0.0f, plotFrame.height - 14.0f));
                 slot.width = axisWidth;
                 slot.justify = Justify::End;
-                auto slotScope = ui.begin(slot);
+                auto slotScope = ui.scope(slot);
                 text(ui, buffer,
                      {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::End});
                 (void)slotScope;
@@ -2201,7 +2201,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         Style plot;
         plot.grow = 1.0f;
         plot.basis = 0.0f;
-        auto plotScope = ui.begin(plot);
+        auto plotScope = ui.scope(plot);
         ui.tag(plotId);
 
         Style marks;
@@ -2271,7 +2271,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         bottom.height = options.xAxis;
         bottom.shrink = 0.0f;
         bottom.gap = 6.0f;
-        auto bottomScope = ui.begin(bottom);
+        auto bottomScope = ui.scope(bottom);
         if (axisWidth > 0.0f) {
             Style spacer;
             spacer.width = axisWidth;
@@ -2281,7 +2281,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
         Style strip;
         strip.grow = 1.0f;
         strip.basis = 0.0f;
-        auto stripScope = ui.begin(strip);
+        auto stripScope = ui.scope(strip);
         for (const double at : xTicks) {
             char buffer[32];
             std::snprintf(buffer, sizeof(buffer), std::string(options.xFormat).c_str(), at);
@@ -2291,7 +2291,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
             cell.top = 0.0f;
             cell.width = 48.0f;
             cell.justify = Justify::Center;
-            auto cellScope = ui.begin(cell);
+            auto cellScope = ui.scope(cell);
             text(ui, buffer,
                  {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::Center});
             (void)cellScope;
@@ -2354,7 +2354,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
     Style outer;
     outer.direction = Direction::Column;
     outer.gap = 4.0f;
-    auto outerScope = ui.begin(outer);
+    auto outerScope = ui.scope(outer);
     ui.tag(id);
 
     const float cell = options.cellSize > 0.0f
@@ -2372,7 +2372,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         top.height = options.columnLabels;
         top.shrink = 0.0f;
         top.gap = 6.0f;
-        auto topScope = ui.begin(top);
+        auto topScope = ui.scope(top);
         if (options.rowLabels > 0.0f) {
             Style spacer;
             spacer.width = options.rowLabels;
@@ -2382,7 +2382,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         Style strip;
         strip.grow = 1.0f;
         strip.basis = 0.0f;
-        auto stripScope = ui.begin(strip);
+        auto stripScope = ui.scope(strip);
         for (std::size_t c = 0; c < columnCount && c < options.columns.size(); ++c) {
             if (options.columns[c].empty()) continue;
             Style slot;
@@ -2390,7 +2390,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
             slot.left = static_cast<float>(c) * pitch;
             slot.top = 0.0f;
             slot.width = std::max(cell, 24.0f);
-            auto slotScope = ui.begin(slot);
+            auto slotScope = ui.scope(slot);
             text(ui, options.columns[c],
                  {.color = Token::TextMuted, .size = 10.0f,
                   .overflow = TextOverflow::Ellipsis});
@@ -2405,13 +2405,13 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         Style body;
         body.direction = Direction::Row;
         body.gap = 6.0f;
-        auto bodyScope = ui.begin(body);
+        auto bodyScope = ui.scope(body);
 
         if (options.rowLabels > 0.0f) {
             Style side;
             side.width = options.rowLabels;
             side.shrink = 0.0f;
-            auto sideScope = ui.begin(side);
+            auto sideScope = ui.scope(side);
             for (std::size_t r = 0; r < rowCount && r < options.rows.size(); ++r) {
                 if (options.rows[r].empty()) continue;
                 Style slot;
@@ -2420,7 +2420,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
                 slot.top = static_cast<float>(r) * pitch + std::max(0.0f, cell / 2.0f - 7.0f);
                 slot.width = options.rowLabels;
                 slot.justify = Justify::End;
-                auto slotScope = ui.begin(slot);
+                auto slotScope = ui.scope(slot);
                 text(ui, options.rows[r],
                      {.color = Token::TextMuted, .size = 10.0f, .align = TextAlign::End,
                       .overflow = TextOverflow::Ellipsis});
@@ -2480,7 +2480,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
         plot.grow = 1.0f;
         plot.basis = 0.0f;
         plot.height = static_cast<float>(rowCount) * pitch - options.gap;
-        auto plotScope = ui.begin(plot);
+        auto plotScope = ui.scope(plot);
         ui.tag(plotId);
 
         Style marks;
@@ -2584,7 +2584,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
     row.direction = Direction::Row;
     row.align = Align::Center;
     row.gap = 16.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id);
 
     std::vector<Shape> shapes;
@@ -2642,7 +2642,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
     plot.height = options.size;
     plot.shrink = 0.0f;
     plot.cursorHint = result.hoveredIndex >= 0 ? Cursor::Pointer : Cursor::Default;
-    auto plotScope = ui.begin(plot);
+    auto plotScope = ui.scope(plot);
     ui.tag(plotId).cursor(plot.cursorHint);
 
     Style marks;
@@ -2715,7 +2715,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
         const float ceiling = isAuto(options.legendMaxHeight) ? options.size
                                                               : options.legendMaxHeight;
         keys.height = std::min(static_cast<float>(slices.size()) * kEntryHeight, ceiling);
-        auto keysScope = beginScroll(ui, input, std::string(id) + ".legend", state.legend, keys);
+        auto keysScope = scrollArea(ui, input, std::string(id) + ".legend", state.legend, keys);
         for (std::size_t i = 0; i < slices.size(); ++i) {
             const std::string entryId = std::string(id) + ".key." + std::to_string(i);
             const bool picked = state.focused == static_cast<int>(i);
@@ -2732,7 +2732,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
             // The legend dims with the chart, so the two say the same thing.
             entry.opacity = state.focused < 0 || picked ? 1.0f : 0.5f;
             entry.cursorHint = Cursor::Pointer;
-            auto entryScope = ui.begin(entry);
+            auto entryScope = ui.scope(entry);
             ui.tag(entryId).cursor(Cursor::Pointer);
             if (input.clicked(entryId)) {
                 state.focused = picked ? -1 : static_cast<int>(i);
@@ -2926,14 +2926,14 @@ ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id,
         column.align = Align::Center;
         column.gap = 2.0f;
         column.shrink = 0.0f;
-        outer.emplace(ui.begin(column));
+        outer.emplace(ui.scope(column));
     }
 
     Style plot;
     plot.width = options.size;
     plot.height = options.size;
     plot.shrink = 0.0f;
-    auto plotScope = ui.begin(plot);
+    auto plotScope = ui.scope(plot);
     ui.tag(plotId);
 
     Style marks;
@@ -2960,7 +2960,7 @@ ChartResult radarChart(Ui& ui, const Interaction& input, std::string_view id,
             slot.top = at.y - 7.0f;
             slot.width = kLabelWidth;
             slot.justify = Justify::Center;
-            auto slotScope = ui.begin(slot);
+            auto slotScope = ui.scope(slot);
             ui.ignoresPointer();
             text(ui, options.categories[axis],
                  {.color = result.hoveredIndex == static_cast<int>(axis) ? Token::Text

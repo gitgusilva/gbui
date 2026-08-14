@@ -52,7 +52,7 @@ struct Field {
         Ui ui(arena);
         ui.setMeasure(&measureFixed, theme.typography());
         {
-            auto root = ui.beginRow({.width = kWindow.width, .height = kWindow.height});
+            auto root = ui.row({.width = kWindow.width, .height = kWindow.height});
             textField(ui, input, "field", state, options);
             (void)root;
         }
@@ -189,7 +189,7 @@ TEST("the caret and the selection are placed inside the field, not the window") 
         Ui rebuilt(arena);
         NodeId root;
         {
-            auto row = rebuilt.beginRow({.padding = Edges{20.0f, 20.0f, 20.0f, 400.0f}});
+            auto row = rebuilt.row({.padding = Edges{20.0f, 20.0f, 20.0f, 400.0f}});
             textField(rebuilt, input, "f", state, {.grow = 1.0f});
             root = row.id();
         }
@@ -227,7 +227,7 @@ TEST("a password field offers an eye, and reveals only when told to") {
         TextEditState state{"hunter2", 7, 7};
         TextFieldResult result;
         {
-            auto row = ui.beginRow({.align = Align::Center, .width = 300.0f});
+            auto row = ui.row({.align = Align::Center, .width = 300.0f});
             result = textField(ui, input, "pw", state,
                                {.password = true, .revealed = revealed, .grow = 1.0f});
             (void)row;
@@ -277,7 +277,7 @@ TEST("turning the eye off leaves no reveal target") {
     Interaction input;
     TextEditState state{"hunter2", 7, 7};
     {
-        auto row = ui.beginRow({.align = Align::Center, .width = 300.0f});
+        auto row = ui.row({.align = Align::Center, .width = 300.0f});
         textField(ui, input, "pw", state,
                   {.password = true, .revealToggle = false, .grow = 1.0f});
         (void)row;
@@ -313,7 +313,7 @@ TEST("the caret lands on whole pixels, whatever the text before it measures") {
             ui.setMeasure(measureWith(fonts), theme.typography());
             NodeId root;
             {
-                auto row = ui.beginRow({.padding = Edges{10.0f, 10.0f, 10.0f, 40.5f}});
+                auto row = ui.row({.padding = Edges{10.0f, 10.0f, 10.0f, 40.5f}});
                 textField(ui, input, "snap", state, {.grow = 1.0f});
                 root = row.id();
             }
@@ -367,7 +367,7 @@ TEST("an empty focused field still shows its caret") {
             ui.setMeasure(measureWith(fonts), theme.typography());
             NodeId root;
             {
-                auto row = ui.beginRow({.padding = Edges::all(10.0f)});
+                auto row = ui.row({.padding = Edges::all(10.0f)});
                 textField(ui, input, "f", state, {.grow = 1.0f});
                 root = row.id();
             }
@@ -413,7 +413,7 @@ TEST("a field does not change height when text arrives") {
             ui.setMeasure(measureWith(fonts), theme.typography());
             NodeId root;
             {
-                auto row = ui.beginRow({.padding = Edges::all(10.0f)});
+                auto row = ui.row({.padding = Edges::all(10.0f)});
                 textField(ui, input, "f", state, {.grow = 1.0f});
                 root = row.id();
             }

@@ -61,7 +61,7 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     box.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
     {
-        auto scope = ui.begin(box);
+        auto scope = ui.scope(box);
         ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
 
         const bool hasValue = selected && *selected < count;
@@ -153,23 +153,23 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
 
     // ---- the list ---------------------------------------------------------
     const std::string listId = std::string(id) + ".list";
-    PopoverOptions popover;
-    popover.placement = options.placement;
-    popover.gap = options.gap;
-    popover.margin = options.margin;
-    popover.flip = options.flip;
-    popover.shift = options.shift;
-    popover.bounds = options.bounds;
-    popover.matchAnchorWidth = true;
-    popover.padding = Edges::all(kListPadding);
-    popover.gapBetweenItems = kRowGap;
-    popover.scroll = options.listScroll;
+    PopoverOptions popoverOptions;
+    popoverOptions.placement = options.placement;
+    popoverOptions.gap = options.gap;
+    popoverOptions.margin = options.margin;
+    popoverOptions.flip = options.flip;
+    popoverOptions.shift = options.shift;
+    popoverOptions.bounds = options.bounds;
+    popoverOptions.matchAnchorWidth = true;
+    popoverOptions.padding = Edges::all(kListPadding);
+    popoverOptions.gapBetweenItems = kRowGap;
+    popoverOptions.scroll = options.listScroll;
 
     // Keeping the highlight on screen. Done before the view is built, so the
     // offset the rows are laid out against is the one this frame decided.
     if (state.highlighted) revealRow(state.list, rowsOf(), *state.highlighted);
 
-    auto list = beginPopover(ui, input, listId, id, popover);
+    auto list = popover(ui, input, listId, id, popoverOptions);
     {
         // As many rows as `maxVisible` allows, and the rest behind a scroll.
         // Every row is built either way — a select is dozens of options, not
@@ -188,7 +188,7 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
         scroll.height = isAuto(options.maxListHeight)
                             ? byRows
                             : std::min(byRows, options.maxListHeight);
-        auto view = beginScroll(ui, input, listId + ".scroll", state.list, scroll);
+        auto view = scrollArea(ui, input, listId + ".scroll", state.list, scroll);
 
         for (std::size_t i = 0; i < count; ++i) {
             const std::string itemId = listId + "." + std::to_string(i);

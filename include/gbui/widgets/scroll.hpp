@@ -47,7 +47,7 @@ enum class ScrollAxis { None, Vertical, Horizontal };
 /**
  * Draws the bar for a scroll view that is not where the bar belongs.
  *
- * A bar normally lives inside the view it drives, and `beginScroll` puts it
+ * A bar normally lives inside the view it drives, and `scrollArea` puts it
  * there. A table is the case that forced this one out: its rows scroll
  * vertically *inside* a box that scrolls horizontally, so the row view's own
  * right-hand edge is out at the end of the widest column, and the bar drawn
@@ -57,7 +57,7 @@ enum class ScrollAxis { None, Vertical, Horizontal };
  *
  * `box` is in the current container's coordinates — where the bar should be, not
  * where the content is. The ids are the view's own, so the press, the drag and
- * the paging are still handled by `beginScroll`: this draws, it does not
+ * the paging are still handled by `scrollArea`: this draws, it does not
  * behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you
  * use it, or there will be two.
  */
@@ -114,8 +114,8 @@ struct ScrollOptions {
  * rows are uniform, `virtualList` builds only the visible ones — see
  * virtualList.hpp.
  */
-Ui::Scope beginScroll(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
-                      const ScrollOptions& options = {});
+Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
+                     const ScrollOptions& options = {});
 
 /** Rows of one height, laid out one after another. Two things reason about
  *  that shape — the virtualised list, and anything scrolling a highlighted row

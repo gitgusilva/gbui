@@ -525,7 +525,7 @@ void Markets::ticker(Ui& ui, const Interaction& input, float seconds, float delt
     bar.shrink = 0.0f;
     bar.padding = Edges::symmetric(0.0f, 14.0f);
     bar.background = Fill{Token::BgElevated};
-    auto scope = ui.begin(bar);
+    auto scope = ui.scope(bar);
 
     kit::pill(ui, "LIVE", {.tone = kit::Tone::Ok});
     kit::field(ui, "LAST UPDATED", feed_.times().empty() ? "" : feed_.times().back(),
@@ -551,7 +551,7 @@ void Markets::ticker(Ui& ui, const Interaction& input, float seconds, float delt
                 card.radius = 12.0f;
                 card.background = Fill{Token::BgOverlay, 0.7f};
                 card.border = Border{1.0f, Fill{Token::Border}};
-                auto cardScope = lane.begin(card);
+                auto cardScope = lane.scope(card);
 
                 text(lane, quote.symbol,
                      {.color = Token::TextMuted,
@@ -586,7 +586,7 @@ void Markets::tiles(Ui& ui) {
     row.direction = Direction::Row;
     row.gap = 12.0f;
     row.shrink = 0.0f;
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
 
     const bool up = feed_.change() >= 0.0;
     kit::statTile(ui, {.label = "LAST",
@@ -623,7 +623,7 @@ void Markets::pricePanel(Ui& ui, const Interaction& input) {
     // meet on a hairline, so the crosshair and a swept range cross from one to
     // the other without anything in between having to be drawn. A gap here is
     // what made them read as two charts that agree rather than as one.
-    auto card = kit::beginCard(
+    auto card = kit::card(
         ui, {.title = heading,
              .note = std::string(kTimeframes[timeframe_]) + " candles · scroll to zoom",
              // The buttons drive the same view the gestures do, so a reader who
@@ -686,7 +686,7 @@ void Markets::pricePanel(Ui& ui, const Interaction& input) {
 }
 
 void Markets::bookPanel(Ui& ui) {
-    auto card = kit::beginCard(ui, {.title = "ORDER BOOK",
+    auto card = kit::card(ui, {.title = "ORDER BOOK",
                                     .note = "depth · 6 levels",
                                     .gap = 1.0f,
                                     .width = 250.0f});
@@ -704,7 +704,7 @@ void Markets::bookPanel(Ui& ui) {
         line.align = Align::Center;
         line.height = 20.0f;
         line.shrink = 0.0f;
-        auto lineScope = ui.begin(line);
+        auto lineScope = ui.scope(line);
 
         Style depth;
         depth.position = Position::Absolute;
@@ -742,7 +742,7 @@ void Markets::bookPanel(Ui& ui) {
         touch.padding = Edges::symmetric(0.0f, 6.0f);
         touch.background = Fill{Token::BgElevated};
         touch.radius = 4.0f;
-        auto touchScope = ui.begin(touch);
+        auto touchScope = ui.scope(touch);
         text(ui, "SPREAD", {.color = Token::TextMuted, .size = 10.0f, .grow = 1.0f});
         text(ui, kit::format("%.2f", feed_.spread()),
              {.color = Token::TextStrong,
@@ -766,7 +766,7 @@ void Markets::bookPanel(Ui& ui) {
 }
 
 void Markets::tapePanel(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "TIME & SALES",
+    auto card = kit::card(ui, {.title = "TIME & SALES",
                                     .note = "every print, newest first",
                                     .gap = 0.0f,
                                     .grow = 1.0f});
@@ -826,7 +826,7 @@ void Markets::tapePanel(Ui& ui, const Interaction& input) {
 }
 
 void Markets::watchPanel(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "WATCHLIST",
+    auto card = kit::card(ui, {.title = "WATCHLIST",
                                     .note = "click a column to sort",
                                     .gap = 0.0f,
                                     .grow = 1.0f});
@@ -944,11 +944,11 @@ NodeId Markets::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
         const bool up = feed_.change() >= 0.0;
-        auto header = kit::beginHeader(ui, up ? Icon::TrendingUp : Icon::TrendingDown, "Halyard",
+        auto header = kit::header(ui, up ? Icon::TrendingUp : Icon::TrendingDown, "Halyard",
                                        "Equities desk · NYSE · consolidated tape");
         kit::hspace(ui, 4.0f);
         image(ui, company.logo.bitmap(), {.width = 26.0f, .height = 26.0f, .radius = 7.0f});
@@ -959,7 +959,7 @@ NodeId Markets::build(Frame& frame) {
             Style strip;
             strip.width = 200.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kTimeframes) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "markets.timeframe", items, timeframe_,
@@ -980,9 +980,9 @@ NodeId Markets::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "markets.page", page_,
-                                {.padding = Edges::all(14.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "markets.page", page_,
+                               {.padding = Edges::all(14.0f), .gap = 12.0f});
 
         tiles(ui);
         {
@@ -991,7 +991,7 @@ NodeId Markets::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 386.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             pricePanel(ui, input);
             bookPanel(ui);
         }
@@ -1001,7 +1001,7 @@ NodeId Markets::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 262.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             tapePanel(ui, input);
             watchPanel(ui, input);
         }
@@ -1009,7 +1009,7 @@ NodeId Markets::build(Frame& frame) {
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::TrendingUp, "feed: consolidated · 2 ms", kit::Tone::Ok);
         kit::statusItem(ui, Icon::ClockFading, feed_.times().empty() ? "" : feed_.times().back());
         spacer(ui);

@@ -95,7 +95,7 @@ TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id,
     box.overflow = Overflow::Hidden;
     box.cursorHint = editable ? Cursor::Text : Cursor::Default;
 
-    auto scope = ui.begin(box);
+    auto scope = ui.scope(box);
     ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
 
     if (options.leading) {
@@ -122,7 +122,7 @@ TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id,
         field.align = Align::Center;
         field.minHeight = lineHeight;
         field.overflow = Overflow::Hidden;
-        auto fieldScope = ui.begin(field);
+        auto fieldScope = ui.scope(field);
         ui.tag(runId).ignoresPointer();
         ui.label(shown, runStyle);
 
@@ -235,7 +235,7 @@ TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id,
         eye.radius = 4.0f;
         if (input.isHovered(eyeId)) eye.background = Fill{Token::SurfaceHover};
         eye.cursorHint = Cursor::Pointer;
-        auto eyeScope = ui.begin(eye);
+        auto eyeScope = ui.scope(eye);
         ui.tag(eyeId).cursor(Cursor::Pointer);
         icon(ui, options.revealed ? Icon::EyeOff : Icon::Eye,
              {.color = options.revealed ? Token::Text : Token::TextMuted, .size = 15.0f});

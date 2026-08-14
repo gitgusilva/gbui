@@ -139,7 +139,7 @@ date.
 | Thing | Style | Example |
 | --- | --- | --- |
 | Types | `CamelCase` | `DisplayList`, `NodeId` |
-| Functions and methods | `camelBack` | `beginListRow`, `intrinsicMainSize` |
+| Functions and methods | `camelBack` | `listRow`, `intrinsicMainSize` |
 | Private members | trailing underscore | `contours_` |
 | Constants | `k` prefix | `kAuto`, `kMenuItemHeight` |
 | Files | named for the symbol, same case | `numberField.hpp` |

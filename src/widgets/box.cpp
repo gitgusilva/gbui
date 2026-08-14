@@ -4,7 +4,7 @@
 
 namespace gbui {
 
-Ui::Scope beginBox(Ui& ui, const BoxOptions& options) {
+Ui::Scope box(Ui& ui, const BoxOptions& options) {
     Style style;
     style.direction = options.direction;
     style.justify = options.justify;
@@ -32,7 +32,7 @@ Ui::Scope beginBox(Ui& ui, const BoxOptions& options) {
     style.layer = options.layer;
     style.cursorHint = options.cursor;
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     if (!options.id.empty()) ui.tag(options.id);
     if (options.focusable) ui.focusable();
     if (options.cursor != Cursor::Default) ui.cursor(options.cursor);

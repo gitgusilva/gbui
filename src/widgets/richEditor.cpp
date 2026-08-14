@@ -325,7 +325,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
     frame.border = Border{1.0f, Fill{Token::Border}};
     frame.radius = 6.0f;
     frame.overflow = Overflow::Hidden;
-    auto scope = ui.begin(frame);
+    auto scope = ui.scope(frame);
     ui.tag(id);
 
     // ---- the toolbar -------------------------------------------------------
@@ -342,7 +342,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
         bar.wrap = true;   // a long toolbar becomes two rows rather than clipping
         bar.padding = Edges::symmetric(3.0f, 6.0f);
         bar.background = Fill{Token::BgElevated};
-        auto barScope = ui.begin(bar);
+        auto barScope = ui.scope(bar);
 
         for (std::size_t i = 0; i < items.size(); ++i) {
             const ToolbarItem& item = items[i];
@@ -413,7 +413,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
             if (active_) key.background = Fill{Token::Accent, 0.22f};
             else if (input.isHovered(itemId)) key.background = Fill{Token::SurfaceHover};
             key.cursorHint = Cursor::Pointer;
-            auto keyScope = ui.begin(key);
+            auto keyScope = ui.scope(key);
             ui.tag(itemId).cursor(Cursor::Pointer);
             if (!item.label.empty()) {
                 text(ui, item.label,
@@ -605,7 +605,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
     view.axis = ScrollAxis::Vertical;
     view.padding = Edges::all(12.0f);
     view.gap = 6.0f;
-    auto body = beginScroll(ui, input, bodyId, state.view, view);
+    auto body = scrollArea(ui, input, bodyId, state.view, view);
 
     int numbered = 0;
     for (std::size_t i = 0; i < document.blocks.size(); ++i) {
@@ -626,7 +626,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
             row.radius = 4.0f;
         }
         row.cursorHint = Cursor::Text;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         ui.tag(blockId).cursor(Cursor::Text);
 
         if (block.type == BlockType::Quote) {
@@ -642,7 +642,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
             marker.width = 20.0f;
             marker.shrink = 0.0f;
             marker.justify = Justify::End;
-            auto markerScope = ui.begin(marker);
+            auto markerScope = ui.scope(marker);
             text(ui, block.type == BlockType::Bullet ? "•" : std::to_string(numbered) + ".",
                  {.color = Token::TextMuted, .size = 12.0f});
             (void)markerScope;
@@ -662,7 +662,7 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
         textBox.direction = Direction::Column;
         textBox.grow = 1.0f;
         textBox.basis = 0.0f;
-        auto textScope = ui.begin(textBox);
+        auto textScope = ui.scope(textBox);
         ui.tag(textId).ignoresPointer();
 
         const TextStyle base = styleFor(block.type, Mark::None);

@@ -4,7 +4,7 @@
 
 namespace gbui {
 
-Ui::Scope beginPanel(Ui& ui, const PanelOptions& options) {
+Ui::Scope panel(Ui& ui, const PanelOptions& options) {
     Style style;
     style.direction = options.direction;
     style.padding = options.padding;
@@ -14,7 +14,7 @@ Ui::Scope beginPanel(Ui& ui, const PanelOptions& options) {
     if (options.border) style.border = Border{1.0f, Fill{Token::Border}};
     style.grow = options.grow;
     if (options.grow > 0.0f) style.basis = 0.0f;
-    return ui.begin(style);
+    return ui.scope(style);
 }
 
 }  // namespace gbui

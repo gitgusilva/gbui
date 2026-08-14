@@ -29,7 +29,7 @@ Border ringFor(bool ring, bool hovered);
 bool activated(const Interaction& input, std::string_view id, bool disabled);
 
 /** Opens the row a control and its label share. */
-Ui::Scope beginControlRow(Ui& ui, std::string_view id, bool disabled);
+Ui::Scope controlRow(Ui& ui, std::string_view id, bool disabled);
 
 /** Space between a control and its label. */
 void labelGap(Ui& ui);
@@ -70,8 +70,8 @@ Rect boundsFor(const Interaction& input, const FloatingOptions& options);
 PlacementOptions placementOptionsFrom(const FloatingOptions& options);
 
 /** Opens an absolutely positioned surface in a layer above the content. */
-Ui::Scope beginFloating(Ui& ui, const Rect& rect, Layer layer, const Edges& padding,
-                        float gapBetweenItems, Direction direction, float maxHeight = kAuto);
+Ui::Scope floating(Ui& ui, const Rect& rect, Layer layer, const Edges& padding,
+                   float gapBetweenItems, Direction direction, float maxHeight = kAuto);
 
 /** Rough size of a floating box before layout has run: the first frame
  *  estimates and the second corrects. */

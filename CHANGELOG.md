@@ -14,6 +14,19 @@ named here and the reason for it is in the commit.
 Work towards 0.3 lives on `main` and gets a number when it ships, not commit by
 commit.
 
+### Changed
+
+- **Every `begin*` container is named after what it makes.** `beginPanel` is
+  `panel`, `beginBox` is `box`, and so on through `toolbar`, `listRow`,
+  `popover`, `modal` and `modalActions`; `beginScroll` is `scrollArea`, because
+  `scroll` is what half the call sites already call their `ScrollState`. On the
+  builder, `ui.begin` is `ui.scope`, `ui.beginRow`/`beginColumn` are `ui.row`
+  and `ui.column`, and `ui.beginIds` is `ui.ids`. A container and a leaf now
+  share one naming rule and differ only in what they return — `Ui::Scope`
+  against `NodeId` — which is the distinction that was worth spelling, and
+  `begin` was never it. **This renames public API**; the mapping above is the
+  whole of it, and a compiler finds every call site.
+
 ## [0.2.1] — 2026-08-13
 
 A packaging fix, released from `0.2.x` rather than from `main`: the branch is

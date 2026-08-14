@@ -48,7 +48,7 @@ void addComponentExamples(std::vector<Example>& out) {
                        row.direction = Direction::Row;
                        row.align = Align::Center;
                        row.gap = 14.0f;
-                       auto scope = ui.begin(row);
+                       auto scope = ui.scope(row);
                        // The same pixels three ways: its own size, a wide box it
                        // is fitted inside, and the same box it is cropped to
                        // cover. `Contain` letterboxes and `Cover` crops, which
@@ -79,20 +79,20 @@ void addComponentExamples(std::vector<Example>& out) {
     out.push_back({"badge", [](Ui& ui, const Interaction&, State&) {
                        // A row, because the stage stretches its children and a
                        // badge that spans the panel is not a badge.
-                       auto row = ui.beginRow({.align = Align::Center, .gap = 8.0f});
+                       auto row = ui.row({.align = Align::Center, .gap = 8.0f});
                        badge(ui, "M");
                        badge(ui, "Enterprise",
                              {.background = Token::Accent, .foreground = Token::AccentFg});
                    }});
 
     out.push_back({"icon", [](Ui& ui, const Interaction&, State&) {
-                       auto row = ui.beginRow({.align = Align::Center, .gap = 10.0f});
+                       auto row = ui.row({.align = Align::Center, .gap = 10.0f});
                        icon(ui, Icon::GitBranch);
                        icon(ui, Icon::CircleAlert, {.color = Token::Removed, .size = 20.0f});
                    }});
 
     out.push_back({"button", [](Ui& ui, const Interaction& input, State&) {
-                       auto row = ui.beginRow({.align = Align::Center, .gap = 8.0f});
+                       auto row = ui.row({.align = Align::Center, .gap = 8.0f});
                        button(ui, input, "PUSH",
                               {.variant = ButtonVariant::Primary,
                                .leading = Icon::Upload,
@@ -113,25 +113,25 @@ void addComponentExamples(std::vector<Example>& out) {
                    }});
 
     out.push_back({"spacer", [](Ui& ui, const Interaction&, State&) {
-                       auto row = ui.beginRow({.align = Align::Center});
+                       auto row = ui.row({.align = Align::Center});
                        text(ui, "left");
                        spacer(ui);
                        text(ui, "right", {.color = Token::TextMuted});
                    }});
 
-    out.push_back({"beginPanel", [](Ui& ui, const Interaction&, State&) {
-                       auto panel = beginPanel(ui);
+    out.push_back({"panel", [](Ui& ui, const Interaction&, State&) {
+                       auto panelScope = panel(ui);
                        sectionHeading(ui, "COMMIT MESSAGE");
                        text(ui, "A surface with a border and a radius.",
                             {.color = Token::TextMuted});
                    }});
 
     out.push_back(
-        {"beginListRow", [](Ui& ui, const Interaction& input, State&) {
+        {"listRow", [](Ui& ui, const Interaction& input, State&) {
              const char* files[] = {"themes/nord/theme.json", "scripts/preview.mjs", "README.md"};
              for (int i = 0; i < 3; ++i) {
                  const std::string tag = "catalog.row." + std::to_string(i);
-                 auto row = beginListRow(
+                 auto row = listRow(
                      ui,
                      {.selected = i == 0, .hovered = input.isHovered(tag), .gap = 8.0f, .id = tag});
                  icon(ui, Icon::File, {.color = Token::TextMuted, .size = 14.0f});
@@ -139,8 +139,8 @@ void addComponentExamples(std::vector<Example>& out) {
              }
          }});
 
-    out.push_back({"beginToolbar", [](Ui& ui, const Interaction& input, State&) {
-                       auto bar = beginToolbar(ui);
+    out.push_back({"toolbar", [](Ui& ui, const Interaction& input, State&) {
+                       auto bar = toolbar(ui);
                        text(ui, "gitbox-themes",
                             {.color = Token::TextStrong, .weight = FontWeight::Medium});
                        spacer(ui);

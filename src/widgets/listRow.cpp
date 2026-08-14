@@ -4,7 +4,7 @@
 
 namespace gbui {
 
-Ui::Scope beginListRow(Ui& ui, const ListRowOptions& options) {
+Ui::Scope listRow(Ui& ui, const ListRowOptions& options) {
     Style style;
     style.direction = Direction::Row;
     style.align = Align::Center;
@@ -20,7 +20,7 @@ Ui::Scope beginListRow(Ui& ui, const ListRowOptions& options) {
     // is for. One without is a layout row, and a hand over it would lie.
     if (!options.id.empty()) style.cursorHint = Cursor::Pointer;
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     if (!options.id.empty()) ui.tag(options.id).cursor(Cursor::Pointer);
     return scope;
 }

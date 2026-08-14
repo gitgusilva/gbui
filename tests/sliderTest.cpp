@@ -20,7 +20,7 @@ Rect sliderIn(Direction direction, const SliderOptions& options = {}) {
     {
         Style parent;
         parent.direction = direction;
-        auto root = ui.begin(parent);
+        auto root = ui.scope(parent);
         (void)slider(ui, input, "s", 0.5, options);
         (void)root;
     }

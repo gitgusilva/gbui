@@ -51,7 +51,7 @@ void graphCell(Ui& ui, std::size_t lane, bool isMerge) {
     cell.width = 26.0f;
     cell.align = Align::Center;
     cell.justify = Justify::Center;
-    auto scope = ui.begin(cell);
+    auto scope = ui.scope(cell);
 
     Style dot;
     dot.width = isMerge ? 9.0f : 7.0f;
@@ -74,11 +74,11 @@ void buildSidebar(Ui& ui) {
     sidebar.padding = Edges::symmetric(8.0f, 0.0f);
     sidebar.gap = 2.0f;
     sidebar.radius = 0.0f;
-    auto scope = ui.begin(sidebar);
+    auto scope = ui.scope(sidebar);
 
     const char* views[] = {"History", "Local Changes", "Stashes"};
     for (int i = 0; i < 3; ++i) {
-        auto row = beginListRow(ui, {.selected = i == 0, .height = 30.0f});
+        auto row = listRow(ui, {.selected = i == 0, .height = 30.0f});
         text(ui, views[i],
              {.color = i == 0 ? Token::TextStrong : Token::Text,
               .weight = i == 0 ? FontWeight::Medium : FontWeight::Regular});
@@ -93,13 +93,13 @@ void buildSidebar(Ui& ui) {
     ui.add(gap);
 
     {
-        auto heading = beginListRow(ui, {.height = 24.0f});
+        auto heading = listRow(ui, {.height = 24.0f});
         sectionHeading(ui, "LOCAL (2)");
         (void)heading;
     }
     const char* branches[] = {"main", "feat/nord-tuning"};
     for (int i = 0; i < 2; ++i) {
-        auto row = beginListRow(ui, {.selected = i == 0, .height = 26.0f});
+        auto row = listRow(ui, {.selected = i == 0, .height = 26.0f});
         text(ui, branches[i], {.color = i == 0 ? Token::TextStrong : Token::Text});
         if (i == 0) {
             spacer(ui);
@@ -117,10 +117,10 @@ void buildCommitList(Ui& ui) {
     list.background = Fill{Token::Bg};
     list.overflow = Overflow::Hidden;
     list.radius = 0.0f;
-    auto scope = ui.begin(list);
+    auto scope = ui.scope(list);
 
     {
-        auto header = beginListRow(ui, {.height = 26.0f});
+        auto header = listRow(ui, {.height = 26.0f});
         graphCell(ui, 0, false);
         sectionHeading(ui, "GRAPH & SUBJECT");
         spacer(ui);
@@ -135,7 +135,7 @@ void buildCommitList(Ui& ui) {
 
     bool first = true;
     for (const auto& commit : commits()) {
-        auto row = beginListRow(ui, {.selected = first, .height = 30.0f, .gap = 8.0f});
+        auto row = listRow(ui, {.selected = first, .height = 30.0f, .gap = 8.0f});
         graphCell(ui, commit.lane, std::string_view(commit.subject).starts_with("Merge"));
         if (first) badge(ui, "main", {.background = Token::Accent, .foreground = Token::AccentFg});
         // The subject takes what the fixed columns leave and elides the rest,
@@ -160,10 +160,10 @@ void buildDetail(Ui& ui) {
     detail.padding = Edges::all(14.0f);
     detail.gap = 10.0f;
     detail.radius = 0.0f;
-    auto scope = ui.begin(detail);
+    auto scope = ui.scope(detail);
 
     {
-        auto row = ui.beginRow({.align = Align::Center, .gap = 8.0f});
+        auto row = ui.row({.align = Align::Center, .gap = 8.0f});
         sectionHeading(ui, "COMMIT");
         text(ui, "8056e2c",
              {.color = Token::TextStrong, .weight = FontWeight::Medium, .role = FontRole::Mono});
@@ -176,7 +176,7 @@ void buildDetail(Ui& ui) {
     text(ui, "feat(themes): warm up the Nord hover surface", {.color = Token::Text, .grow = 1.0f});
     spacer(ui);
     {
-        auto row = ui.beginRow({.gap = 8.0f});
+        auto row = ui.row({.gap = 8.0f});
         button(ui, "CHECKOUT", {.variant = ButtonVariant::Secondary, .block = true});
         button(ui, "REVERT", {.variant = ButtonVariant::Ghost});
         (void)row;
@@ -189,22 +189,22 @@ NodeId buildWindow(Ui& ui) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto toolbar = beginToolbar(ui);
+        auto toolbarScope = toolbar(ui);
         text(ui, "gitbox-themes", {.color = Token::TextStrong, .weight = FontWeight::SemiBold});
         badge(ui, "main");
         spacer(ui);
         button(ui, "FETCH", {.variant = ButtonVariant::Ghost});
         button(ui, "PULL", {.variant = ButtonVariant::Ghost});
         button(ui, "PUSH", {.variant = ButtonVariant::Primary});
-        (void)toolbar;
+        (void)toolbarScope;
     }
     divider(ui, Direction::Column);
 
     {
-        auto body = ui.beginRow({.grow = 1.0f, .basis = 0.0f});
+        auto body = ui.row({.grow = 1.0f, .basis = 0.0f});
         buildSidebar(ui);
         divider(ui, Direction::Row);
         buildCommitList(ui);

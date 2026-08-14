@@ -78,7 +78,7 @@ struct PropertyInfo {
 
 /** One component: a function that writes nodes through a `Ui`. */
 struct ComponentInfo {
-    /** The function's name: `button`, `beginPanel`, `lineChart`. */
+    /** The function's name: `button`, `panel`, `lineChart`. */
     std::string_view name;
     /** Which umbrella header gathers it — Components, Controls, Containers,
      *  Overlays, Charts — or "Other" for one that no umbrella includes. */

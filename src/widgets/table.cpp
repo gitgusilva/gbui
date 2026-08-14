@@ -199,7 +199,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
     outer.border = Border{1.0f, Fill{Token::Border}};
     outer.radius = 6.0f;
     outer.overflow = Overflow::Hidden;
-    auto scope = ui.begin(outer);
+    auto scope = ui.scope(outer);
     ui.tag(id);
 
     // Everything below scrolls sideways together. The header has to be inside
@@ -210,7 +210,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
     across.direction = Direction::Column;
     across.axis = ScrollAxis::Horizontal;
     across.grow = options.grow > 0.0f || !isAuto(options.height) ? 1.0f : 0.0f;
-    auto acrossScope = beginScroll(ui, input, acrossId, state.columns, across);
+    auto acrossScope = scrollArea(ui, input, acrossId, state.columns, across);
 
     // ---- the header --------------------------------------------------------
     //
@@ -223,7 +223,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         header.height = options.headerHeight;
         header.shrink = 0.0f;
         header.background = Fill{Token::BgElevated};
-        auto headerScope = ui.begin(header);
+        auto headerScope = ui.scope(header);
         ui.tag(headerId);
 
         for (std::size_t i = 0; i < columns.size(); ++i) {
@@ -253,7 +253,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                 // already carried by the cursor and by the arrow every sortable
                 // column wears permanently.
                 head.cursorHint = column.sortable ? Cursor::Pointer : Cursor::Default;
-                auto headScope = ui.begin(head);
+                auto headScope = ui.scope(head);
                 ui.tag(cellId).cursor(head.cursorHint);
 
                 text(ui, column.title,
@@ -326,7 +326,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
             // press meant for the divider.
             grip.zIndex = 1;
             grip.cursorHint = Cursor::ResizeHorizontal;
-            auto gripScope = ui.begin(grip);
+            auto gripScope = ui.scope(grip);
             ui.tag(gripId).cursor(Cursor::ResizeHorizontal);
 
             // A hairline that thickens and takes the accent while it is being
@@ -367,7 +367,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         else if (options.zebra && row % 2 == 1)
             line.background = Fill{Token::BgElevated, 0.45f};
         line.cursorHint = Cursor::Pointer;
-        auto lineScope = rowUi.begin(line);
+        auto lineScope = rowUi.scope(line);
         rowUi.tag(rowId).cursor(Cursor::Pointer);
 
         for (std::size_t i = 0; i < columns.size(); ++i) {
@@ -381,7 +381,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
             box.justify = columns[i].align == TextAlign::End      ? Justify::End
                           : columns[i].align == TextAlign::Center ? Justify::Center
                                                                   : Justify::Start;
-            auto boxScope = rowUi.begin(box);
+            auto boxScope = rowUi.scope(box);
             cell(rowUi, row, i);
             (void)boxScope;
         }
@@ -436,7 +436,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         ScrollOptions view;
         view.axis = ScrollAxis::Vertical;
         view.scrollbar = false;
-        auto body = beginScroll(ui, input, bodyId, state.body, view);
+        auto body = scrollArea(ui, input, bodyId, state.body, view);
         for (std::size_t row = 0; row < rowCount; ++row) buildRow(ui, row);
         result.shown = VirtualSlice{0, rowCount, rowCount, options.rowHeight};
         (void)body;

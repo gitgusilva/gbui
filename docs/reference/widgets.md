@@ -163,28 +163,28 @@ to extend it.
 ## Containers
 
 ```cpp
-Ui::Scope beginBox(Ui&, const BoxOptions& = {});
-Ui::Scope beginPanel(Ui&, const PanelOptions& = {});
-Ui::Scope beginToolbar(Ui&, const ToolbarOptions& = {});
-Ui::Scope beginListRow(Ui&, const ListRowOptions& = {});
+Ui::Scope box(Ui&, const BoxOptions& = {});
+Ui::Scope panel(Ui&, const PanelOptions& = {});
+Ui::Scope toolbar(Ui&, const ToolbarOptions& = {});
+Ui::Scope listRow(Ui&, const ListRowOptions& = {});
 NodeId    spacer(Ui&, float grow = 1.0f);
 NodeId    divider(Ui&, Direction containerDirection);
 ```
 
-`beginBox` is the general container, the way `<div>` is one — `ui.begin(Style{…})`
+`box` is the general container, the way `<div>` is one — `ui.scope(Style{…})`
 already builds anything the layout engine can express, so this is the
 ergonomics. The presets are functions returning options, not a second API:
 
 ```cpp
-auto card    = beginBox(ui, BoxStyle::card());
-auto sidebar = beginBox(ui, BoxStyle::sidebar());
-auto bar     = beginBox(ui, BoxStyle::navbar({.height = 44.0f}));
-auto body    = beginBox(ui, BoxStyle::section());
-auto middle  = beginBox(ui, BoxStyle::centre());
+auto card    = box(ui, BoxStyle::card());
+auto sidebar = box(ui, BoxStyle::sidebar());
+auto bar     = box(ui, BoxStyle::navbar({.height = 44.0f}));
+auto body    = box(ui, BoxStyle::section());
+auto middle  = box(ui, BoxStyle::centre());
 ```
 
 `BoxOptions` carries the layout, size, appearance, `cursor`, `id` and
-`focusable` fields a container repeats; `beginPanel` stays as the older, narrower
+`focusable` fields a container repeats; `panel` stays as the older, narrower
 form of `card`.
 
 ```cpp
@@ -215,7 +215,7 @@ per-edge widths.
 `#include "gbui/widgets/scroll.hpp"`, `virtualList.hpp`
 
 ```cpp
-Ui::Scope beginScroll(Ui&, const Interaction&, id, ScrollState&, const ScrollOptions& = {});
+Ui::Scope scrollArea(Ui&, const Interaction&, id, ScrollState&, const ScrollOptions& = {});
 ```
 
 The content is laid out at its natural size, clipped to the viewport, and moved
@@ -249,7 +249,7 @@ Everything inside a scroll view costs a node, so 50 000 rows really do build
 VirtualSlice shown = virtualList(ui, input, "history", state,
                                  {.count = commits.size(), .rowHeight = 28.0f},
                                  [&](Ui& ui, std::size_t index) {
-                                     auto row = beginListRow(ui, {.id = rowId(index)});
+                                     auto row = listRow(ui, {.id = rowId(index)});
                                      text(ui, commits[index].subject, {.grow = 1.0f});
                                  });
 ```
@@ -291,11 +291,11 @@ void scrollbar(Ui&, const Interaction&, id, const ScrollState&, Rect box,
                ScrollAxis = Vertical, float width = 10.0f, bool autoHide = true);
 ```
 
-A bar for a view that is not where the bar belongs. Normally `beginScroll` draws
+A bar for a view that is not where the bar belongs. Normally `scrollArea` draws
 its own and this is not needed; the table is the case that forced it out. `box`
 is where the bar should go, in the current container's coordinates, and the ids
 are the view's own — so the press, the drag and the paging are still handled by
-`beginScroll`. It draws; it does not behave. Turn the view's own bar off with
+`scrollArea`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
 ### Marquee
@@ -622,11 +622,11 @@ rebuild its tree.
 
 ```cpp
 void      tooltip(Ui&, const Interaction&, anchorId, std::string_view text, options);
-Ui::Scope beginPopover(Ui&, const Interaction&, id, anchorId, options);
+Ui::Scope popover(Ui&, const Interaction&, id, anchorId, options);
 bool      menuItem(Ui&, const Interaction&, id, std::string_view label, options);
 void      menuSeparator(Ui&);
-Modal     beginModal(Ui&, const Interaction&, id, title, Vec2 position, options);
-Ui::Scope beginModalActions(Ui&);
+Modal     modal(Ui&, const Interaction&, id, title, Vec2 position, options);
+Ui::Scope modalActions(Ui&);
 ```
 
 Every one of them takes a `FloatingOptions` — `placement`, `gap`, `margin`,
@@ -637,7 +637,7 @@ unconditionally beside the control it describes. `delay` (0.4 s) is what stops a
 pointer dragged across a toolbar from flashing one per control; it needs an
 animator for the clock, and without one the tooltip shows at once.
 
-`beginPopover` bounds its own height: `maxHeight = kAuto` does **not** mean
+`popover` bounds its own height: `maxHeight = kAuto` does **not** mean
 unbounded, it means the room actually available on the side it lands on, less
 the margin — so a popup that would run past the bottom of the window stops at it
 and scrolls inside instead. Pass a `ScrollState*` for that scrolling; null means
@@ -649,7 +649,7 @@ select, where the leading edge belongs to the labels being compared. It is
 focusable by default, which is right for a menu the keyboard should walk and
 wrong for a list whose owner drives the highlight.
 
-`beginModal` takes the position and gives it back, so dragging survives the tree
+`modal` takes the position and gives it back, so dragging survives the tree
 being rebuilt; pass an empty position on the first frame to have it centred.
 `dismissed` covers the close button, the backdrop and Escape.
 

@@ -83,7 +83,7 @@ private:
 constexpr std::array<std::string_view, 3> kShifts = {"A · 06-14", "B · 14-22", "C · 22-06"};
 
 void Production::stateBars(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "LINE STATE BY HOUR",
+    auto card = kit::card(ui, {.title = "LINE STATE BY HOUR",
                                     .note = "minutes · stacked",
                                     .grow = 1.4f,
                                     .minWidth = 320.0f});
@@ -102,7 +102,7 @@ void Production::stateBars(Ui& ui, const Interaction& input) {
 }
 
 void Production::pareto(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(
+    auto card = kit::card(
         ui, {.title = "DOWNTIME PARETO", .note = "minutes lost", .grow = 1.0f, .minWidth = 260.0f});
     const std::vector<Series> series = {
         {.name = "Minutes", .values = causes_, .color = Token::Removed}};
@@ -122,7 +122,7 @@ void Production::pareto(Ui& ui, const Interaction& input) {
 }
 
 void Production::defects(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "DEFECTS BY STATION AND HOUR",
+    auto card = kit::card(ui, {.title = "DEFECTS BY STATION AND HOUR",
                                     .note = "hover a cell",
                                     .grow = 1.0f,
                                     .minWidth = 300.0f});
@@ -139,7 +139,7 @@ void Production::defects(Ui& ui, const Interaction& input) {
 }
 
 void Production::stations(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "STATIONS",
+    auto card = kit::card(ui, {.title = "STATIONS",
                                     .note = "cycle against takt",
                                     .gap = 0.0f,
                                     .grow = 1.0f,
@@ -240,17 +240,17 @@ NodeId Production::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto header = kit::beginHeader(ui, Icon::Package, "Kaizen MES · Line 4",
+        auto header = kit::header(ui, Icon::Package, "Kaizen MES · Line 4",
                                        "Assembly · SKU 88-4120 Hinge LH · takt 42.0 s");
         spacer(ui);
         {
             Style strip;
             strip.width = 300.0f;
             strip.shrink = 0.0f;
-            auto stripScope = ui.begin(strip);
+            auto stripScope = ui.scope(strip);
             std::vector<TabItem> items;
             for (std::string_view label : kShifts) items.push_back({.label = label});
             if (const auto chosen = tabs(ui, input, "production.shift", items, shift_,
@@ -264,7 +264,7 @@ NodeId Production::build(Frame& frame) {
             toggle.align = Align::Center;
             toggle.gap = 8.0f;
             toggle.shrink = 0.0f;
-            auto toggleScope = ui.begin(toggle);
+            auto toggleScope = ui.scope(toggle);
             text(ui, "ANDON", {.color = Token::TextMuted, .size = 10.5f});
             if (switchToggle(ui, input, "production.andon", andon_)) andon_ = !andon_;
         }
@@ -280,14 +280,14 @@ NodeId Production::build(Frame& frame) {
         body.direction = Direction::Column;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
-        auto page = beginScroll(ui, input, "production.page", page_,
-                                {.padding = Edges::all(12.0f), .gap = 12.0f});
+        auto bodyScope = ui.scope(body);
+        auto page = scrollArea(ui, input, "production.page", page_,
+                               {.padding = Edges::all(12.0f), .gap = 12.0f});
 
         {
             // The four dials and the counters beside them: the whole shift in
             // one row, and everything below it is the explanation.
-            auto card = kit::beginCard(ui, {.title = "OVERALL EQUIPMENT EFFECTIVENESS",
+            auto card = kit::card(ui, {.title = "OVERALL EQUIPMENT EFFECTIVENESS",
                                             .note = "shift to date · target 85 %",
                                             .direction = Direction::Row,
                                             .gap = 10.0f});
@@ -299,7 +299,7 @@ NodeId Production::build(Frame& frame) {
                 cell.justify = Justify::Center;
                 cell.gap = 4.0f;
                 cell.shrink = 0.0f;
-                auto cellScope = ui.begin(cell);
+                auto cellScope = ui.scope(cell);
                 kit::gauge(ui, {.value = value,
                                 .label = label,
                                 .unit = "%",
@@ -322,7 +322,7 @@ NodeId Production::build(Frame& frame) {
             grid.basis = 0.0f;
             grid.minWidth = 0.0f;
             grid.align = Align::Center;
-            auto gridScope = ui.begin(grid);
+            auto gridScope = ui.scope(grid);
             kit::statTile(ui, {.label = "RATE",
                                .value = kit::format("%.0f", rate_.latest()),
                                .unit = "pcs/h",
@@ -351,7 +351,7 @@ NodeId Production::build(Frame& frame) {
             row.gap = 12.0f;
             row.height = 250.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             stateBars(ui, input);
             pareto(ui, input);
         }
@@ -360,7 +360,7 @@ NodeId Production::build(Frame& frame) {
             row.direction = Direction::Row;
             row.gap = 12.0f;
             row.shrink = 0.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             stations(ui, input);
             defects(ui, input);
         }
@@ -368,7 +368,7 @@ NodeId Production::build(Frame& frame) {
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::Terminal, "OPC UA · 6 stations connected", kit::Tone::Ok);
         kit::statusItem(ui, Icon::ClockFading, kShifts[shift_]);
         kit::statusItem(ui, Icon::Package, "order 4471-B · 7 200 pcs");

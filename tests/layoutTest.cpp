@@ -27,7 +27,7 @@ TEST("grow splits the free space in proportion") {
     Ui ui(arena);
     NodeId a, b, c;
     {
-        auto row = ui.beginRow({.gap = 0});
+        auto row = ui.row({.gap = 0});
         a = ui.add({.grow = 1.0f, .basis = 0.0f});
         b = ui.add({.grow = 3.0f, .basis = 0.0f});
         c = ui.add({.width = 100.0f});
@@ -49,7 +49,7 @@ TEST("gap and padding come out of the content box") {
     Ui ui(arena);
     NodeId first, second;
     {
-        auto row = ui.beginRow({.gap = 10.0f, .padding = Edges::all(8.0f)});
+        auto row = ui.row({.gap = 10.0f, .padding = Edges::all(8.0f)});
         first = ui.add({.grow = 1.0f, .basis = 0.0f});
         second = ui.add({.grow = 1.0f, .basis = 0.0f});
         (void)row;
@@ -70,7 +70,7 @@ TEST("shrink is weighted by base size, as CSS does it") {
     Ui ui(arena);
     NodeId wide, narrow;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         wide = ui.add({.shrink = 1.0f, .width = 300.0f});
         narrow = ui.add({.shrink = 1.0f, .width = 100.0f});
         (void)row;
@@ -102,7 +102,7 @@ TEST("justify places the leftover space") {
         Ui ui(arena);
         NodeId first;
         {
-            auto row = ui.beginRow({.justify = expectation.justify});
+            auto row = ui.row({.justify = expectation.justify});
             first = ui.add({.width = 50.0f});
             ui.add({.width = 50.0f});
             (void)row;
@@ -117,7 +117,7 @@ TEST("space-between pushes the ends apart and ignores the gap in between") {
     Ui ui(arena);
     NodeId left, right;
     {
-        auto row = ui.beginRow({.justify = Justify::SpaceBetween});
+        auto row = ui.row({.justify = Justify::SpaceBetween});
         left = ui.add({.width = 40.0f});
         right = ui.add({.width = 40.0f});
         (void)row;
@@ -138,7 +138,7 @@ TEST("align centres on the cross axis and stretch fills it") {
         Ui ui(stretched);
         NodeId child;
         {
-            auto row = ui.beginRow({.align = Align::Stretch});
+            auto row = ui.row({.align = Align::Stretch});
             child = ui.add({.width = 20.0f});
             (void)row;
         }
@@ -151,7 +151,7 @@ TEST("align centres on the cross axis and stretch fills it") {
         Ui ui(centred);
         NodeId child;
         {
-            auto row = ui.beginRow({.align = Align::Center});
+            auto row = ui.row({.align = Align::Center});
             child = ui.add({.width = 20.0f, .height = 20.0f});
             (void)row;
         }
@@ -166,7 +166,7 @@ TEST("a column stacks and an auto height follows its content") {
     Ui ui(arena);
     NodeId second;
     {
-        auto column = ui.beginColumn({.gap = 4.0f});
+        auto column = ui.column({.gap = 4.0f});
         ui.add({.height = 30.0f});
         second = ui.add({.height = 30.0f});
         (void)column;
@@ -184,7 +184,7 @@ TEST("space refused by a max-width goes to the others, not to waste") {
     Ui ui(arena);
     NodeId capped, free;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         capped = ui.add({.grow = 1.0f, .basis = 0.0f, .maxWidth = 60.0f});
         free = ui.add({.grow = 1.0f, .basis = 0.0f});
         (void)row;
@@ -206,10 +206,10 @@ TEST("an item is not shrunk below what its content needs") {
     Ui ui(arena);
     NodeId rigid, flexible;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         {
             // A box holding a fixed-size child cannot be squeezed past it.
-            auto box = ui.begin({.shrink = 1.0f, .padding = Edges::all(4.0f)});
+            auto box = ui.scope({.shrink = 1.0f, .padding = Edges::all(4.0f)});
             rigid = ui.add({.shrink = 0.0f, .width = 80.0f, .height = 10.0f});
             (void)box;
         }
@@ -231,7 +231,7 @@ TEST("min-width 0 opts back in to shrinking away") {
     Ui ui(arena);
     NodeId squeezed;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         squeezed = ui.add({.shrink = 1.0f, .width = 300.0f, .minWidth = 0.0f});
         ui.add({.shrink = 0.0f, .width = 100.0f});
         (void)row;
@@ -248,7 +248,7 @@ TEST("margins take space on both axes") {
     Ui ui(arena);
     NodeId child;
     {
-        auto row = ui.beginRow();
+        auto row = ui.row();
         child = ui.add({.grow = 1.0f, .basis = 0.0f, .margin = Edges::all(10.0f)});
         (void)row;
     }
@@ -267,9 +267,9 @@ TEST("hit testing answers the deepest node under the point") {
     Ui ui(arena);
     NodeId inner;
     {
-        auto column = ui.beginColumn({.padding = Edges::all(10.0f)});
+        auto column = ui.column({.padding = Edges::all(10.0f)});
         {
-            auto row = ui.beginRow({.height = 40.0f});
+            auto row = ui.row({.height = 40.0f});
             inner = ui.add({.grow = 1.0f, .basis = 0.0f});
             (void)row;
         }
@@ -288,7 +288,7 @@ TEST("text measurement grows the box that holds it") {
     Ui ui(arena);
     NodeId label;
     {
-        auto row = ui.beginRow({.align = Align::Start});
+        auto row = ui.row({.align = Align::Start});
         label = ui.label("Local Changes");
         (void)row;
     }
@@ -319,7 +319,7 @@ std::vector<Rect> chips(bool wrap, float containerWidth, int count, float chipWi
         row.gap = gap;
         row.alignContent = alignContent;
         row.width = containerWidth;
-        auto scope = ui.begin(row);
+        auto scope = ui.scope(row);
         for (int i = 0; i < count; ++i) {
             ids.push_back(ui.add({.shrink = 0.0f, .width = chipWidth, .height = 20.0f}));
         }
@@ -378,12 +378,12 @@ TEST("lines stack, and the container is as tall as all of them") {
     Ui ui(arena);
     NodeId row;
     {
-        auto column = ui.beginColumn({.width = 200.0f});
+        auto column = ui.column({.width = 200.0f});
         {
             Style style;
             style.direction = Direction::Row;
             style.wrap = true;
-            auto scope = ui.begin(style);
+            auto scope = ui.scope(style);
             row = scope.id();
                 for (int i = 0; i < 5; ++i) {
                 ui.add({.shrink = 0.0f, .width = 60.0f, .height = 20.0f});
@@ -414,7 +414,7 @@ TEST("alignContent distributes the lines across the container") {
         style.width = 200.0f;
         style.height = 300.0f;
         style.alignContent = AlignContent::Center;
-        auto scope = ui.begin(style);
+        auto scope = ui.scope(style);
         for (int i = 0; i < 4; ++i) {
             ids.push_back(ui.add({.shrink = 0.0f, .width = 60.0f, .height = 20.0f}));
         }
@@ -439,7 +439,7 @@ TEST("a percentage is a share of the container's content box") {
     {
         // 400 wide with 20 of padding each side: the content box is 360, and
         // that — not the frame — is what a percentage is a share of, as in CSS.
-        auto row = ui.beginRow({.width = 400.0f, .padding = Edges::all(20.0f)});
+        auto row = ui.row({.width = 400.0f, .padding = Edges::all(20.0f)});
         half = ui.add({.shrink = 0.0f, .width = Length::percent(50)});
         quarter = ui.add({.shrink = 0.0f, .width = Length::percent(25)});
         (void)row;
@@ -458,7 +458,7 @@ TEST("a percentage height shares the container's height") {
     Ui ui(arena);
     NodeId child;
     {
-        auto column = ui.beginColumn({.width = 200.0f, .height = 300.0f});
+        auto column = ui.column({.width = 200.0f, .height = 300.0f});
         child = ui.add({.shrink = 0.0f, .height = Length::percent(40)});
         (void)column;
     }
@@ -478,7 +478,7 @@ TEST("a percentage maximum caps a growing item — the split-pane rule") {
         Ui ui(arena);
         NodeId sidebar;
         {
-            auto row = ui.beginRow({.width = windowWidth});
+            auto row = ui.row({.width = windowWidth});
             sidebar = ui.add({.shrink = 0.0f, .width = Length::percent(25), .maxWidth = 320.0f});
             ui.add({.grow = 1.0f, .basis = 0.0f});
             (void)row;
@@ -518,7 +518,7 @@ TEST("a percentage against an unknown basis behaves as auto") {
     NodeId child;
     {
         // The row has no width of its own; it is as wide as what is inside it.
-        auto row = ui.beginRow({});
+        auto row = ui.row({});
         child = ui.add({.shrink = 0.0f, .width = Length::percent(50), .height = 20.0f});
         (void)row;
     }
@@ -543,7 +543,7 @@ std::vector<Rect> recordAt(float scale) {
     Arena arena;
     Ui ui(arena);
     {
-        auto row = ui.beginRow({.gap = 8.0f, .width = 200.0f, .padding = Edges::all(10.0f)});
+        auto row = ui.row({.gap = 8.0f, .width = 200.0f, .padding = Edges::all(10.0f)});
         ui.add({.width = 40.0f, .height = 24.0f,
                 .background = Fill{Token::Accent}, .radius = 4.0f});
         ui.add({.width = 60.0f, .height = 24.0f, .background = Fill{Token::Bg},
@@ -639,7 +639,7 @@ TEST("zIndex decides what is drawn last, and what the pointer finds") {
     {
         // Two overlapping boxes. `under` is written *second*, so tree order
         // would put it on top; `zIndex` says otherwise.
-        auto stack = ui.beginRow({.width = 100.0f, .height = 100.0f});
+        auto stack = ui.row({.width = 100.0f, .height = 100.0f});
         over = ui.add({.width = 100.0f, .height = 100.0f, .position = Position::Absolute,
                        .zIndex = 5, .left = 0.0f, .top = 0.0f,
                        .background = Fill{Token::Accent}});

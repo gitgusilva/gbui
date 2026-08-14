@@ -41,7 +41,7 @@ NodeId richText(Ui& ui, const std::vector<TextSpan>& spans, const RichTextOption
         row.justify = options.align == TextAlign::Center ? Justify::Center : Justify::End;
     }
 
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     for (const TextSpan& span : spans) {
         TextStyle style;
         style.color = Fill{span.color};

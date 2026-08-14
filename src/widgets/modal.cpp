@@ -8,8 +8,8 @@
 
 namespace gbui {
 
-Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title,
-                 Vec2 position, const ModalOptions& options) {
+Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title,
+            Vec2 position, const ModalOptions& options) {
     ModalResult result;
     const Rect bounds = input.viewport().empty() ? Rect{0, 0, 1280, 720} : input.viewport();
 
@@ -78,7 +78,7 @@ Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::str
     dialog.border = Border{1.0f, Fill{Token::BorderStrong}};
     dialog.overflow = Overflow::Hidden;
 
-    auto body = ui.begin(dialog);
+    auto body = ui.scope(dialog);
     ui.tag(id);
 
     {
@@ -90,7 +90,7 @@ Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::str
         header.padding = Edges::symmetric(0.0f, 14.0f);
         header.radius = 0.0f;
         header.background = Fill{Token::BgOverlay};
-        auto headerScope = ui.begin(header);
+        auto headerScope = ui.scope(header);
         ui.tag(headerId);
 
         if (options.icon) {
@@ -110,7 +110,7 @@ Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::str
         if (input.isHovered(closeId)) close.background = Fill{Token::SurfaceHover};
         if (input.isFocusVisible(closeId)) close.outline = Outline{2.0f, 1.0f, Fill{Token::Accent}};
         {
-            auto closeScope = ui.begin(close);
+            auto closeScope = ui.scope(close);
             ui.tag(closeId).focusable();
             icon(ui, Icon::X, {.color = Token::TextMuted, .size = 14.0f});
             (void)closeScope;
@@ -128,14 +128,14 @@ Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::str
     return Modal{std::move(body), result};
 }
 
-Ui::Scope beginModalActions(Ui& ui) {
+Ui::Scope modalActions(Ui& ui) {
     Style row;
     row.direction = Direction::Row;
     row.align = Align::Center;
     row.justify = Justify::End;
     row.gap = 8.0f;
     row.padding = Edges::all(14.0f);
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     return scope;
 }
 

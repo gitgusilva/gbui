@@ -13,6 +13,6 @@ struct ToolbarOptions {
     bool bottomBorder = true;
 };
 
-Ui::Scope beginToolbar(Ui& ui, const ToolbarOptions& options = {});
+Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options = {});
 
 }  // namespace gbui

@@ -34,7 +34,7 @@ Sheet run(const std::vector<Column>& columns, const std::vector<float>& widths,
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = tableWidth, .height = 300.0f});
+            auto root = ui.column({.width = tableWidth, .height = 300.0f});
             sheet.result =
                 table(ui, input, "t", columns, 12, sheet.state,
                       [](Ui& cellUi, std::size_t row, std::size_t column) {
@@ -147,7 +147,7 @@ TEST("a column fits its sample in the style the cell draws it in") {
             Ui ui(arena);
             ui.setMeasure(measure, theme.typography());
             {
-                auto root = ui.beginColumn({.width = 400.0f, .height = 200.0f});
+                auto root = ui.column({.width = 400.0f, .height = 200.0f});
                 const TableResult result =
                     table(ui, input, "f", columns, 3, state,
                           [](Ui& cellUi, std::size_t, std::size_t) { text(cellUi, "x"); },

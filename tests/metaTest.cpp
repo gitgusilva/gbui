@@ -75,7 +75,7 @@ TEST("an optional property says so, and an icon is an icon") {
 TEST("a container is marked as one") {
     // The first thing a designer needs to know about a component: whether
     // something can be dropped inside it.
-    const meta::ComponentInfo* panel = meta::find("beginPanel");
+    const meta::ComponentInfo* panel = meta::find("panel");
     CHECK(panel != nullptr);
     if (panel) CHECK(panel->container);
 

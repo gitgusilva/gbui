@@ -18,6 +18,6 @@ struct PanelOptions {
     float grow = 0.0f;
 };
 
-Ui::Scope beginPanel(Ui& ui, const PanelOptions& options = {});
+Ui::Scope panel(Ui& ui, const PanelOptions& options = {});
 
 }  // namespace gbui

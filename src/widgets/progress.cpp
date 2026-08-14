@@ -15,7 +15,7 @@ NodeId progressBar(Ui& ui, const ProgressOptions& options) {
     track.overflow = Overflow::Hidden;
     track.align = Align::Center;
 
-    auto scope = ui.begin(track);
+    auto scope = ui.scope(track);
 
     Style fill;
     fill.height = options.height;

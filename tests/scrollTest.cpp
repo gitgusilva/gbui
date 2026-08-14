@@ -30,9 +30,9 @@ View run(const ScrollOptions& options, float wheel = 0.0f, int rows = 20) {
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = 200.0f, .height = 400.0f});
+            auto root = ui.column({.width = 200.0f, .height = 400.0f});
             {
-                auto scroll = beginScroll(ui, input, "view", view.state, options);
+                auto scroll = scrollArea(ui, input, "view", view.state, options);
                 for (int i = 0; i < rows; ++i) ui.add({.width = 300.0f, .height = 20.0f});
                 (void)scroll;
             }
@@ -122,14 +122,14 @@ Nested runNested(Vec2 pointer, float wheel) {
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = 200.0f, .height = 400.0f});
+            auto root = ui.column({.width = 200.0f, .height = 400.0f});
             {
-                auto page = beginScroll(ui, input, "page", nested.outer,
-                                        {.axis = ScrollAxis::Vertical});
+                auto page = scrollArea(ui, input, "page", nested.outer,
+                                       {.axis = ScrollAxis::Vertical});
                 ui.add({.width = 180.0f, .height = 100.0f});
                 {
-                    auto list = beginScroll(ui, input, "page.list", nested.inner,
-                                            {.axis = ScrollAxis::Vertical, .grow = 0.0f,
+                    auto list = scrollArea(ui, input, "page.list", nested.inner,
+                                           {.axis = ScrollAxis::Vertical, .grow = 0.0f,
                                              .maxHeight = 100.0f});
                     for (int i = 0; i < 20; ++i) ui.add({.width = 160.0f, .height = 20.0f});
                     (void)list;
@@ -206,19 +206,19 @@ BothWays runBothWays(float wheel, bool shift) {
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = 200.0f, .height = 200.0f});
+            auto root = ui.column({.width = 200.0f, .height = 200.0f});
             {
-                auto sideways = beginScroll(ui, input, "across", box.across,
-                                            {.direction = Direction::Column,
+                auto sideways = scrollArea(ui, input, "across", box.across,
+                                           {.direction = Direction::Column,
                                              .axis = ScrollAxis::Horizontal});
                 {
                     // A definite width, the way a table's columns give it one.
                     // Without it the inner view is sized by its parent while
                     // the parent is sized by it, and the pair settles on zero.
-                    auto wide = ui.beginColumn({.shrink = 0.0f, .width = 400.0f});
+                    auto wide = ui.column({.shrink = 0.0f, .width = 400.0f});
                     {
-                        auto rows = beginScroll(ui, input, "across.rows", box.down,
-                                                {.axis = ScrollAxis::Vertical,
+                        auto rows = scrollArea(ui, input, "across.rows", box.down,
+                                               {.axis = ScrollAxis::Vertical,
                                                  .grow = 0.0f,
                                                  .maxHeight = 150.0f});
                         for (int i = 0; i < 30; ++i) ui.add({.height = 20.0f});
@@ -283,11 +283,10 @@ TEST("a horizontal view leaves room for its own bar") {
         Arena arena;
         Ui ui(arena);
         {
-            auto root = ui.beginColumn({.width = 200.0f, .height = 120.0f});
+            auto root = ui.column({.width = 200.0f, .height = 120.0f});
             {
-                auto view = beginScroll(ui, input, "wide", state,
-                                        {.direction = Direction::Row,
-                                         .axis = ScrollAxis::Horizontal});
+                auto view = scrollArea(ui, input, "wide", state, {.direction = Direction::Row,
+                                                                 .axis = ScrollAxis::Horizontal});
                 for (int i = 0; i < 10; ++i) ui.add({.width = 90.0f, .height = 40.0f});
                 (void)view;
             }

@@ -34,7 +34,7 @@ VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id,
     // Opening the scroll view first is what resolves the wheel, the drag and
     // the keys into `state.offset`, so the slice below is chosen from where the
     // list has just been moved to rather than from where it was.
-    auto content = beginScroll(ui, input, id, state, scroll);
+    auto content = scrollArea(ui, input, id, state, scroll);
 
     VirtualSlice slice;
     slice.total = options.count;
@@ -77,7 +77,7 @@ VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id,
         slot.direction = Direction::Column;
         slot.height = options.rowHeight;
         slot.shrink = 0.0f;
-        auto scope = ui.begin(slot);
+        auto scope = ui.scope(slot);
         row(ui, index);
         (void)scope;
     }

@@ -35,10 +35,10 @@ struct Modal {
 
 /** The caller supplies the position so dragging survives the tree being
  *  rebuilt, and gets it back updated. */
-Modal beginModal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title,
-                 Vec2 position, const ModalOptions& options = {});
+Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_view title,
+            Vec2 position, const ModalOptions& options = {});
 
 /** The row of buttons at the foot of a dialog, pushed to the right. */
-Ui::Scope beginModalActions(Ui& ui);
+Ui::Scope modalActions(Ui& ui);
 
 }  // namespace gbui

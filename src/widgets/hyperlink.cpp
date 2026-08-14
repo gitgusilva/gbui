@@ -24,7 +24,7 @@ bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::strin
     row.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Hand;
     if (ring) row.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
 
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id).focusable(!options.disabled).cursor(row.cursorHint);
 
     {
@@ -34,7 +34,7 @@ bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::strin
         Style stack;
         stack.direction = Direction::Column;
         stack.gap = 1.0f;
-        auto stackScope = ui.begin(stack);
+        auto stackScope = ui.scope(stack);
         text(ui, label, {.color = hovered && !options.disabled ? Token::AccentHover : options.color,
                          .size = options.size});
         Style rule;

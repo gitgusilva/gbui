@@ -6,9 +6,9 @@
 // shape:
 //
 //     Ui ui(arena);
-//     auto root = ui.beginColumn({.gap = 8});
+//     auto root = ui.column({.gap = 8});
 //     {
-//         auto bar = ui.beginRow({.gap = 6, .height = 40});
+//         auto bar = ui.row({.gap = 6, .height = 40});
 //         ui.label("History");
 //     }                                    // <- the row closes here
 //     ui.label("Local Changes");
@@ -103,9 +103,9 @@ public:
 
     /** Opens a container and makes it the parent of everything until the
      *  returned Scope dies. */
-    Scope begin(const Style& style);
-    Scope beginRow(Style style = {});
-    Scope beginColumn(Style style = {});
+    Scope scope(const Style& style);
+    Scope row(Style style = {});
+    Scope column(Style style = {});
 
     /** Adds a childless node — a spacer, a rule, a swatch. */
     NodeId add(const Style& style);
@@ -151,7 +151,7 @@ public:
      * `"scada.tank.backwash"` at the next, and misspelling one of them is a
      * control that silently stops responding.
      *
-     *     auto ids = ui.beginIds("scada.tank");
+     *     auto ids = ui.ids("scada.tank");
      *     meter(ui, ui.qualify("clearwell"), …);   // "scada.tank.clearwell"
      *
      * Scopes nest, and the separator is supplied here rather than by the
@@ -180,7 +180,7 @@ public:
         std::size_t restoreTo_;
     };
 
-    IdScope beginIds(std::string_view name);
+    IdScope ids(std::string_view name);
 
     /**
      * `name` with the open naming scopes in front of it, interned so the view

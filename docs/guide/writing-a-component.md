@@ -6,9 +6,13 @@ no base class, nothing to inherit and nothing to register.
 Two shapes, depending on whether it has children:
 
 ```cpp
-NodeId    thing(Ui&, args…);        // a leaf: builds and returns
-Ui::Scope beginThing(Ui&, args…);   // a container: the caller fills it
+NodeId    thing(Ui&, args…);   // a leaf: builds and returns
+Ui::Scope thing(Ui&, args…);   // a container: the caller fills it
 ```
+
+Same name either way. What separates them is the return type: a leaf hands back
+the node it made and is finished, a container hands back a scope and everything
+built until that scope dies is inside it.
 
 ## A worked example
 
@@ -69,7 +73,7 @@ NodeId statusPill(Ui& ui, FileStatus status, const StatusPillOptions& options) {
     style.background = Fill{look.color, 0.20f};
     style.shrink = 0.0f;      // a fixed marker never gives up its width
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     text(ui, look.letter, {.color = look.color, .weight = FontWeight::SemiBold, .size = 11.0f});
     return scope.id();
 }
@@ -78,7 +82,7 @@ NodeId statusPill(Ui& ui, FileStatus status, const StatusPillOptions& options) {
 Used:
 
 ```cpp
-auto row = beginListRow(ui, {.selected = isSelected});
+auto row = listRow(ui, {.selected = isSelected});
 statusPill(ui, FileStatus::Modified);
 text(ui, "themes/nord/theme.json", {.grow = 1.0f});
 ```
@@ -100,7 +104,7 @@ The one mistake this API makes easy, and it has caused four layout bugs here:
 
 ```cpp
 {
-    auto row = ui.beginRow();
+    auto row = ui.row();
     …
     (void)row;          // silences a warning. It is NOT a close.
 }                       // <- this is the close
@@ -124,7 +128,7 @@ by.
 
 ```cpp
 bool statusFilter(Ui& ui, const Interaction& input, std::string_view id, bool on) {
-    auto scope = ui.begin({.cursorHint = Cursor::Pointer});
+    auto scope = ui.scope({.cursorHint = Cursor::Pointer});
     ui.tag(id).focusable();
 
     bool activated = input.clicked(id);
@@ -152,9 +156,9 @@ selected, what a field contains, whether a menu is open — belongs to the
 application and is passed in:
 
 ```cpp
-auto row = beginListRow(ui, {.selected = state.selected == path,
-                             .hovered  = state.hovered == path,
-                             .id       = path});
+auto row = listRow(ui, {.selected = state.selected == path,
+                        .hovered  = state.hovered == path,
+                        .id       = path});
 ```
 
 That keeps the toolkit out of the business of owning your model, and it is why

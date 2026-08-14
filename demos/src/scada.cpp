@@ -116,13 +116,13 @@ void Scada::units(Ui& ui, const Interaction& input) {
     rail.padding = Edges::symmetric(10.0f, 0.0f);
     rail.background = Fill{Token::Bg};
     rail.radius = 0.0f;
-    auto scope = ui.begin(rail);
+    auto scope = ui.scope(rail);
 
     {
         Style heading;
         heading.padding = Edges::symmetric(0.0f, 12.0f);
         heading.shrink = 0.0f;
-        auto headingScope = ui.begin(heading);
+        auto headingScope = ui.scope(heading);
         sectionHeading(ui, "PROCESS UNITS");
     }
 
@@ -130,7 +130,7 @@ void Scada::units(Ui& ui, const Interaction& input) {
         const Unit& unit = units_[i];
         const std::string tag = "scada.unit." + std::string(unit.tag);
         {
-            auto row = kit::beginEntry(ui, {.id = tag,
+            auto row = kit::entry(ui, {.id = tag,
                                             .selected = i == unit_,
                                             .hovered = input.isHovered(tag),
                                             .height = 42.0f});
@@ -141,7 +141,7 @@ void Scada::units(Ui& ui, const Interaction& input) {
                 column.gap = 1.0f;
                 column.grow = 1.0f;
                 column.minWidth = 0.0f;
-                auto columnScope = ui.begin(column);
+                auto columnScope = ui.scope(column);
                 text(ui, unit.name,
                      {.color = i == unit_ ? Token::TextStrong : Token::Text,
                       .weight = i == unit_ ? FontWeight::Medium : FontWeight::Regular,
@@ -161,7 +161,7 @@ void Scada::units(Ui& ui, const Interaction& input) {
         footer.gap = 8.0f;
         footer.padding = Edges::all(12.0f);
         footer.shrink = 0.0f;
-        auto footerScope = ui.begin(footer);
+        auto footerScope = ui.scope(footer);
         kit::field(ui, "PLC", "Rockwell L83E · slot 0", Token::Text, FontRole::Mono);
         kit::field(ui, "SCAN TIME", "6.2 ms", Token::Text, FontRole::Mono);
         kit::field(ui, "OPC UA", "opc.tcp://helix:4840", Token::TextMuted, FontRole::Mono);
@@ -169,7 +169,7 @@ void Scada::units(Ui& ui, const Interaction& input) {
 }
 
 void Scada::dials(Ui& ui) {
-    auto card = kit::beginCard(ui, {.title = "PROCESS VARIABLES",
+    auto card = kit::card(ui, {.title = "PROCESS VARIABLES",
                                     .note = "1 s scan · engineering units",
                                     .direction = Direction::Row,
                                     .gap = 6.0f});
@@ -182,7 +182,7 @@ void Scada::dials(Ui& ui) {
         cell.grow = 1.0f;
         cell.basis = 0.0f;
         cell.minWidth = 0.0f;
-        auto cellScope = ui.begin(cell);
+        auto cellScope = ui.scope(cell);
         kit::gauge(ui, options);
     };
 
@@ -233,8 +233,8 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
         // written once. It was spelled out at each call site, which is four
         // chances to typo a string that fails silently — a bar that stops
         // animating, with nothing to say why.
-        auto ids = ui.beginIds("scada.tank");
-        auto card = kit::beginCard(ui, {.title = "VESSEL LEVELS",
+        auto ids = ui.ids("scada.tank");
+        auto card = kit::card(ui, {.title = "VESSEL LEVELS",
                                         .note = "% of working volume",
                                         .gap = 14.0f,
                                         .grow = 1.0f,
@@ -262,9 +262,9 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                         .id = ui.qualify("chemical")});
     }
     {
-        auto ids = ui.beginIds("scada.pump");
+        auto ids = ui.ids("scada.pump");
         auto card =
-            kit::beginCard(ui, {.title = "PUMPS AND SETPOINT", .gap = 8.0f, .width = 244.0f});
+            kit::card(ui, {.title = "PUMPS AND SETPOINT", .gap = 8.0f, .width = 244.0f});
 
         for (std::size_t i = 0; i < pumpList_.size(); ++i) {
             const Pump& pump = pumpList_[i];
@@ -274,7 +274,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
             row.align = Align::Center;
             row.gap = 8.0f;
             row.height = 26.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
 
             kit::statusDot(ui, pumps_[i] ? kit::Tone::Ok : kit::Tone::Neutral);
             {
@@ -283,7 +283,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                 names.gap = 0.0f;
                 names.grow = 1.0f;
                 names.minWidth = 0.0f;
-                auto namesScope = ui.begin(names);
+                auto namesScope = ui.scope(names);
                 text(ui, pump.name, {.color = Token::Text, .size = 11.5f});
                 text(ui, kit::format("%.0f h", pump.hours),
                      {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
@@ -297,7 +297,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
             row.direction = Direction::Row;
             row.align = Align::Center;
             row.gap = 8.0f;
-            auto rowScope = ui.begin(row);
+            auto rowScope = ui.scope(row);
             text(ui, "FLOW SETPOINT", {.color = Token::TextMuted, .size = 10.0f, .grow = 1.0f});
             text(ui, kit::format("%.0f m³/h", setpoint_),
                  {.color = Token::TextStrong,
@@ -323,7 +323,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
 }
 
 void Scada::trend(Ui& ui, const Interaction& input) {
-    auto card = kit::beginCard(ui, {.title = "FIT-101 TREND · LAST 30 MINUTES",
+    auto card = kit::card(ui, {.title = "FIT-101 TREND · LAST 30 MINUTES",
                                     .note = "m³/h · drag to zoom",
                                     .grow = 1.2f,
                                     .minWidth = 260.0f});
@@ -364,12 +364,12 @@ void Scada::commandLog(Ui& ui, const Interaction& input) {
         {"11:20:44", "system", "AIT-604 alarm raised · free chlorine 0.42 mg/L", kit::Tone::Warn},
     }};
 
-    auto card = kit::beginCard(ui, {.title = "COMMAND AND EVENT LOG",
+    auto card = kit::card(ui, {.title = "COMMAND AND EVENT LOG",
                                     .note = "operator actions and system events",
                                     .gap = 0.0f,
                                     .grow = 1.0f});
 
-    auto list = beginScroll(ui, input, "scada.log", logScroll_, {.gap = 0.0f});
+    auto list = scrollArea(ui, input, "scada.log", logScroll_, {.gap = 0.0f});
     for (const Entry& entry : entries) {
         Style row;
         row.direction = Direction::Row;
@@ -377,13 +377,13 @@ void Scada::commandLog(Ui& ui, const Interaction& input) {
         row.gap = 10.0f;
         row.height = 24.0f;
         row.shrink = 0.0f;
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
         text(ui, entry.time, {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.5f});
         {
             Style who;
             who.width = 78.0f;
             who.shrink = 0.0f;
-            auto whoScope = ui.begin(who);
+            auto whoScope = ui.scope(who);
             text(ui, entry.who,
                  {.color = entry.who == "system" ? Token::TextMuted : Token::Accent,
                   .role = FontRole::Mono,
@@ -400,14 +400,14 @@ void Scada::alarms(Ui& ui, const Interaction& input) {
         if (!alarm.acknowledged) ++unacknowledged;
     }
 
-    auto card = kit::beginCard(
+    auto card = kit::card(
         ui, {.title = "ALARM SUMMARY",
              .note = kit::format("%.0f unacknowledged", static_cast<double>(unacknowledged)),
              .gap = 0.0f,
              .grow = 1.0f,
              .width = 320.0f});
 
-    auto list = beginScroll(ui, input, "scada.alarms", alarmScroll_, {.gap = 2.0f});
+    auto list = scrollArea(ui, input, "scada.alarms", alarmScroll_, {.gap = 2.0f});
     for (std::size_t i = 0; i < alarmList_.size(); ++i) {
         Alarm& alarm = alarmList_[i];
         const std::string tag = "scada.alarm." + std::to_string(i);
@@ -425,7 +425,7 @@ void Scada::alarms(Ui& ui, const Interaction& input) {
         // one keeps the colour only in its priority chip. That is the whole
         // visual grammar of an alarm list, and it is one `if`.
         if (!alarm.acknowledged) row.background = Fill{kit::toneToken(alarm.tone), 0.14f};
-        auto rowScope = ui.begin(row);
+        auto rowScope = ui.scope(row);
 
         kit::beacon(ui, alarm.tone, !alarm.acknowledged, 7.0f);
         text(ui, kit::format("P%.0f", static_cast<double>(alarm.priority)),
@@ -439,7 +439,7 @@ void Scada::alarms(Ui& ui, const Interaction& input) {
             column.gap = 1.0f;
             column.grow = 1.0f;
             column.minWidth = 0.0f;
-            auto columnScope = ui.begin(column);
+            auto columnScope = ui.scope(column);
             text(ui, alarm.message,
                  {.color = alarm.acknowledged ? Token::Text : Token::TextStrong,
                   .weight = alarm.acknowledged ? FontWeight::Regular : FontWeight::Medium,
@@ -448,7 +448,7 @@ void Scada::alarms(Ui& ui, const Interaction& input) {
                 Style meta;
                 meta.direction = Direction::Row;
                 meta.gap = 8.0f;
-                auto metaScope = ui.begin(meta);
+                auto metaScope = ui.scope(meta);
                 text(ui, alarm.time,
                      {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
                 text(ui, alarm.tag,
@@ -484,10 +484,10 @@ NodeId Scada::build(Frame& frame) {
     window.direction = Direction::Column;
     window.background = Fill{Token::Bg};
     window.radius = 0.0f;
-    auto root = ui.begin(window);
+    auto root = ui.scope(window);
 
     {
-        auto header = kit::beginHeader(ui, Icon::Settings, "Helix Process Control",
+        auto header = kit::header(ui, Icon::Settings, "Helix Process Control",
                                        "Marecchia WTP · shift B · operator: r.almeida");
         spacer(ui);
         kit::pill(ui, "3 UNACK", {.tone = kit::Tone::Alarm});
@@ -497,7 +497,7 @@ NodeId Scada::build(Frame& frame) {
             toggle.align = Align::Center;
             toggle.gap = 8.0f;
             toggle.shrink = 0.0f;
-            auto toggleScope = ui.begin(toggle);
+            auto toggleScope = ui.scope(toggle);
             text(ui, autoMode_ ? "AUTO" : "MANUAL",
                  {.color = autoMode_ ? Token::Added : Token::Modified,
                   .weight = FontWeight::SemiBold,
@@ -515,7 +515,7 @@ NodeId Scada::build(Frame& frame) {
         body.direction = Direction::Row;
         body.grow = 1.0f;
         body.basis = 0.0f;
-        auto bodyScope = ui.begin(body);
+        auto bodyScope = ui.scope(body);
 
         units(ui, input);
         kit::rule(ui, Direction::Row);
@@ -528,7 +528,7 @@ NodeId Scada::build(Frame& frame) {
             centre.grow = 1.0f;
             centre.basis = 0.0f;
             centre.minWidth = 0.0f;
-            auto centreScope = ui.begin(centre);
+            auto centreScope = ui.scope(centre);
             dials(ui);
             {
                 Style row;
@@ -536,7 +536,7 @@ NodeId Scada::build(Frame& frame) {
                 row.gap = 12.0f;
                 row.height = 262.0f;
                 row.shrink = 0.0f;
-                auto rowScope = ui.begin(row);
+                auto rowScope = ui.scope(row);
                 vesselsAndPumps(ui, input);
                 trend(ui, input);
             }
@@ -548,14 +548,14 @@ NodeId Scada::build(Frame& frame) {
             right.direction = Direction::Column;
             right.padding = Edges{12.0f, 12.0f, 12.0f, 0.0f};
             right.shrink = 0.0f;
-            auto rightScope = ui.begin(right);
+            auto rightScope = ui.scope(right);
             alarms(ui, input);
         }
     }
 
     kit::rule(ui, Direction::Column);
     {
-        auto bar = kit::beginStatusBar(ui);
+        auto bar = kit::statusBar(ui);
         kit::statusItem(ui, Icon::Terminal, "PLC link OK · redundancy A", kit::Tone::Ok);
         kit::statusItem(ui, Icon::ClockFading, "scan 6.2 ms");
         kit::statusItem(ui, Icon::Archive, "historian 14 d buffered");

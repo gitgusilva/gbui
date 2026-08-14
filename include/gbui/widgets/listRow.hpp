@@ -19,6 +19,6 @@ struct ListRowOptions {
 /** Opens a row. Returns a Scope, so its contents are written inside the
  *  braces. `selected` washes the row in the accent at 18%, `hovered` uses
  *  `surfaceHover`, and both are passed in — components hold no state. */
-Ui::Scope beginListRow(Ui& ui, const ListRowOptions& options = {});
+Ui::Scope listRow(Ui& ui, const ListRowOptions& options = {});
 
 }  // namespace gbui

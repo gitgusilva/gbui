@@ -29,7 +29,7 @@ bool menuItem(Ui& ui, const Interaction& input, std::string_view id, std::string
 
     row.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
-    auto scope = ui.begin(row);
+    auto scope = ui.scope(row);
     ui.tag(id).focusable(options.focusable && !options.disabled).cursor(row.cursorHint);
 
     const bool tickLeading =
@@ -57,7 +57,7 @@ bool menuItem(Ui& ui, const Interaction& input, std::string_view id, std::string
         slot.shrink = 0.0f;
         slot.justify = Justify::End;
         slot.align = Align::Center;
-        auto slotScope = ui.begin(slot);
+        auto slotScope = ui.scope(slot);
         icon(ui, Icon::Check, {.color = Token::Accent, .size = 14.0f});
         (void)slotScope;
     }

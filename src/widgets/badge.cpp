@@ -16,7 +16,7 @@ NodeId badge(Ui& ui, std::string_view value, const BadgeOptions& options) {
     // an ellipsis while the row still has room for the text beside it.
     style.shrink = 0.0f;  // fully rounded; the painter clamps to half the height
 
-    auto scope = ui.begin(style);
+    auto scope = ui.scope(style);
     TextOptions label;
     label.color = options.foreground;
     label.size = 11.0f;

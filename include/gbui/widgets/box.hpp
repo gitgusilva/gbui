@@ -1,6 +1,6 @@
 // The general container, the way `<div>` is one.
 //
-// `ui.begin(Style{…})` already builds any box the layout engine can express, so
+// `ui.scope(Style{…})` already builds any box the layout engine can express, so
 // `box` is not a new capability — it is the ergonomics. A sidebar, a navbar, a
 // card, a section and a plain wrapper are all the same node with different
 // values, and writing six lines of `Style` at each of those call sites is how a
@@ -8,8 +8,8 @@
 //
 // Presets are functions returning options, not a second API:
 //
-//     auto card = beginBox(ui, BoxStyle::card());
-//     auto bar  = beginBox(ui, BoxStyle::navbar({.height = 44.0f}));
+//     auto card = box(ui, BoxStyle::card());
+//     auto bar  = box(ui, BoxStyle::navbar({.height = 44.0f}));
 #pragma once
 
 #include <limits>
@@ -58,7 +58,7 @@ struct BoxOptions {
 };
 
 /** Opens a container. Everything until the returned scope dies is inside it. */
-Ui::Scope beginBox(Ui& ui, const BoxOptions& options = {});
+Ui::Scope box(Ui& ui, const BoxOptions& options = {});
 
 /** Presets for the containers an application actually repeats. Each returns
  *  options, so a caller overrides whatever it likes. */

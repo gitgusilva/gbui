@@ -62,7 +62,7 @@ DateTimePickerResult dateTimePicker(Ui& ui, const Interaction& input, std::strin
     frame.direction = options.sideBySide ? Direction::Row : Direction::Column;
     frame.gap = options.gap;
     frame.align = Align::Start;
-    auto scope = ui.begin(frame);
+    auto scope = ui.scope(frame);
     ui.tag(id);
 
     const DatePickerResult day =
@@ -123,7 +123,7 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
     trigger.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
     {
-        auto scope = ui.begin(trigger);
+        auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
         icon(ui, Icon::ClockFading, {.color = Token::TextMuted, .size = 14.0f});
         // Muted for the placeholder and not for the value: that contrast is the
@@ -143,7 +143,7 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
             clear.align = Align::Center;
             if (input.isHovered(clearId)) clear.background = Fill{Token::SurfaceHover};
             clear.cursorHint = Cursor::Pointer;
-            auto clearScope = ui.begin(clear);
+            auto clearScope = ui.scope(clear);
             ui.tag(clearId).cursor(Cursor::Pointer);
             icon(ui, Icon::X, {.color = Token::TextMuted, .size = 11.0f});
             (void)clearScope;
@@ -162,17 +162,17 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
     if (activated(input, triggerId, false)) state.open = !state.open;
     if (!state.open) return result;
 
-    PopoverOptions popover;
-    popover.placement = Placement::Bottom;
+    PopoverOptions popoverOptions;
+    popoverOptions.placement = Placement::Bottom;
     // Wider than the date field's: this holds a calendar *and* the clock
     // columns beside it, and squeezing them would stack the pair vertically
     // just as the reader opened it.
-    popover.minWidth = 420.0f;
-    popover.maxWidth = 560.0f;
-    popover.padding = Edges::all(10.0f);
-    popover.scroll = ScrollAxis::Vertical;
+    popoverOptions.minWidth = 420.0f;
+    popoverOptions.maxWidth = 560.0f;
+    popoverOptions.padding = Edges::all(10.0f);
+    popoverOptions.scroll = ScrollAxis::Vertical;
 
-    auto surface = beginPopover(ui, input, std::string(id) + ".popover", triggerId, popover);
+    auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     const DateTimePickerResult picked = dateTimePicker(
         ui, input, std::string(id) + ".picker", result.when.valid() ? result.when : selected,
         state, options);

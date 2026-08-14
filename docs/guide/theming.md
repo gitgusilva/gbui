@@ -22,7 +22,7 @@ Typography carries `uiFont`, `uiFontSize`, `monoFont`, `editorFont`,
 
 ```cpp
 text(ui, "main", {.color = Token::TextStrong});           // yes
-ui.begin({.background = Fill{Token::Accent, 0.18f}});     // a token at an alpha
+ui.scope({.background = Fill{Token::Accent, 0.18f}});     // a token at an alpha
 
 TextStyle wrong;
 wrong.color = Fill{Color{242, 242, 242}};                 // no
@@ -36,7 +36,7 @@ A gradient is a list of stops, and each stop carries a `Fill` rather than a
 colour, so a gradient is themeable like everything else:
 
 ```cpp
-ui.begin({.backgroundGradient = Gradient::linear(Fill{Token::Accent},
+ui.scope({.backgroundGradient = Gradient::linear(Fill{Token::Accent},
                                                  Fill{Token::Accent, 0.0f})});
 ```
 

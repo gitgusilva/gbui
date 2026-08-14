@@ -35,7 +35,7 @@ bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
     // whatever is beside it, and the one arriving from the right would be
     // visible long before it was due.
     strip.overflow = Overflow::Hidden;
-    auto scope = ui.begin(strip);
+    auto scope = ui.scope(strip);
     ui.tag(id);
 
     // Advanced, not derived. Wrapped at the stride so the number stays small
@@ -68,7 +68,7 @@ bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
         lane.left = -travelled + static_cast<float>(copy) * stride;
         lane.top = 0.0f;
         lane.height = Length::percent(100);
-        auto laneScope = ui.begin(lane);
+        auto laneScope = ui.scope(lane);
         // Only the first is measured. The second is the same content and would
         // report the same width, and two nodes answering to one tag is a
         // question with two answers.

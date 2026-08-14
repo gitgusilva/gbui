@@ -14,7 +14,7 @@ bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checke
     const bool hovered = input.isHovered(id);
     const bool ring = input.isFocusVisible(id);
 
-    auto row = beginControlRow(ui, id, options.disabled);
+    auto row = controlRow(ui, id, options.disabled);
     {
         const float side = options.size > 0.0f ? options.size : ui.design().checkboxSize;
         Style box;
@@ -39,7 +39,7 @@ bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checke
         if (ring && checked && !options.disabled) {
             box.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
         }
-        auto scope = ui.begin(box);
+        auto scope = ui.scope(box);
         if (checked) {
             icon(ui, Icon::Check,
                  {.color = options.disabled ? off.label : Token::AccentFg,

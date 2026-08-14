@@ -126,7 +126,7 @@ TEST("a wrapped paragraph is as tall as the lines it needs") {
     Ui ui(arena);
     NodeId paragraph;
     {
-        auto column = ui.beginColumn({.width = 40.0f});
+        auto column = ui.column({.width = 40.0f});
         paragraph = text(ui, "aaa bbb ccc", wrapping());
         (void)column;
     }
@@ -144,7 +144,7 @@ TEST("narrowing a paragraph makes it taller") {
         Ui ui(arena);
         NodeId paragraph;
         {
-            auto column = ui.beginColumn({.width = width});
+            auto column = ui.column({.width = width});
             paragraph = text(ui, "aaa bbb ccc", wrapping());
             (void)column;
         }
@@ -163,7 +163,7 @@ TEST("padding comes off the width before the text is wrapped") {
     Ui ui(arena);
     NodeId paragraph;
     {
-        auto column = ui.beginColumn({.width = 40.0f});
+        auto column = ui.column({.width = 40.0f});
         TextStyle textStyle;
         textStyle.size = kSize;
         textStyle.overflow = TextOverflow::Wrap;
@@ -184,9 +184,9 @@ TEST("a row is as tall as a paragraph at the width that paragraph gets") {
     Ui ui(arena);
     NodeId row;
     {
-        auto column = ui.beginColumn({.width = 100.0f});
+        auto column = ui.column({.width = 100.0f});
         {
-            auto scope = ui.beginRow({});
+            auto scope = ui.row({});
             row = scope.id();
             ui.add({.width = 40.0f});  // the label beside it
             TextOptions options = wrapping();
@@ -210,7 +210,7 @@ TEST("a wrapped run reports the longest word as its minimum width") {
     Ui ui(arena);
     NodeId paragraph;
     {
-        auto row = ui.beginRow({});
+        auto row = ui.row({});
         paragraph = text(ui, "a longestword b", wrapping());
         (void)row;
     }
@@ -227,7 +227,7 @@ TEST("painting a wrapped run draws one command per line") {
     Arena arena;
     Ui ui(arena);
     {
-        auto column = ui.beginColumn({.width = 40.0f});
+        auto column = ui.column({.width = 40.0f});
         text(ui, "aaa bbb ccc", wrapping());
         (void)column;
     }
@@ -256,7 +256,7 @@ TEST("a clamped run ends with an ellipsis on its last line") {
     Arena arena;
     Ui ui(arena);
     {
-        auto column = ui.beginColumn({.width = 40.0f});
+        auto column = ui.column({.width = 40.0f});
         text(ui, "aaa bbb ccc ddd eee", wrapping(2));
         (void)column;
     }

@@ -6,7 +6,7 @@
 //
 //     if (input.clicked("toolbar.branch")) state.menuOpen = !state.menuOpen;
 //     if (state.menuOpen) {
-//         auto menu = beginPopover(ui, input, "toolbar.branch.menu", "toolbar.branch");
+//         auto menu = popover(ui, input, "toolbar.branch.menu", "toolbar.branch");
 //         …
 //     }
 #pragma once
@@ -60,7 +60,7 @@ struct PopoverOptions : FloatingOptions {
 
 /** Returns a scope, so its contents are written inside the braces like any
  *  other container. */
-Ui::Scope beginPopover(Ui& ui, const Interaction& input, std::string_view id,
-                       std::string_view anchorId, const PopoverOptions& options = {});
+Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
+                  std::string_view anchorId, const PopoverOptions& options = {});
 
 }  // namespace gbui

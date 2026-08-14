@@ -139,7 +139,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
     panel.direction = Direction::Column;
     panel.gap = options.gap;
     panel.width = options.width;
-    auto scope = ui.begin(panel);
+    auto scope = ui.scope(panel);
     ui.tag(id);
 
     // ---- the saturation / value square -------------------------------------
@@ -149,7 +149,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         square.radius = 6.0f;
         square.background = Fill{pureHue};
         square.cursorHint = Cursor::Crosshair;
-        auto squareScope = ui.begin(square);
+        auto squareScope = ui.scope(square);
         ui.tag(squareId).cursor(Cursor::Crosshair);
 
         // White across, black down. Two gradients over the hue make the ramp
@@ -183,7 +183,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         track.height = options.railHeight;
         track.radius = options.railHeight / 2.0f;
         track.cursorHint = Cursor::Pointer;
-        auto trackScope = ui.begin(track);
+        auto trackScope = ui.scope(track);
         ui.tag(railId).cursor(Cursor::Pointer);
         if (chequered && !frame.empty()) chequer(ui, frame.width, frame.height);
         {
@@ -222,7 +222,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         readoutRow.direction = Direction::Row;
         readoutRow.align = Align::Center;
         readoutRow.gap = 8.0f;
-        auto row = ui.begin(readoutRow);
+        auto row = ui.scope(readoutRow);
         {
             // The swatch sits on a chequerboard too, or a 10% colour would look
             // like a pale one rather than a transparent one.
@@ -232,7 +232,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
             swatch.shrink = 0.0f;
             swatch.radius = 4.0f;
             swatch.border = Border{1.0f, Fill{Token::Border}};
-            auto swatchScope = ui.begin(swatch);
+            auto swatchScope = ui.scope(swatch);
             chequer(ui, 26.0f, 20.0f);
             Style over;
             over.position = Position::Absolute;
@@ -260,7 +260,7 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         swatchRow.direction = Direction::Row;
         swatchRow.gap = 6.0f;
         swatchRow.wrap = true;
-        auto row = ui.begin(swatchRow);
+        auto row = ui.scope(swatchRow);
         for (std::size_t i = 0; i < options.swatches.size(); ++i) {
             const std::string swatchId = std::string(id) + ".swatch." + std::to_string(i);
             Style swatch;
@@ -321,7 +321,7 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
     trigger.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
     {
-        auto scope = ui.begin(trigger);
+        auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
 
         {
@@ -334,7 +334,7 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
             swatch.shrink = 0.0f;
             swatch.radius = 4.0f;
             // On a chequerboard, so a translucent choice reads as translucent.
-            auto swatchScope = ui.begin(swatch);
+            auto swatchScope = ui.scope(swatch);
             if (options.alpha) chequer(ui, options.height - 8.0f, options.height - 8.0f);
             Style over;
             over.position = Position::Absolute;
@@ -361,20 +361,20 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
     if (!state.open) return result;
 
     // ---- the popover -------------------------------------------------------
-    PopoverOptions popover;
-    popover.placement = Placement::Bottom;
-    popover.minWidth = options.width;
-    popover.maxWidth = options.width + 24.0f;
-    popover.padding = Edges::all(12.0f);
-    popover.gapBetweenItems = 0.0f;
+    PopoverOptions popoverOptions;
+    popoverOptions.placement = Placement::Bottom;
+    popoverOptions.minWidth = options.width;
+    popoverOptions.maxWidth = options.width + 24.0f;
+    popoverOptions.padding = Edges::all(12.0f);
+    popoverOptions.gapBetweenItems = 0.0f;
     // The picker is a fixed height; nothing inside it should scroll.
-    // Scrolls inside rather than overflowing. `beginPopover` already works out
+    // Scrolls inside rather than overflowing. `popover` already works out
     // how much room there is and caps the box at it; without a scroll that cap
     // is just a clip, and a calendar opened near the bottom of the window loses
     // its last week with no way to reach it.
-    popover.scroll = ScrollAxis::Vertical;
+    popoverOptions.scroll = ScrollAxis::Vertical;
 
-    auto surface = beginPopover(ui, input, std::string(id) + ".popover", triggerId, popover);
+    auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     ColorPickerOptions inner = options;
     inner.width = options.width;
     result = colorPicker(ui, input, std::string(id) + ".picker", state, inner);
