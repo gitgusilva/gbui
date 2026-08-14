@@ -15,7 +15,7 @@
 // reader pastes forty lines out of a thousand without noticing. So Ctrl+A is
 // intercepted here, and `copy` and `cut` answer with the *file* rather than with
 // the fragment — which is also what the Copy button has always done.
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -100,20 +100,61 @@ function plain(): string {
 }
 watch(() => props.html, () => (plainCache = ''))
 
+let observer: ResizeObserver | null = null
+
 function measure() {
   const host = body.value
   if (!host) return
-  viewport.value = host.clientHeight
-  const line = host.querySelector<HTMLElement>('.line')
+  // `|| maxHeight`, and this is the whole of a bug worth naming: the markup
+  // arrives after the mount — it is a hundred kilobytes in a chunk of its own —
+  // so at the mount there is no element to measure, `v-if` having kept it out
+  // of the document. A viewport of zero renders `OVERSCAN` lines and a spring
+  // where the rest of the file should be, which is a source viewer showing
+  // fourteen lines of a thousand and nothing to say why.
+  viewport.value = host.clientHeight || props.maxHeight
   // A line's height is what every offset here is counted in, so it is measured
   // rather than assumed: the page's font size is the reader's to change.
-  if (line && line.offsetHeight > 0) lineHeight.value = line.offsetHeight
+  //
+  // Measured on the row, not on Shiki's `.line` inside it. That span is inline,
+  // and an inline box is as tall as its glyphs — twelve pixels against the
+  // row's twenty-four. Counting in half the real height makes the springs half
+  // the file's length, and the window then races the scrollbar: right at the
+  // top, and a screen of blank by the bottom.
+  //
+  // `getBoundingClientRect`, not `offsetHeight`, because the row is 23.8 pixels
+  // and rounding it to 24 is two hundred pixels of drift over a thousand lines.
+  const row = host.querySelector<HTMLElement>('.gbui-code-row')
+  const height = row?.getBoundingClientRect().height ?? 0
+  if (height > 0) lineHeight.value = height
+}
+
+/** Measures now, and again whenever the block changes size. */
+function watchSize() {
+  observer?.disconnect()
+  measure()
+  if (!body.value || typeof ResizeObserver === 'undefined') return
+  // The window resize listener is not enough: this block grows when its source
+  // lands and when the reader switches demos, and neither is a resize.
+  observer = new ResizeObserver(() => measure())
+  observer.observe(body.value)
 }
 
 onMounted(async () => {
   await nextTick()
-  measure()
+  watchSize()
   window.addEventListener('resize', measure)
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  window.removeEventListener('resize', measure)
+})
+
+// The element only exists once there are lines to put in it, so this is where
+// the first real measurement happens for every asynchronously loaded file.
+watch(lines, async () => {
+  await nextTick()
+  watchSize()
 })
 
 function onScroll(event: Event) {
@@ -186,7 +227,12 @@ function onCopy(event: ClipboardEvent) {
       <div class="gbui-code-shell" v-html="parsed.head" />
       <div class="gbui-code-window">
         <div class="gbui-code-spring" :style="{ height: `${above}px` }" />
-        <div v-for="(line, index) in shown" :key="first + index" v-html="line" />
+        <div
+          v-for="(line, index) in shown"
+          :key="first + index"
+          class="gbui-code-row"
+          v-html="line"
+        />
         <div class="gbui-code-spring" :style="{ height: `${below}px` }" />
       </div>
     </div>
