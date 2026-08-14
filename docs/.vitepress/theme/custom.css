@@ -81,10 +81,11 @@ html.dark .light-only {
   max-width: 760px;
 }
 
-.component-page .vp-doc > div > table {
-  display: table;
-  width: auto;
-}
+/* The table is *not* given `display: table` here, the way the demos page gives
+ * it to its own. VitePress's default for one is a block that scrolls sideways,
+ * which is what an options table wants: the last column is a sentence, so the
+ * table should take the width it is given and wrap — and scroll rather than
+ * overflow the page on the few that still will not fit. */
 
 /* The line under a heading saying where a component lives and what kind it is.
  * Set in the generated Markdown, so it is one span rather than a component. */

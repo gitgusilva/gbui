@@ -83,10 +83,6 @@ function build(): ComponentPage[] {
 
 export const pages: ComponentPage[] = build()
 
-export function pageOf(slug: string): ComponentPage | undefined {
-  return pages.find((page) => page.slug === slug)
-}
-
 /** The groups in the order the metadata lists them, each with its pages. */
 export function groups(): { text: string; pages: ComponentPage[] }[] {
   const order: string[] = []

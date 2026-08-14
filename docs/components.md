@@ -11,11 +11,13 @@ tables come from `gbui::meta`, which `tools/generate_meta.py` produces from
 `include/gbui/widgets/*.hpp`. A component that gained an option this morning has
 it here this afternoon, and one that never existed cannot appear at all.
 
-Each page carries a **Run** button — the same WebAssembly module the
+Every component has a **Run** button beside it — the same WebAssembly module the
 [demos](/demos) use, downloaded once for the page and not before you ask.
 Components that are one idea share a page, because the header they are declared
 in says they are: `colorField` and `colorPicker` are the same control with and
-without its input, and a reader who came looking for either wants both.
+without its input, and a reader who came looking for either wants both. They run
+side by side there, one example each, which is the comparison the shared page is
+for.
 
 <GbuiComponentIndex />
 

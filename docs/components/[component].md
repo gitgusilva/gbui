@@ -1,8 +1,10 @@
 ---
 editLink: false
-outline: [2, 3]
-# The example and the options table opt out of the prose column; see
-# .vitepress/theme/custom.css.
+# No outline, and the example and the options table opt out of the prose
+# column: what these pages are for is a table of four columns whose last one is
+# a sentence, and the aside was taking a quarter of the width to list the two
+# headings the sidebar already shows. See .vitepress/theme/custom.css.
+aside: false
 pageClass: component-page
 ---
 

@@ -42,6 +42,10 @@ function body(component: Component, alone: boolean) {
   if (!alone) {
     lines.push(`## ${component.name}`, '', `<span class="gbui-facts">${facts(component)}</span>`, '')
   }
+  // Every component runs under its own heading, including the only one on a
+  // page of its own — a page that shows two of three is a page that has
+  // decided for the reader which two are worth looking at.
+  lines.push(`<GbuiComponent name="${component.name}" />`, '')
   for (const signature of component.signatures) {
     lines.push('```cpp', signature, '```', '')
   }
@@ -61,8 +65,6 @@ export default {
         `<span class="gbui-facts">\`#include "${first.header}"\`${alone ? ` · ${facts(first)}` : ` · ${first.group}`}</span>`,
         '',
         first.summary,
-        '',
-        `<GbuiComponent page="${page.slug}" />`,
         '',
       ]
       for (const component of page.components) lines.push(...body(component, alone))
