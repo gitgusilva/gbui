@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { sidebar as componentSidebar } from './componentPages'
 import { current, isArchived, versionLink, versionMenu } from './versions'
 
 // Each version is built with its own base path and deployed to its own
@@ -30,21 +31,14 @@ export default defineConfig({
     ],
 
     sidebar: {
-      '/components': [
-        {
-          text: 'Components',
-          items: [
-            { text: 'All of them', link: '/components' },
-            { text: 'Writing a component', link: '/guide/writing-a-component' },
-            { text: 'The six demo screens', link: '/demos' },
-          ],
-        },
-      ],
+      // Every component is a route, and the sidebar is the list of them; both
+      // come from the generated metadata. See .vitepress/componentPages.ts.
+      '/components': componentSidebar(),
       '/demos': [
         {
           text: 'Demos',
           items: [
-            { text: 'The six screens', link: '/demos' },
+            { text: 'The screens', link: '/demos' },
             { text: 'Components', link: '/components' },
             { text: 'Your first window', link: '/guide/first-window' },
             { text: 'Writing a component', link: '/guide/writing-a-component' },

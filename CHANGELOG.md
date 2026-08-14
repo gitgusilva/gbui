@@ -26,6 +26,12 @@ commit.
   against `NodeId` — which is the distinction that was worth spelling, and
   `begin` was never it. **This renames public API**; the mapping above is the
   whole of it, and a compiler finds every call site.
+- Documentation: **every component has its own page**, listed in the sidebar and
+  found by search, generated from the same metadata the gallery read. Components
+  declared in one header share one page — `colorField` with `colorPicker`,
+  `scrollArea` with `scrollbar`, `text` with `strong` and `emphasis` — because
+  the file they are in is the toolkit's own statement that they are one idea.
+  `/components` is the contents page for them.
 
 ## [0.2.1] — 2026-08-13
 
