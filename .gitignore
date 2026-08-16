@@ -1,7 +1,11 @@
 # Anchored to the repository root, all three of them: `gallery/` unanchored also
 # matched examples/gallery/, which kept that example's only source file out of
 # the first commit and broke the build everywhere CI ran it.
-/build/
+# `/build*/` and not `/build/`: a second configuration is the normal way to
+# check something — a Debug tree beside a Release one, a scratch tree to
+# reproduce a CI failure — and every one of them was untracked only by luck.
+# One of them reached a commit.
+/build*/
 /out/
 /gallery/
 node_modules/
