@@ -164,7 +164,7 @@ TextEditResult textarea(Ui& ui, const Interaction& input, std::string_view id,
     box.minWidth = 96.0f;
     box.background = palette.background;
     box.border = Border{1.0f, Fill{palette.border}};
-    // `isFocused`, not `isFocusVisible`, for the reason `textField` gives: a box
+    // `isFocused`, not `isFocusVisible`, for the reason `textInput` gives: a box
     // that will swallow the next keystroke has to say so however focus arrived.
     if (focused && editable) box.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
     box.radius = ui.design().controlRadius;

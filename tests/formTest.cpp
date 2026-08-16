@@ -19,7 +19,7 @@ constexpr float kCharacterWidth = 10.0f;
 constexpr float kLineHeight = 14.0f;
 const Rect kWindow{0, 0, 400, 400};
 
-/** The same fixed font `textFieldTest` uses: every character ten pixels wide
+/** The same fixed font `textInputTest` uses: every character ten pixels wide
  *  and every line fourteen tall, so a click at x is expected at character x/10
  *  and a click at y on line y/14, and the assertions read as arithmetic. */
 TextMetrics measureFixed(std::string_view text, const TextStyle&, const Typography&, float) {

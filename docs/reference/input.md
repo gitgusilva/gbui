@@ -129,8 +129,8 @@ applies to a scripted `element.focus()`: a label clicked to focus its field
 draws no ring, and the same label reached by Tab does.
 
 Controls that take typing are the documented exception and ring on plain
-`isFocused`: `textField` and `numberField` show it however focus arrived,
-because a box that will swallow the next keystroke has to say so.
+`isFocused`: `textInput` shows it however focus arrived, in all three of its
+types, because a box that will swallow the next keystroke has to say so.
 
 ### Focus within
 

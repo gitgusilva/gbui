@@ -100,7 +100,7 @@ public:
      *  where the keyboard went. So the ring follows how focus *arrived*.
      *
      *  Controls that take typing are the documented exception and use
-     *  `isFocused` for their ring instead — see `textField`. */
+     *  `isFocused` for their ring instead — see `textInput`. */
     bool isFocusVisible(std::string_view tag) const { return focusVisible_ && isFocused(tag); }
 
     /** Whether focus is on this node or anywhere inside it.

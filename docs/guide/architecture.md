@@ -91,7 +91,7 @@ namespace gbui::charts { ... }       // a module large enough to own its vocabul
 | Functions and methods | `camelBack` | `listRow`, `intrinsicMainSize` |
 | Private members | trailing underscore | `contours_` |
 | Constants | `k` prefix | `kAuto`, `kMenuItemHeight` |
-| Files | named for the symbol, same case | `numberField.hpp` declares `numberField()` |
+| Files | named for the symbol, same case | `textInput.hpp` declares `textInput()` |
 | Tests | `<subject>Test.cpp` | `textWrapTest.cpp` |
 | Options | an `…Options` struct | `ButtonOptions` |
 
@@ -99,7 +99,7 @@ The file naming is deliberately **not** the usual C++ convention — the standar
 library, LLVM and Chromium all pair `snake_case` files with `CamelCase` symbols.
 The trade was made the other way here because almost nothing in this library is
 a class: the public surface is free functions, and a reader looking for
-`numberField` should not have to know it lives in `number_field.hpp`.
+`textInput` should not have to know it lives in `text_input.hpp`.
 Directories stay lowercase.
 
 `.clang-format` and `.clang-tidy` at the repository root enforce the mechanical

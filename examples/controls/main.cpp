@@ -58,8 +58,13 @@ struct Model {
     TextEditState name{"gitbox-themes", 13, 13};
     TextEditState token{"hunter2-secret", 14, 14};
     bool tokenRevealed = false;
+    // A number box edits text and reports a number, so the application keeps
+    // both: the string the caret lives in, and the value the rest of the screen
+    // reads. They are only allowed to disagree while the box has the keyboard.
     double fetchMinutes = 5.0;
+    TextEditState fetchMinutesText{"5", 1, 1};
     double fontSize = 20.0;
+    TextEditState fontSizeText{"20", 2, 2};
     double contrast = 0.65;
     double stepped = 0.5;
     std::size_t tab = 0;
@@ -301,20 +306,22 @@ void togglesTab(Ui& ui, const Interaction& input, Model& model) {
 void textTab(Ui& ui, const Interaction& input, Model& model) {
     {
         auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
-        sectionTitle(ui, "Fields", "widgets/textField");
+        sectionTitle(ui, "Fields", "widgets/textInput");
         {
             auto fieldScope = field(ui, "Repository");
-            textField(ui, input, "controls.name", model.name,
+            textInput(ui, input, "controls.name", model.name,
                       {.placeholder = "name", .leading = Icon::Folder, .grow = 1.0f});
             (void)fieldScope;
         }
         {
             auto fieldScope = field(ui, "Access token");
             // The eye is on by default; the model owns whether it is showing.
-            const TextFieldResult result =
-                textField(ui, input, "controls.token", model.token,
-                          {.placeholder = "paste a token", .password = true,
-                           .revealed = model.tokenRevealed, .grow = 1.0f});
+            const TextInputResult result =
+                textInput(ui, input, "controls.token", model.token,
+                          {.type = InputType::Password,
+                           .placeholder = "paste a token",
+                           .revealed = model.tokenRevealed,
+                           .grow = 1.0f});
             if (result.toggledReveal) model.tokenRevealed = !model.tokenRevealed;
             (void)fieldScope;
         }
@@ -329,13 +336,13 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
         {
             auto fieldScope = field(ui, "Read-only");
             TextEditState readOnly{"origin/main", 0, 0};
-            textField(ui, input, "controls.readonly", readOnly, {.readOnly = true, .grow = 1.0f});
+            textInput(ui, input, "controls.readonly", readOnly, {.readOnly = true, .grow = 1.0f});
             (void)fieldScope;
         }
         {
             auto fieldScope = field(ui, "Disabled");
             TextEditState off{"", 0, 0};
-            textField(ui, input, "controls.disabledfield", off,
+            textInput(ui, input, "controls.disabledfield", off,
                       {.placeholder = "not editable", .disabled = true, .grow = 1.0f});
             (void)fieldScope;
         }
@@ -398,13 +405,16 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
 void numbersTab(Ui& ui, const Interaction& input, Model& model) {
     {
         auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 10.0f});
-        sectionTitle(ui, "Numbers and ranges", "widgets/numberField · slider");
+        sectionTitle(ui, "Numbers and ranges", "widgets/textInput · slider");
         {
             auto fieldScope = field(ui, "Auto-fetch");
-            const auto result = numberField(ui, input, "controls.minutes", model.fetchMinutes,
-                                            {.minimum = 0, .maximum = 60, .step = 1,
-                                             .suffix = " min"});
-            if (result.changed) model.fetchMinutes = result.value;
+            const auto result = textInput(ui, input, "controls.minutes", model.fetchMinutesText,
+                                          {.type = InputType::Number,
+                                           .minimum = 0,
+                                           .maximum = 60,
+                                           .step = 1,
+                                           .suffix = " min"});
+            if (result.hasValue) model.fetchMinutes = result.value;
             (void)fieldScope;
         }
         {
@@ -1516,10 +1526,13 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             stepper.width = 118.0f;
             stepper.shrink = 0.0f;
             auto stepperScope = ui.scope(stepper);
-            const auto result = numberField(ui, input, "controls.uisize", model.fontSize,
-                                            {.minimum = 9, .maximum = 22, .step = 1,
-                                             .suffix = " px"});
-            if (result.changed) model.fontSize = result.value;
+            const auto result = textInput(ui, input, "controls.uisize", model.fontSizeText,
+                                          {.type = InputType::Number,
+                                           .minimum = 9,
+                                           .maximum = 22,
+                                           .step = 1,
+                                           .suffix = " px"});
+            if (result.hasValue) model.fontSize = result.value;
             (void)stepperScope;
         }
         {
@@ -1798,7 +1811,13 @@ int main(int argc, char** argv) {
         model.tab = static_cast<std::size_t>(std::max(0, page));
         model.design = static_cast<std::size_t>(std::clamp(design, 0, static_cast<int>(kDesignCount) - 1));
         model.lightMode = lightMode;
-        if (fontSize > 0.0) model.fontSize = fontSize;
+        if (fontSize > 0.0) {
+            model.fontSize = fontSize;
+            // The box the reader edits has to agree with the value the flag
+            // set, or the screenshot shows one size and says another.
+            model.fontSizeText.text = std::to_string(static_cast<int>(fontSize));
+            model.fontSizeText.moveToEnd();
+        }
         theme = themeFor(model);
         const auto shot = static_cast<float>(shotScale);
         // The canvas is in device pixels; the tree is laid out in logical ones.

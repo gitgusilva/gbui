@@ -58,7 +58,6 @@ set(GBUI_SOURCES
     src/widgets/marquee.cpp
     src/widgets/menu.cpp
     src/widgets/modal.cpp
-    src/widgets/numberField.cpp
     src/widgets/panel.cpp
     src/widgets/popover.cpp
     src/widgets/progress.cpp
@@ -73,7 +72,7 @@ set(GBUI_SOURCES
     src/widgets/tabs.cpp
     src/widgets/text.cpp
     src/widgets/textarea.cpp
-    src/widgets/textField.cpp
+    src/widgets/textInput.cpp
     src/widgets/timePicker.cpp
     src/widgets/toolbar.cpp
     src/widgets/tooltip.cpp

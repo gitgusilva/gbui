@@ -36,7 +36,7 @@ struct Field {
     Arena arena;
     Interaction input;
     TextEditState state;
-    TextFieldOptions options{};
+    TextInputOptions options{};
 
     explicit Field(std::string text) {
         state = TextEditState{std::move(text), 0, 0};
@@ -53,7 +53,7 @@ struct Field {
         ui.setMeasure(&measureFixed, theme.typography());
         {
             auto root = ui.row({.width = kWindow.width, .height = kWindow.height});
-            textField(ui, input, "field", state, options);
+            textInput(ui, input, "field", state, options);
             (void)root;
         }
         LayoutContext context;
@@ -84,6 +84,75 @@ struct Field {
         event.pointer = {x, kWindow.height / 2.0f};
         event.pointerDown = false;
         frame(event);
+    }
+};
+
+/** The same loop around a number box, with the keyboard on it unless a test
+ *  takes it away — which is the only way to reach the blur behaviour. */
+struct NumberBox {
+    Theme theme = Theme::dark();
+    Arena arena;
+    Interaction input;
+    TextEditState state;
+    TextInputOptions options{.type = InputType::Number};
+    TextInputResult result{};
+    bool focused = true;
+
+    explicit NumberBox(std::string text) {
+        state = TextEditState{std::move(text), 0, 0};
+        state.moveToEnd();
+        options.grow = 1.0f;
+    }
+
+    void frame(const InputFrame& event = {}) {
+        input.update(arena, arena.empty() ? NodeId{} : NodeId(0), event);
+        if (focused) {
+            input.focus("n");
+        } else {
+            input.blur();
+        }
+
+        arena.reset();
+        Ui ui(arena);
+        ui.setMeasure(&measureFixed, theme.typography());
+        {
+            auto root = ui.row({.width = kWindow.width, .height = kWindow.height});
+            result = textInput(ui, input, "n", state, options);
+            (void)root;
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        context.measure = &measureFixed;
+        layout(arena, ui.root(), kWindow, context);
+    }
+
+    /** One frame of typing, exactly as a keyboard delivers it. */
+    void type(std::string typed) {
+        InputFrame event;
+        event.text = std::move(typed);
+        frame(event);
+    }
+
+    void press(Key key) {
+        InputFrame event;
+        event.keys.push_back(KeyEvent{key});
+        frame(event);
+    }
+
+    /** The wheel over the box, which is what makes a spin box usable without
+     *  clicking into it first. */
+    void scroll(float lines) {
+        InputFrame event;
+        event.pointer = {kWindow.width / 2.0f, kWindow.height / 2.0f};
+        event.wheel = lines;
+        frame(event);
+    }
+
+    /** Takes the keyboard away and runs one more frame, which is the moment the
+     *  text is normalised from the value. */
+    void blur() {
+        focused = false;
+        frame();
     }
 };
 
@@ -190,7 +259,7 @@ TEST("the caret and the selection are placed inside the field, not the window") 
         NodeId root;
         {
             auto row = rebuilt.row({.padding = Edges{20.0f, 20.0f, 20.0f, 400.0f}});
-            textField(rebuilt, input, "f", state, {.grow = 1.0f});
+            textInput(rebuilt, input, "f", state, {.grow = 1.0f});
             root = row.id();
         }
         LayoutContext context;
@@ -225,11 +294,13 @@ TEST("a password field offers an eye, and reveals only when told to") {
         Ui ui(arena);
         Theme theme = Theme::dark();
         TextEditState state{"hunter2", 7, 7};
-        TextFieldResult result;
+        TextInputResult result;
         {
             auto row = ui.row({.align = Align::Center, .width = 300.0f});
-            result = textField(ui, input, "pw", state,
-                               {.password = true, .revealed = revealed, .grow = 1.0f});
+            result = textInput(ui, input, "pw", state,
+                               {.type = InputType::Password,
+                                .revealed = revealed,
+                                .grow = 1.0f});
             (void)row;
         }
         LayoutContext context;
@@ -278,8 +349,8 @@ TEST("turning the eye off leaves no reveal target") {
     TextEditState state{"hunter2", 7, 7};
     {
         auto row = ui.row({.align = Align::Center, .width = 300.0f});
-        textField(ui, input, "pw", state,
-                  {.password = true, .revealToggle = false, .grow = 1.0f});
+        textInput(ui, input, "pw", state,
+                  {.type = InputType::Password, .revealToggle = false, .grow = 1.0f});
         (void)row;
     }
     LayoutContext context;
@@ -314,7 +385,7 @@ TEST("the caret lands on whole pixels, whatever the text before it measures") {
             NodeId root;
             {
                 auto row = ui.row({.padding = Edges{10.0f, 10.0f, 10.0f, 40.5f}});
-                textField(ui, input, "snap", state, {.grow = 1.0f});
+                textInput(ui, input, "snap", state, {.grow = 1.0f});
                 root = row.id();
             }
             LayoutContext context;
@@ -368,7 +439,7 @@ TEST("an empty focused field still shows its caret") {
             NodeId root;
             {
                 auto row = ui.row({.padding = Edges::all(10.0f)});
-                textField(ui, input, "f", state, {.grow = 1.0f});
+                textInput(ui, input, "f", state, {.grow = 1.0f});
                 root = row.id();
             }
             LayoutContext context;
@@ -414,7 +485,7 @@ TEST("a field does not change height when text arrives") {
             NodeId root;
             {
                 auto row = ui.row({.padding = Edges::all(10.0f)});
-                textField(ui, input, "f", state, {.grow = 1.0f});
+                textInput(ui, input, "f", state, {.grow = 1.0f});
                 root = row.id();
             }
             LayoutContext context;
@@ -431,4 +502,179 @@ TEST("a field does not change height when text arrives") {
     const float typed = runHeight("hello");
     if (typed <= 0.0f) return;
     CHECK_NEAR(empty, typed);
+}
+
+// ---- the number form -------------------------------------------------------
+//
+// All of it rests on one decision: the text is the value while the box has the
+// keyboard. Everything below is a consequence of that, and the old
+// `numberField` — which held a `double` and no text at all — could express none
+// of it.
+
+TEST("a number box refuses anything that is not on the way to a number") {
+    NumberBox box("12");
+    box.frame();
+
+    box.type("a");
+    CHECK(box.state.text == "12");
+    CHECK_EQ(box.state.caret, std::size_t{2});
+
+    box.type("3");
+    CHECK(box.state.text == "123");
+}
+
+TEST("a number that is not one yet is allowed to exist") {
+    NumberBox box("");
+    box.options.minimum = -10.0;
+    box.options.maximum = 10.0;
+    box.options.decimals = 2;
+    box.frame();
+
+    // A lone sign is a state every negative number is typed through, and a box
+    // that refuses it cannot be typed a negative number at all.
+    box.type("-");
+    CHECK(box.state.text == "-");
+    CHECK(!box.result.hasValue);
+
+    box.type("1");
+    CHECK(box.result.hasValue);
+    CHECK_NEAR(box.result.value, -1.0);
+
+    // So is a trailing point, and it reads as the number before it.
+    box.type(".");
+    CHECK(box.state.text == "-1.");
+    CHECK(box.result.hasValue);
+    CHECK_NEAR(box.result.value, -1.0);
+
+    box.type("5");
+    CHECK_NEAR(box.result.value, -1.5);
+
+    // A second point is not on the way to anything.
+    box.type(".");
+    CHECK(box.state.text == "-1.5");
+}
+
+TEST("what the type refuses depends on the range and the decimals") {
+    {
+        NumberBox whole("1");
+        whole.options.decimals = 0;
+        whole.frame();
+        whole.type(".");
+        CHECK(whole.state.text == "1");
+    }
+    {
+        NumberBox positive("1");
+        positive.options.minimum = 0.0;
+        positive.frame();
+        // The caret is at the end, which is where a sign would be illegal
+        // anyway — but the check is on the whole string, so this is refused
+        // wherever it lands.
+        positive.state.caret = positive.state.anchor = 0;
+        positive.type("-");
+        CHECK(positive.state.text == "1");
+    }
+}
+
+TEST("the value is clamped while the text is not, and blur reconciles them") {
+    NumberBox box("5");
+    box.options.minimum = 0.0;
+    box.options.maximum = 60.0;
+    box.frame();
+
+    box.type("00");
+    // On screen it says what was typed; the application is told what it can
+    // store. Rewriting the text under the caret mid-number is the behaviour
+    // this shape exists to avoid.
+    CHECK(box.state.text == "500");
+    CHECK(box.result.hasValue);
+    CHECK_NEAR(box.result.value, 60.0);
+
+    box.blur();
+    CHECK(box.state.text == "60");
+    CHECK_NEAR(box.result.value, 60.0);
+}
+
+TEST("an empty number box has no value, and blur does not invent one") {
+    NumberBox box("");
+    box.options.minimum = 0.0;
+    box.options.maximum = 60.0;
+    box.frame();
+
+    CHECK(!box.result.hasValue);
+    box.blur();
+    CHECK(box.state.text.empty());
+    CHECK(!box.result.hasValue);
+}
+
+TEST("half a number is cleared on blur rather than left on screen") {
+    NumberBox box("");
+    box.options.minimum = -10.0;
+    box.frame();
+
+    box.type("-");
+    CHECK(box.state.text == "-");
+
+    box.blur();
+    CHECK(box.state.text.empty());
+}
+
+TEST("the arrows and the wheel step the value") {
+    NumberBox box("5");
+    box.options.minimum = 0.0;
+    box.options.maximum = 60.0;
+    box.frame();
+
+    box.press(Key::Up);
+    CHECK(box.state.text == "6");
+    CHECK_NEAR(box.result.value, 6.0);
+
+    box.scroll(2.0f);
+    CHECK(box.state.text == "8");
+
+    box.press(Key::Down);
+    CHECK(box.state.text == "7");
+
+    // A step lands the caret where more typing continues the number.
+    CHECK_EQ(box.state.caret, box.state.text.size());
+}
+
+TEST("a step button steps the value on the frame it was clicked") {
+    NumberBox box("5");
+    box.options.maximum = 60.0;
+    box.frame();
+    box.frame();
+
+    const Rect plus = box.input.frameOf("n.increment");
+    CHECK(plus.width > 0.0f);
+    const Vec2 at{plus.x + plus.width / 2.0f, plus.y + plus.height / 2.0f};
+
+    InputFrame down;
+    down.pointer = at;
+    down.pointerDown = true;
+    box.frame(down);
+    CHECK(box.state.text == "5");   // a press is not a click
+
+    InputFrame up;
+    up.pointer = at;
+    up.pointerDown = false;
+    box.frame(up);
+    CHECK(box.state.text == "6");
+}
+
+TEST("Home and End belong to the caret, not to the bounds") {
+    // The behaviour `numberField` had and this deliberately does not: it takes
+    // typing now, and a box where End jumps to the maximum is a box that fights
+    // whoever is typing in it.
+    NumberBox box("42");
+    box.options.minimum = 0.0;
+    box.options.maximum = 60.0;
+    box.frame();
+
+    box.press(Key::Home);
+    CHECK_EQ(box.state.caret, std::size_t{0});
+    CHECK(box.state.text == "42");
+
+    box.press(Key::End);
+    CHECK_EQ(box.state.caret, std::size_t{2});
+    CHECK(box.state.text == "42");
 }

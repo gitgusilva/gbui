@@ -46,7 +46,6 @@ struct State {
     bool off = false;
     std::size_t choice = 1;
     std::size_t tab = 0;
-    double number = 42.0;
     double fraction = 0.62;
     float clock = 0.0f;
     /** Seconds since the previous frame, for anything that advances. */
@@ -55,6 +54,9 @@ struct State {
     MarqueeState marquee{};
 
     TextEditState text{"themes/nord", 11, 11};
+    /** A number box's state is a string like any other input's: while it has
+     *  the keyboard the text is the value, and `42.` is on the way to one. */
+    TextEditState minutes{"42", 2, 2};
     TextEditState secret{"hunter2", 7, 7};
     TextareaState note{};
     /** What the `field` example is complaining about, so the example shows the

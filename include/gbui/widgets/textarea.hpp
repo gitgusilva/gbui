@@ -1,6 +1,6 @@
 // A multi-line plain text box.
 //
-// The gap between `textField` and `richEditor`, and it is a wide one: a commit
+// The gap between `textInput` and `richEditor`, and it is a wide one: a commit
 // message, a description, a note. Plain text, so the value is a `std::string`
 // and stays one — nothing here has marks, blocks or a document model, and a
 // caller who wants those wants `richEditor`.

@@ -46,18 +46,19 @@ void addControlExamples(std::vector<Example>& out) {
                        }
                    }});
 
-    out.push_back({"numberField", [](Ui& ui, const Interaction& input, State& state) {
-                       if (const NumberFieldResult result = numberField(
-                               ui, input, "catalog.number", state.number,
-                               {.minimum = 0.0, .maximum = 100.0, .step = 1.0, .suffix = " min"});
-                           result.changed) {
-                           state.number = result.value;
-                       }
-                   }});
-
-    out.push_back({"textField", [](Ui& ui, const Interaction& input, State& state) {
-                       textField(ui, input, "catalog.field", state.text,
+    out.push_back({"textInput", [](Ui& ui, const Interaction& input, State& state) {
+                       // Both forms, because the type is the whole point: the
+                       // same box, the same caret and the same editing model,
+                       // with one of them refusing anything that is not a
+                       // number and growing two buttons for the range.
+                       textInput(ui, input, "catalog.field", state.text,
                                  {.placeholder = "Repository name", .leading = Icon::Search});
+                       textInput(ui, input, "catalog.number", state.minutes,
+                                 {.type = InputType::Number,
+                                  .minimum = 0.0,
+                                  .maximum = 100.0,
+                                  .step = 1.0,
+                                  .suffix = " min"});
                    }});
 
     out.push_back({"textarea", [](Ui& ui, const Interaction& input, State& state) {
@@ -85,7 +86,7 @@ void addControlExamples(std::vector<Example>& out) {
                               .error = state.fieldError,
                               .required = true},
                              [&](Ui& inner) {
-                                 textField(inner, input, "catalog.field", state.text,
+                                 textInput(inner, input, "catalog.field", state.text,
                                            {.placeholder = "Repository name", .grow = 1.0f});
                              });
                    }});
@@ -102,7 +103,7 @@ void addControlExamples(std::vector<Example>& out) {
                        // the keyboard there — and draws no focus ring, because
                        // the pointer already told the user where they went.
                        label(ui, input, "catalog.field", "Repository");
-                       textField(ui, input, "catalog.field", state.text,
+                       textInput(ui, input, "catalog.field", state.text,
                                  {.placeholder = "Repository name"});
                    }});
 

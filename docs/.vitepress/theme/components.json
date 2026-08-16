@@ -580,126 +580,6 @@
     ]
   },
   {
-    "name": "numberField",
-    "group": "Elements",
-    "header": "gbui/widgets/numberField.hpp",
-    "summary": "A number, with step buttons and the wheel.",
-    "signatures": [
-      "[[nodiscard]] NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view id, double value, const NumberFieldOptions& options = {});"
-    ],
-    "notes": [
-      "The value is clamped and rounded before it is returned, so a caller never sees one outside the range."
-    ],
-    "optionsType": "NumberFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "minimum",
-        "kind": "Number",
-        "type": "double",
-        "default": "-1e18",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "maximum",
-        "kind": "Number",
-        "type": "double",
-        "default": "1e18",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "step",
-        "kind": "Number",
-        "type": "double",
-        "default": "1.0",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "decimals",
-        "kind": "Number",
-        "type": "int",
-        "default": "0",
-        "choices": [],
-        "doc": "Digits after the point, for both display and rounding.",
-        "optional": false
-      },
-      {
-        "name": "suffix",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "\"px\", \"%\", \" ms\"",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "readOnly",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "steppers",
-        "kind": "Enum",
-        "type": "StepperPlacement",
-        "default": "StepperPlacement::Sides",
-        "choices": [
-          "Sides",
-          "Stacked",
-          "None"
-        ],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's control height.",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "120.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "stackedBelow",
-        "kind": "Number",
-        "type": "float",
-        "default": "110.0f",
-        "choices": [],
-        "doc": "Below this the steppers are dropped to `Stacked` automatically, so a field in a narrow column shows its value rather than two buttons.",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "progressBar",
     "group": "Elements",
     "header": "gbui/widgets/progress.hpp",
@@ -1271,25 +1151,40 @@
     ]
   },
   {
-    "name": "textField",
+    "name": "textInput",
     "group": "Elements",
-    "header": "gbui/widgets/textField.hpp",
-    "summary": "A single-line text field.",
+    "header": "gbui/widgets/textInput.hpp",
+    "summary": "A single-line input, and a type that says what it accepts.",
     "signatures": [
-      "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});"
+      "TextInputResult textInput(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextInputOptions& options = {});"
     ],
-    "notes": [],
-    "optionsType": "TextFieldOptions",
+    "notes": [
+      "Edits `state` in place when it has focus and returns what happened, so a caller can react to a submit without diffing the text. The pointer places the caret: a press puts it at the character it landed on, and holding and moving drags a selection out from there. Both measure the run the same way the caret is drawn, so what is clicked is where it lands."
+    ],
+    "optionsType": "TextInputOptions",
     "container": false,
     "interactive": true,
     "properties": [
+      {
+        "name": "type",
+        "kind": "Enum",
+        "type": "InputType",
+        "default": "InputType::Text",
+        "choices": [
+          "Text",
+          "Password",
+          "Number"
+        ],
+        "doc": "What the box accepts. Everything below marked for one type is ignored by the others.",
+        "optional": false
+      },
       {
         "name": "placeholder",
         "kind": "Text",
         "type": "std::string_view",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "Shown while the text is empty. It steps aside once the box has the keyboard: a hint you are being asked to type over is noise the moment you start.",
         "optional": false
       },
       {
@@ -1311,13 +1206,22 @@
         "optional": false
       },
       {
-        "name": "password",
+        "name": "invalid",
         "kind": "Bool",
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "Draws bullets instead of the text. The state still holds the real string \u2014 this hides it, it does not protect it.",
+        "doc": "Draws the box in the error colour. The control's half of the state `field` owns the message for. A component does not reach into another component's options, so a field with an error on it does not restyle its control by remote control \u2014 the caller says so twice, once in each place, and both are readable on their own.",
         "optional": false
+      },
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "A glyph at the leading edge, inside the box.",
+        "optional": true
       },
       {
         "name": "revealToggle",
@@ -1325,7 +1229,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "The eye at the trailing edge that shows the password while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against. Ignored unless `password` is set.",
+        "doc": "The eye at the trailing edge that shows the text while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against.",
         "optional": false
       },
       {
@@ -1338,21 +1242,79 @@
         "optional": false
       },
       {
-        "name": "leading",
-        "kind": "Icon",
-        "type": "std::optional<Icon>",
-        "default": "",
+        "name": "minimum",
+        "kind": "Number",
+        "type": "double",
+        "default": "-1e18",
         "choices": [],
         "doc": "",
-        "optional": true
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Number",
+        "type": "double",
+        "default": "1e18",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "1.0",
+        "choices": [],
+        "doc": "What one arrow, one wheel notch or one step button is worth.",
+        "optional": false
+      },
+      {
+        "name": "decimals",
+        "kind": "Number",
+        "type": "int",
+        "default": "0",
+        "choices": [],
+        "doc": "Digits after the point. Zero also stops a point being typed at all.",
+        "optional": false
+      },
+      {
+        "name": "suffix",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn after the value, and never part of it: `\" min\"`, `\"px\"`, `\"%\"`. A suffix inside the editable text would be a suffix the caret can be put in the middle of.",
+        "optional": false
+      },
+      {
+        "name": "steppers",
+        "kind": "Enum",
+        "type": "StepperPlacement",
+        "default": "StepperPlacement::Sides",
+        "choices": [
+          "Sides",
+          "Stacked",
+          "None"
+        ],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "stackedBelow",
+        "kind": "Number",
+        "type": "float",
+        "default": "110.0f",
+        "choices": [],
+        "doc": "Below this width the steppers drop to `Stacked` automatically, so a box in a narrow column shows its value rather than two buttons.",
+        "optional": false
       },
       {
         "name": "height",
         "kind": "Number",
         "type": "float",
-        "default": "32.0f",
+        "default": "0.0f",
         "choices": [],
-        "doc": "",
+        "doc": "Zero takes the active design's control height.",
         "optional": false
       },
       {
@@ -1361,7 +1323,7 @@
         "type": "float",
         "default": "kAuto",
         "choices": [],
-        "doc": "",
+        "doc": "`kAuto` fits the content \u2014 except on a number, which takes 120 px: a box sized to its digits changes width as they are typed, and the steppers walk out from under the pointer clicking them.",
         "optional": false
       },
       {

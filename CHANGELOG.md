@@ -16,6 +16,39 @@ commit.
 
 ### Changed
 
+- **One `textInput` with an `InputType`, where there were `textField` and
+  `numberField`.** The HTML shape: `Text`, `Password` and `Number` are one box
+  that draws its content differently and refuses different things, and the two
+  files that said so separately drifted exactly as two copies do — `numberField`
+  held a `double` and no text, so the control in the set that most wants typing
+  was the one that could not be typed into. It cannot be called `input`: every
+  call site here names its `Interaction` parameter that, and a local hides a
+  namespace-scope function of the same name completely.
+
+  **Number entry is rewritten, not renamed.** The state is a `TextEditState`
+  like every other input's, and while the box has the keyboard the text is the
+  source of truth — `-`, `1.` and empty are all states a number is typed
+  through, and nothing rewrites the text underneath the caret. `result.value` is
+  clamped even when the text is not (typing `500` into a box that stops at `60`
+  shows `500` and returns `60`), `result.hasValue` is how an empty box says it
+  has no value, and blur normalises the text from the clamped value. Anything
+  that could still become a number is accepted; anything else is refused.
+
+  Two behaviours went with the rewrite, both on purpose: **Home and End move the
+  caret** rather than jumping to the bounds, and `+`/`-` type rather than step —
+  a box that takes typing cannot have those keys mean something else. Up, Down,
+  the wheel and the step buttons still step. Two bugs went with it too: the
+  stacked spin box drew `ChevronDown` for *both* arrows, and a number box sized
+  to its digits changed width as they were typed, walking the steppers out from
+  under the pointer clicking them — a number now takes 120 px unless told
+  otherwise. `invalid` is new on all three types, and is the control's half of
+  the state `field` owns the message for.
+
+  **This removes public API**: `textField`, `TextFieldOptions`,
+  `TextFieldResult`, `numberField`, `NumberFieldOptions` and `NumberFieldResult`
+  are gone, and `StepperPlacement` moved to `gbui/widgets/textInput.hpp`. A
+  compiler finds every call site; `{.password = true}` becomes
+  `{.type = InputType::Password}`.
 - **Every `begin*` container is named after what it makes.** `beginPanel` is
   `panel`, `beginBox` is `box`, and so on through `toolbar`, `listRow`,
   `popover`, `modal` and `modalActions`; `beginScroll` is `scrollArea`, because
@@ -37,7 +70,7 @@ commit.
 
 - **The component set is grouped by four questions instead of one word.**
   "Controls" held a checkbox and a date picker as if they were peers. The groups
-  are now **Elements** (21 — leaves with a counterpart in HTML, deciding nothing
+  are now **Elements** (22 — leaves with a counterpart in HTML, deciding nothing
   beyond the theme), **Containers** (11 — anything whose job is the content
   inside it), **Overlays** (6 — anything that leaves the flow and floats),
   **Components** (8 — the composed editors) and **Charts** (9). The questions are
@@ -63,7 +96,7 @@ commit.
 
 ### Added
 
-- **`textarea`**, the multi-line plain text box — the gap between `textField`
+- **`textarea`**, the multi-line plain text box — the gap between `textInput`
   and `richEditor`, and a wide one: a commit message, a description, a note.
   Return takes a newline and Ctrl+Return (Cmd+Return on macOS) submits, which is
   what every composer does. `rows` is a floor and `maxRows` a ceiling, so a box

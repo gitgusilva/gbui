@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(61);
+    out.reserve(60);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -185,30 +185,6 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::string_view id, std::string_view text, const LabelOptions& options = {});",
-    });
-    out.push_back(ComponentInfo{
-        "numberField",
-        "Elements",
-        "gbui/widgets/numberField.hpp",
-        "The value is clamped and rounded before it is returned, so a caller never sees one outside the range.",
-        "A number, with step buttons and the wheel.",
-        "NumberFieldOptions",
-        {
-            PropertyInfo{"minimum", PropertyKind::Number, "double", "-1e18", {}, "", false},
-            PropertyInfo{"maximum", PropertyKind::Number, "double", "1e18", {}, "", false},
-            PropertyInfo{"step", PropertyKind::Number, "double", "1.0", {}, "", false},
-            PropertyInfo{"decimals", PropertyKind::Number, "int", "0", {}, "Digits after the point, for both display and rounding.", false},
-            PropertyInfo{"suffix", PropertyKind::Text, "std::string_view", "", {}, "\"px\", \"%\", \" ms\"", false},
-            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
-            PropertyInfo{"readOnly", PropertyKind::Bool, "bool", "false", {}, "", false},
-            PropertyInfo{"steppers", PropertyKind::Enum, "StepperPlacement", "StepperPlacement::Sides", {"Sides", "Stacked", "None"}, "", false},
-            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height.", false},
-            PropertyInfo{"width", PropertyKind::Number, "float", "120.0f", {}, "", false},
-            PropertyInfo{"stackedBelow", PropertyKind::Number, "float", "110.0f", {}, "Below this the steppers are dropped to `Stacked` automatically, so a field in a narrow column shows its value rather than two buttons.", false},
-        },
-        false,
-        true,
-        "[[nodiscard]] NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view id, double value, const NumberFieldOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "progressBar",
@@ -392,27 +368,35 @@ std::vector<ComponentInfo> build() {
         "NodeId text(Ui& ui, std::string_view value, const TextOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "textField",
+        "textInput",
         "Elements",
-        "gbui/widgets/textField.hpp",
-        "",
-        "A single-line text field.",
-        "TextFieldOptions",
+        "gbui/widgets/textInput.hpp",
+        "Edits `state` in place when it has focus and returns what happened, so a caller can react to a submit without diffing the text. The pointer places the caret: a press puts it at the character it landed on, and holding and moving drags a selection out from there. Both measure the run the same way the caret is drawn, so what is clicked is where it lands.",
+        "A single-line input, and a type that says what it accepts.",
+        "TextInputOptions",
         {
-            PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "", {}, "", false},
+            PropertyInfo{"type", PropertyKind::Enum, "InputType", "InputType::Text", {"Text", "Password", "Number"}, "What the box accepts. Everything below marked for one type is ignored by the others.", false},
+            PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "", {}, "Shown while the text is empty. It steps aside once the box has the keyboard: a hint you are being asked to type over is noise the moment you start.", false},
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"readOnly", PropertyKind::Bool, "bool", "false", {}, "", false},
-            PropertyInfo{"password", PropertyKind::Bool, "bool", "false", {}, "Draws bullets instead of the text. The state still holds the real string — this hides it, it does not protect it.", false},
-            PropertyInfo{"revealToggle", PropertyKind::Bool, "bool", "true", {}, "The eye at the trailing edge that shows the password while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against. Ignored unless `password` is set.", false},
+            PropertyInfo{"invalid", PropertyKind::Bool, "bool", "false", {}, "Draws the box in the error colour. The control's half of the state `field` owns the message for. A component does not reach into another component's options, so a field with an error on it does not restyle its control by remote control — the caller says so twice, once in each place, and both are readable on their own.", false},
+            PropertyInfo{"leading", PropertyKind::Icon, "std::optional<Icon>", "", {}, "A glyph at the leading edge, inside the box.", true},
+            PropertyInfo{"revealToggle", PropertyKind::Bool, "bool", "true", {}, "The eye at the trailing edge that shows the text while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against.", false},
             PropertyInfo{"revealed", PropertyKind::Bool, "bool", "false", {}, "Whether the text is currently shown. The caller owns it, like every other piece of state here, and flips it when the result says so.", false},
-            PropertyInfo{"leading", PropertyKind::Icon, "std::optional<Icon>", "", {}, "", true},
-            PropertyInfo{"height", PropertyKind::Number, "float", "32.0f", {}, "", false},
-            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"minimum", PropertyKind::Number, "double", "-1e18", {}, "", false},
+            PropertyInfo{"maximum", PropertyKind::Number, "double", "1e18", {}, "", false},
+            PropertyInfo{"step", PropertyKind::Number, "double", "1.0", {}, "What one arrow, one wheel notch or one step button is worth.", false},
+            PropertyInfo{"decimals", PropertyKind::Number, "int", "0", {}, "Digits after the point. Zero also stops a point being typed at all.", false},
+            PropertyInfo{"suffix", PropertyKind::Text, "std::string_view", "", {}, "Drawn after the value, and never part of it: `\" min\"`, `\"px\"`, `\"%\"`. A suffix inside the editable text would be a suffix the caret can be put in the middle of.", false},
+            PropertyInfo{"steppers", PropertyKind::Enum, "StepperPlacement", "StepperPlacement::Sides", {"Sides", "Stacked", "None"}, "", false},
+            PropertyInfo{"stackedBelow", PropertyKind::Number, "float", "110.0f", {}, "Below this width the steppers drop to `Stacked` automatically, so a box in a narrow column shows its value rather than two buttons.", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "`kAuto` fits the content — except on a number, which takes 120 px: a box sized to its digits changes width as they are typed, and the steppers walk out from under the pointer clicking them.", false},
             PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
         },
         false,
         true,
-        "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});",
+        "TextInputResult textInput(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextInputOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "textarea",

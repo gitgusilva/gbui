@@ -18,7 +18,7 @@
 //
 //     field(ui, input, "f.name", {.label = "Repository", .required = true,
 //                                 .help = "Lowercase, no spaces.", .forId = "name"},
-//           [&](Ui& ui) { textField(ui, input, "name", state); });
+//           [&](Ui& ui) { textInput(ui, input, "name", state); });
 #pragma once
 
 #include <functional>

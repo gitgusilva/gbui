@@ -223,7 +223,7 @@ TEST("a checkbox asks for the pointer across its whole row") {
 TEST("a text field asks for the text cursor") {
     CHECK(cursorOver([](Ui& ui, const Interaction& input) {
               static TextEditState state{"origin/main", 0, 0};
-              textField(ui, input, "t", state, {});
+              textInput(ui, input, "t", state, {});
           }) == Cursor::Text);
 }
 

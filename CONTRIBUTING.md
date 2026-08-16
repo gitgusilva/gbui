@@ -44,7 +44,7 @@ be asked to remove it whatever else it does.
 4. **Identity is a string tag, never a `NodeId`.** The tree is rebuilt every
    frame; only a tag survives it.
 5. **One component, one header, one source file**, all named after the symbol in
-   the same camelCase (`numberField.hpp` declares `numberField()`). Anything two
+   the same camelCase (`textInput.hpp` declares `textInput()`). Anything two
    components share goes in `src/widgets/detail.hpp` rather than being copied.
 6. **Name what is missing.** A gap admitted in a header comment is a feature. A
    half-built one that silently misbehaves is a liability, and this codebase
@@ -156,7 +156,7 @@ of `/v0.2/` would install.
 | Functions and methods | `camelBack` | `listRow`, `intrinsicMainSize` |
 | Private members | trailing underscore | `contours_` |
 | Constants | `k` prefix | `kAuto`, `kMenuItemHeight` |
-| Files | named for the symbol, same case | `numberField.hpp` |
+| Files | named for the symbol, same case | `textInput.hpp` |
 | Options | an `…Options` struct | `ButtonOptions` |
 
 **Comments explain why.** What the code does is already written down in the

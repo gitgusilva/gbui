@@ -165,5 +165,5 @@ if (result.submitted) commit(state.text);
 ```
 
 Word movement treats bytes above ASCII as word characters, which keeps accented
-words whole. `textField` wraps all of this; the functions are public because
+words whole. `textInput` wraps all of this; the functions are public because
 they are useful on their own.

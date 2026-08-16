@@ -483,10 +483,9 @@ not what decides whether the control is a primitive.
 | `checkbox` | `(ui, input, id, checked, options)` | `true` on the frame it was toggled |
 | `radio` | `(ui, input, id, selected, options)` | `true` when chosen; nothing when already selected |
 | `toggle` | `(ui, input, id, on, options)` | `true` on the frame it was flipped |
-| `textField` | `(ui, input, id, TextEditState&, options)` | `TextFieldResult` — changed, moved, submitted, cancelled, toggledReveal |
+| `textInput` | `(ui, input, id, TextEditState&, options)` | `TextInputResult` — changed, moved, submitted, cancelled, toggledReveal, and `value`/`hasValue` on a number |
 | `textarea` | `(ui, input, id, TextareaState&, options)` | `TextEditResult` — `submitted` is the modified Return |
 | `field` | `(ui, input, id, options, control)` | `FieldResult` — the id to focus when the caption was clicked |
-| `numberField` | `(ui, input, id, value, options)` | `{value, changed}`, already clamped and stepped |
 | `slider` | `(ui, input, id, value, options)` | `{value, changed}`, snapped to `step` |
 | `progressBar` | `(ui, options)` | nothing; a negative value draws the indeterminate form |
 | `label` | `(ui, input, id, text, options)` | the id to focus when it was clicked, or nothing |
@@ -505,24 +504,45 @@ Every one of them:
 
 ### Text and numbers
 
-`textField` supports a placeholder, a leading icon, `readOnly` and `password`,
-with a reveal eye at the trailing edge that shows the text while it is held
-(`revealToggle`, on by default — a field you cannot read back is a field people
-mistype into). It and `numberField` are the exception to the ring rule above: a
-box that will swallow the next keystroke rings however focus arrived.
+`textInput` is one box with an `InputType`, the shape `<input>` has: `Text`,
+`Password` and `Number`. HTML's `email`, `url`, `tel` and `search` are
+deliberately absent, because here they would change nothing — their whole effect
+is to pick a soft keyboard and hand the browser a validator, and this toolkit
+has neither.
+
+All three support a placeholder, a leading icon, `readOnly`, `disabled` and
+`invalid`. `Password` draws bullets, with a reveal eye at the trailing edge that
+shows the text while it is held (`revealToggle`, on by default — a box you
+cannot read back is a box people mistype into). `textInput` is the exception to
+the ring rule above: a box that will swallow the next keystroke rings however
+focus arrived.
 
 The pointer places its caret. A press puts the caret on the character boundary
 nearest the click, and holding and moving drags a selection out from there —
 both measuring the run exactly as the caret is drawn, so what is clicked is
-where it lands. A password field maps the click against its bullets and counts
+where it lands. A password box maps the click against its bullets and counts
 that many characters into the string, because the two are not the same number
 of bytes.
 
-`numberField` owns the parse: it clamps, steps and rounds before returning, so
-a caller never sees a value outside the range. The wheel steps it while the
-pointer is over it. Its steppers go `Sides`, `Stacked` (the classic spin box) or
-`None`, and drop to `Stacked` automatically below `stackedBelow` pixels wide, so
-a field in a narrow column shows its value rather than two buttons.
+**A number is edited as text, and that is the whole design.** The state is a
+`TextEditState` like every other input's, because a caret needs a string and a
+number being typed is not yet a number: `-`, `1.` and empty are all states a
+reader passes through. So while the box has the keyboard the text is the source
+of truth and nothing rewrites it underneath the caret; anything that could still
+become a number is accepted and anything else is refused outright.
+
+`result.value` is the text read as a number, **clamped even when the text is
+not** — typing `500` into a box that stops at `60` leaves `500` on screen and
+returns `60` throughout. `result.hasValue` is false for an empty box, which is
+how a number input says it has no value. On blur the text is normalised from the
+clamped value, which is the one moment the two are allowed to disagree.
+
+The wheel steps the value while the pointer is over the box, and Up and Down
+step it while it has the keyboard. Home and End do **not** go to the bounds —
+they belong to the caret, as they do in anything else that takes typing. The
+steppers go `Sides`, `Stacked` (the classic spin box) or `None`, and drop to
+`Stacked` automatically below `stackedBelow` pixels wide, so a box in a narrow
+column shows its value rather than two buttons.
 
 ### Label and link
 
