@@ -94,6 +94,8 @@ struct State {
     DateTimeFieldState stampState{};
 
     bool modalOpen = false;
+    /** Whether the `drawer` example's panel is in. */
+    bool drawerOpen = false;
     Vec2 modalAt{};
     bool popoverOpen = true;
 

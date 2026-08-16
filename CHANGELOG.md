@@ -36,6 +36,19 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   down and re-open on the way up.
 - **`Interaction::pointerPressed()`** — true for the one frame the button went
   down, which is what the above needed and what `pointerDown()` is not.
+- **`drawer`** — a panel that comes in from an edge, named in the component
+  inventory and missing until now. Modal by default: a backdrop and the
+  keyboard trapped inside, which is a phone's navigation drawer; `modal = false`
+  is the desktop inspector, a pane beside the work with neither.
+
+  **It is the one floating component that takes `open` as a parameter.**
+  Everywhere else here, showing is building and hiding is not building — which
+  works because appearing is instant. A drawer slides, and a component that
+  stops being called cannot animate its own exit: the node is gone on the frame
+  the caller stops asking for it. So the flag goes in and the component decides
+  whether it is arriving, open, leaving or gone. Closed, the body is a
+  zero-sized clipped box out of the flow, so the call still sits unconditionally
+  in the frame.
 - **A scrollbar that gets out of the way**, which is SimpleBar's behaviour and
   now `ScrollOptions::scrollbarVisibility = ScrollbarVisibility::WhileUsed`.
   The bar is full while the view is being used — the pointer inside it, the bar

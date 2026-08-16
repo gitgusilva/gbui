@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/gbui_controls.dir/link.d CMakeFiles/gbui_controls.dir/controls/main.cpp.o -o gbui_controls  ../libgbui.a /usr/lib64/libSDL2-2.0.so.0.3200.70

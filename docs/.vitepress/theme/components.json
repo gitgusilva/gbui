@@ -3296,6 +3296,127 @@
     ]
   },
   {
+    "name": "drawer",
+    "group": "Overlays",
+    "header": "gbui/widgets/drawer.hpp",
+    "summary": "A panel that comes in from an edge.",
+    "signatures": [
+      "Drawer drawer(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, bool open, const DrawerOptions& options = {});"
+    ],
+    "notes": [
+      "A panel from an edge. bool showFilters = \u2026; auto sheet = drawer(ui, input, \"filters\", \"Filters\", showFilters); if (sheet.result.dismissed) showFilters = false; { // contents, written into sheet.body like any other container } The call sits unconditionally in the frame, the way `tooltip` does. Closed and finished leaving, `body` is a zero-sized clipped box out of the flow, so whatever the caller writes into it costs a few nodes and draws nothing \u2014 rather than landing in whichever container happened to be current."
+    ],
+    "optionsType": "DrawerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "side",
+        "kind": "Enum",
+        "type": "DrawerSide",
+        "default": "DrawerSide::Right",
+        "choices": [
+          "Left",
+          "Right",
+          "Top",
+          "Bottom"
+        ],
+        "doc": "Which edge it comes in from, and therefore which way it slides.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "320.0f",
+        "choices": [],
+        "doc": "How far across the window it reaches, in pixels. Clamped to the window, so a 400-pixel drawer on a 320-pixel window is a 320-pixel drawer rather than one with its close button off the edge.",
+        "optional": false
+      },
+      {
+        "name": "modal",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Blocks the window: a backdrop behind it and the keyboard trapped inside. On, because a panel that arrives over the content and leaves the content usable is an unusual thing to want and a confusing thing to meet. Off is the desktop inspector \u2014 a pane beside the work rather than in front of it.",
+        "optional": false
+      },
+      {
+        "name": "backdrop",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Dims what is behind it. Only meaningful when `modal`; a non-modal drawer with a backdrop would dim a window it does not block.",
+        "optional": false
+      },
+      {
+        "name": "header",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The title bar. Off leaves the whole panel to the caller, which is what a drawer holding its own toolbar wants.",
+        "optional": false
+      },
+      {
+        "name": "closeButton",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The \u00d7 in the header. A drawer with no other way out should keep it.",
+        "optional": false
+      },
+      {
+        "name": "icon",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "Beside the title.",
+        "optional": true
+      },
+      {
+        "name": "dismissOnBackdrop",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A press on the backdrop puts it away. Only when `modal` \u2014 without a backdrop there is nothing that press could mean.",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "duration",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.22f",
+        "choices": [],
+        "doc": "How long the slide takes, in seconds. Needs an animator; without one it simply appears, which is what every animated thing here does.",
+        "optional": false
+      },
+      {
+        "name": "bounds",
+        "kind": "Opaque",
+        "type": "Rect",
+        "default": "",
+        "choices": [],
+        "doc": "The window. Empty means the viewport the last layout used.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "menuItem",
     "group": "Overlays",
     "header": "gbui/widgets/menu.hpp",

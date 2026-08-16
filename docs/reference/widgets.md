@@ -9,10 +9,10 @@ uses. Four umbrellas gather the groups for callers who want all of it:
 
 | Umbrella | What it pulls in |
 | --- | --- |
-| `gbui/widgets/elements.hpp` | text, link, label, icon, image, badge, progress, spacing — and the input set: button, checkbox, radio, switch, select, slider, text field, textarea, number field, and the `field` that wraps one |
-| `gbui/widgets/containers.hpp` | box, panel, list row, toolbar, scroll view, table, tabs, virtualised list, marquee |
-| `gbui/widgets/overlays.hpp` | tooltip, popover, menu, modal |
-| `gbui/widgets/components.hpp` | the composed editors — colour, date, time and rich text — and the charts |
+| `gbui/widgets/elements.hpp` | `text`, `hyperlink`, `label`, `icon`, `image`, `badge`, `progressBar`, `divider`, `spacer` — and the input set: `button`, `checkbox`, `radio`, `toggle`, `select`, `slider`, `textInput`, `textarea`, and the `field` that wraps one |
+| `gbui/widgets/containers.hpp` | `box`, `panel`, `listRow`, `toolbar`, `scrollArea`, `scrollbar`, `table`, `tabs`, `tabPanels`, `virtualList`, `marquee`, `splitPane`, `treeView`, `carousel`, `gallery`, `compare` |
+| `gbui/widgets/overlays.hpp` | `tooltip`, `popover`, `menuItem`, `modal`, `drawer`, `toast` |
+| `gbui/widgets/components.hpp` | the composed editors — `colorPicker`, `datePicker`, `timePicker`, `dateTimePicker`, `richEditor`, each with its field form — and the charts |
 
 **Which group does a thing belong to?** Four questions, asked in this order.
 The order is the taxonomy; asking them in any other one produces two axes and no
@@ -871,6 +871,7 @@ bool        menuItem(Ui&, const Interaction&, id, std::string_view label, option
 void        menuSeparator(Ui&);
 Modal       modal(Ui&, const Interaction&, id, title, Vec2 position, options);
 Ui::Scope   modalActions(Ui&);
+Drawer      drawer(Ui&, const Interaction&, id, title, bool open, options);
 ToastResult toast(Ui&, const Interaction&, ToastState&, float delta, options);
 ```
 
@@ -910,6 +911,44 @@ part of the box itself.
 unconditionally beside the control it describes. `delay` (0.4 s) is what stops a
 pointer dragged across a toolbar from flashing one per control; it needs an
 animator for the clock, and without one the tooltip shows at once.
+
+### Drawer
+
+A panel from an edge — the shape behind a navigation menu on a narrow window, a
+filter pane, a details sidebar, a settings sheet on a phone.
+
+```cpp
+auto sheet = drawer(ui, input, "filters", "Filters", showFilters,
+                    {.side = DrawerSide::Right, .size = 260.0f});
+if (sheet.result.dismissed) showFilters = false;
+if (sheet.result.visible) {
+    // contents, written into the panel like any other container
+}
+```
+
+**It takes `open` as a parameter, and it is the only floating thing here that
+does.** Everywhere else, showing means building and hiding means not building;
+that works because appearing is instant. A drawer slides, and *a component that
+stops being called cannot animate its own exit* — the node is gone on the frame
+the caller stops asking for it, and there is nothing left to move off screen.
+So the flag goes in, and the component decides whether it is sliding in, open,
+sliding out, or gone. The application still owns the boolean, which is the rule
+that matters.
+
+Closed and finished leaving, the body is a zero-sized clipped box out of the
+flow, so the call can sit unconditionally in the frame and anything written
+into it costs a few nodes and draws nothing.
+
+`modal` (on) is the difference between a sheet that blocks the window — a
+backdrop, and the keyboard trapped inside — and a pane that sits beside it. Both
+are real: a navigation drawer on a phone is modal, a desktop inspector is not.
+One component with an option, for the reason this library keeps rediscovering.
+A non-modal drawer draws no backdrop even if you ask for one: dimming a window
+it does not block would tell the reader they cannot use something they can.
+
+`header` and `closeButton` come off for a panel that brings its own chrome, and
+`dismissOnBackdrop` and `dismissOnEscape` come off for one that has to be
+answered rather than waved away.
 
 `popover` bounds its own height: `maxHeight = kAuto` does **not** mean
 unbounded, it means the room actually available on the side it lands on, less

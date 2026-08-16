@@ -119,6 +119,27 @@ void addOverlayExamples(std::vector<Example>& out) {
                        }
                    }, 260});
 
+    out.push_back({"drawer", [](Ui& ui, const Interaction& input, State& state) {
+                       button(ui, input, "FILTERS",
+                              {.variant = ButtonVariant::Secondary, .id = "catalog.drawer.open"});
+                       if (input.clicked("catalog.drawer.open")) state.drawerOpen = true;
+
+                       // Called every frame, open or not — the flag goes *in*.
+                       // A component that stopped being built could not animate
+                       // its own way out; see the top of drawer.hpp.
+                       auto sheet = drawer(ui, input, "catalog.drawer", "Filters",
+                                           state.drawerOpen,
+                                           {.size = 260.0f, .icon = Icon::Settings});
+                       if (sheet.result.dismissed) state.drawerOpen = false;
+                       if (!sheet.result.visible) return;
+
+                       auto body = ui.column({.gap = 8.0f, .padding = Edges::all(14.0f)});
+                       state.on = checkbox(ui, input, "catalog.drawer.merged", state.on,
+                                           {.label = "Merged branches"});
+                       state.off = checkbox(ui, input, "catalog.drawer.stale", state.off,
+                                            {.label = "Stale over 90 days"});
+                   }, 380});
+
     out.push_back({"modal", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "DISCARD ALL",
                               {.variant = ButtonVariant::Danger, .id = "catalog.modal.open"});

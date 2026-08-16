@@ -3,6 +3,7 @@ add_executable(gbui_tests
     accessibilityTest.cpp
     toastTest.cpp
     compareTest.cpp
+    drawerTest.cpp
     carouselTest.cpp
     galleryTest.cpp
     treeViewTest.cpp

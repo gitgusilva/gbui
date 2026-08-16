@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/gbui_demo.dir/link.d CMakeFiles/gbui_demo.dir/runtime/native.cpp.o -o gbui_demo  libgbui_demos.a ../libgbui.a /usr/lib64/libSDL2-2.0.so.0.3200.70 ../libgbui_meta.a

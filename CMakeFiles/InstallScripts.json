@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/gustavo/Desktop/projects/gitbox/gbui/cmake_install.cmake",
+		"/home/gustavo/Desktop/projects/gitbox/gbui/tests/cmake_install.cmake",
+		"/home/gustavo/Desktop/projects/gitbox/gbui/examples/cmake_install.cmake",
+		"/home/gustavo/Desktop/projects/gitbox/gbui/demos/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

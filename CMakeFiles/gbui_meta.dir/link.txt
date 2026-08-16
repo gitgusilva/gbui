@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgbui_meta.a CMakeFiles/gbui_meta.dir/src/meta/components.cpp.o
+/usr/bin/ranlib libgbui_meta.a

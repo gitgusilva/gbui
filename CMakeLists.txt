@@ -42,6 +42,7 @@ set(GBUI_SOURCES
     src/paint/paint.cpp
     src/paint/canvas.cpp
     src/widgets/detail.cpp
+    src/widgets/drawer.cpp
     src/widgets/floating.cpp
     src/widgets/badge.cpp
     src/widgets/box.cpp

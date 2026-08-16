@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(66);
+    out.reserve(67);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -813,6 +813,30 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const VirtualListOptions& options, const std::function<void(Ui&, std::size_t)>& row);",
+    });
+    out.push_back(ComponentInfo{
+        "drawer",
+        "Overlays",
+        "gbui/widgets/drawer.hpp",
+        "A panel from an edge. bool showFilters = …; auto sheet = drawer(ui, input, \"filters\", \"Filters\", showFilters); if (sheet.result.dismissed) showFilters = false; { // contents, written into sheet.body like any other container } The call sits unconditionally in the frame, the way `tooltip` does. Closed and finished leaving, `body` is a zero-sized clipped box out of the flow, so whatever the caller writes into it costs a few nodes and draws nothing — rather than landing in whichever container happened to be current.",
+        "A panel that comes in from an edge.",
+        "DrawerOptions",
+        {
+            PropertyInfo{"side", PropertyKind::Enum, "DrawerSide", "DrawerSide::Right", {"Left", "Right", "Top", "Bottom"}, "Which edge it comes in from, and therefore which way it slides.", false},
+            PropertyInfo{"size", PropertyKind::Number, "float", "320.0f", {}, "How far across the window it reaches, in pixels. Clamped to the window, so a 400-pixel drawer on a 320-pixel window is a 320-pixel drawer rather than one with its close button off the edge.", false},
+            PropertyInfo{"modal", PropertyKind::Bool, "bool", "true", {}, "Blocks the window: a backdrop behind it and the keyboard trapped inside. On, because a panel that arrives over the content and leaves the content usable is an unusual thing to want and a confusing thing to meet. Off is the desktop inspector — a pane beside the work rather than in front of it.", false},
+            PropertyInfo{"backdrop", PropertyKind::Bool, "bool", "true", {}, "Dims what is behind it. Only meaningful when `modal`; a non-modal drawer with a backdrop would dim a window it does not block.", false},
+            PropertyInfo{"header", PropertyKind::Bool, "bool", "true", {}, "The title bar. Off leaves the whole panel to the caller, which is what a drawer holding its own toolbar wants.", false},
+            PropertyInfo{"closeButton", PropertyKind::Bool, "bool", "true", {}, "The × in the header. A drawer with no other way out should keep it.", false},
+            PropertyInfo{"icon", PropertyKind::Icon, "std::optional<Icon>", "", {}, "Beside the title.", true},
+            PropertyInfo{"dismissOnBackdrop", PropertyKind::Bool, "bool", "true", {}, "A press on the backdrop puts it away. Only when `modal` — without a backdrop there is nothing that press could mean.", false},
+            PropertyInfo{"dismissOnEscape", PropertyKind::Bool, "bool", "true", {}, "", false},
+            PropertyInfo{"duration", PropertyKind::Number, "float", "0.22f", {}, "How long the slide takes, in seconds. Needs an animator; without one it simply appears, which is what every animated thing here does.", false},
+            PropertyInfo{"bounds", PropertyKind::Opaque, "Rect", "", {}, "The window. Empty means the viewport the last layout used.", false},
+        },
+        false,
+        true,
+        "Drawer drawer(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, bool open, const DrawerOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "menuItem",
