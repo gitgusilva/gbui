@@ -14,6 +14,38 @@ named here and the reason for it is in the commit.
 Nothing yet. The next version's work lands on `main` and gets a number when it
 ships, not commit by commit.
 
+## [0.3.2] — 2026-08-16
+
+Releases carry binaries now, and the site has a page to get them from.
+
+### Added
+
+- **A shared library, the headers and the CMake package files, attached to
+  every release** — Linux x86-64, Windows x86-64, and both kinds of Mac. Unpack
+  one, point `CMAKE_PREFIX_PATH` at it, and `find_package(gbui)` finds it;
+  there is nothing else to install and nothing to build. A `SHA256SUMS` covers
+  the set. Until now a release was a source tarball GitHub made for free, which
+  is to say: build it yourself.
+
+  **They are built without the SDL2 backend, deliberately.** A prebuilt library
+  that links SDL2 needs *the same* SDL2 on the machine that loads it, and the
+  version a distribution ships is never the version the runner had — so the one
+  build that can be handed to a stranger is the one with nothing underneath it.
+  `Window::create` returns nothing in these and every other part of the library
+  is the same code. The alternative was a download that fails at load time on
+  most machines, with a message about a shared object rather than about why.
+
+  **Each archive is consumed before it is allowed out**: configured against,
+  built against and *run*, on the machine that produced it, by
+  `tools/consumer`. That is the check whose absence 0.3.1 was, and it now
+  stands between a broken package and a published one rather than after it.
+- **A download page**, in the nav and in the guide's first section. It reads
+  the newest release from the GitHub API at run time rather than baking a list
+  into a page that gets deployed once and then goes quietly stale, puts the
+  visitor's own platform first, and falls back to the releases page when the
+  API rate-limits — sixty requests an hour per address, and a visitor left on a
+  spinner has been told nothing.
+
 ## [0.3.1] — 2026-08-16
 
 A portability fix, and the two jobs that caught it. The library's own sources

@@ -10,6 +10,7 @@ import GbuiCode from './components/GbuiCode.vue'
 import GbuiComponent from './components/GbuiComponent.vue'
 import GbuiComponentIndex from './components/GbuiComponentIndex.vue'
 import GbuiDemo from './components/GbuiDemo.vue'
+import GbuiDownloads from './components/GbuiDownloads.vue'
 import './custom.css'
 
 export default {
@@ -19,5 +20,6 @@ export default {
     app.component('GbuiCode', GbuiCode)
     app.component('GbuiComponent', GbuiComponent)
     app.component('GbuiComponentIndex', GbuiComponentIndex)
+    app.component('GbuiDownloads', GbuiDownloads)
   },
 } satisfies Theme

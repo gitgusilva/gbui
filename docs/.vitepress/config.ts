@@ -27,6 +27,7 @@ export default defineConfig({
       { text: 'Reference', link: '/reference/overview' },
       { text: 'Components', link: '/components' },
       { text: 'Demos', link: '/demos' },
+      { text: 'Download', link: '/download' },
       versionMenu(),
     ],
 
@@ -51,6 +52,7 @@ export default defineConfig({
           items: [
             { text: 'Introduction', link: '/guide/introduction' },
             { text: 'Installation', link: '/guide/installation' },
+            { text: 'Download a build', link: '/download' },
             { text: 'Your first window', link: '/guide/first-window' },
           ],
         },

@@ -71,6 +71,12 @@ add_subdirectory(gbui)
 target_link_libraries(your_app PRIVATE gbui::gbui)
 ```
 
+Or don't build it: every release carries a shared library, the headers and the
+CMake package files for Linux, Windows and both kinds of Mac —
+[download](https://gitgusilva.github.io/gbui/download). Those have no SDL2 and
+so no window, because a prebuilt library that links SDL2 needs the same SDL2 on
+the machine that loads it; everything else in them is the same code.
+
 Then read [Your first window](https://gitgusilva.github.io/gbui/guide/first-window).
 
 ## Licence

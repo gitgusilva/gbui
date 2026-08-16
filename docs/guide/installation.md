@@ -11,6 +11,18 @@
 Everything else is vendored or standard. `third_party/stb_truetype.h` (public
 domain) rasterises glyphs and is the only third-party code in the tree.
 
+## Or don't build it
+
+Every release carries a shared library, the headers and the CMake package files
+for Linux, Windows and both kinds of Mac — see [download](/download). Unpack
+one, point `CMAKE_PREFIX_PATH` at it, and `find_package(gbui)` finds it.
+
+Those builds have no SDL2 and therefore no window: a prebuilt library that links
+SDL2 needs the same SDL2 on the machine that loads it, which a download cannot
+promise. Everything else in the library is the same code. Build from source if
+you want a window — which is the rest of this page, and is what an application
+should be shipping against anyway.
+
 ## Build it
 
 ```sh

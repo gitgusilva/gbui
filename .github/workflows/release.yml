@@ -36,10 +36,185 @@ permissions:
   contents: write
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # The binaries
+  # ---------------------------------------------------------------------------
+  #
+  # One archive per platform, each holding a shared library, the headers and the
+  # CMake package files — everything `find_package(gbui)` needs and nothing
+  # else. Until this existed a release was a source tarball GitHub made for
+  # free, which is to say: build it yourself.
+  #
+  # **They are built without the SDL2 backend, on purpose.** A prebuilt library
+  # that links SDL2 needs the same SDL2 on the machine that loads it, and the
+  # version that ships in a distribution is never the version the runner had —
+  # so the one build that could be handed to a stranger is the one with nothing
+  # under it. `Window::create` returns nothing in these; every other part of the
+  # library, layout and paint included, is the same code. Anyone who wants a
+  # window builds from source with SDL2 present, which is one command and is
+  # what the installation guide already describes.
+  #
+  # Each archive is consumed before it is allowed out: configured, built and
+  # *run* against the staged prefix. That check existed only in CI, against a
+  # prefix nobody downloads, and it is what let 0.3 ship an umbrella header that
+  # had stopped exporting `text`.
+  package:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  label: linux-x86_64,   platform: linux-x86_64,   archive: tar.gz }
+          - { os: windows-latest, label: windows-x86_64, platform: windows-x86_64, archive: zip }
+          - { os: macos-latest,   label: macos-arm64,    platform: macos-arm64,    archive: tar.gz }
+          - { os: macos-13,       label: macos-x86_64,   platform: macos-x86_64,   archive: tar.gz }
+
+    steps:
+      # The tag, not the default branch — this job builds the thing being
+      # released, where the job below only reads the changelog about it.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - name: Work out the name
+        id: name
+        shell: bash
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="${tag#v}"
+          {
+            echo "version=$version"
+            echo "stem=gbui-$version-${{ matrix.platform }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and install
+        shell: bash
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGBUI_BUILD_TESTS=OFF \
+            -DGBUI_BUILD_EXAMPLES=OFF \
+            -DGBUI_BUILD_DEMOS=OFF \
+            -DGBUI_PLATFORM_SDL2=OFF \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCMAKE_INSTALL_PREFIX="$PWD/stage/${{ steps.name.outputs.stem }}"
+          cmake --build build --config Release --parallel
+          cmake --install build --config Release
+
+      # What a person finds when they open the archive. The library cannot say
+      # any of this for itself once it is out of the repository.
+      - name: Say what is in it
+        shell: bash
+        env:
+          STEM: ${{ steps.name.outputs.stem }}
+          VERSION: ${{ steps.name.outputs.version }}
+        run: |
+          cp LICENSE "stage/$STEM/LICENSE"
+          cat > "stage/$STEM/README.md" <<EOF
+          # gbui $VERSION — ${{ matrix.platform }}
+
+          A shared build of gbui, its headers, and the CMake package files.
+
+          ## Use it
+
+          Point CMake at this directory and ask for the package:
+
+          \`\`\`sh
+          cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/$STEM
+          \`\`\`
+
+          \`\`\`cmake
+          find_package(gbui $VERSION REQUIRED)
+          target_link_libraries(my_app PRIVATE gbui::gbui)
+          \`\`\`
+
+          That one line carries the include directory and the C++20 requirement
+          with it. Everything you write is in the \`gbui\` namespace.
+
+          The library is shared, so it has to be findable at run time: on Linux
+          and macOS the linker writes an rpath if you install alongside it, and
+          on Windows \`gbui.dll\` goes beside your executable or on \`PATH\`.
+
+          ## No window backend
+
+          This build has no SDL2, because a prebuilt library that links SDL2
+          needs the same SDL2 on your machine and that is not a promise a
+          download can keep. \`Window::create\` returns nothing here; layout,
+          painting, the display list and the SVG painter are all the same code
+          as a source build.
+
+          Build from source if you want a window — it is one command, and
+          https://gitgusilva.github.io/gbui/guide/installation has it.
+
+          ## Contents
+
+          | | |
+          | --- | --- |
+          | \`include/gbui/\` | the headers |
+          | \`lib/\` | the library, and \`lib/cmake/gbui/\` for \`find_package\` |
+          | \`bin/\` | the DLL, on Windows only |
+
+          Licensed under the terms in LICENSE.
+          EOF
+
+      # The check the source tree cannot run: everything in it includes the
+      # header it wants directly, so an umbrella that stopped exporting a name
+      # breaks nothing until somebody consumes an *installed* prefix.
+      - name: Consume it, before anybody else has to
+        shell: bash
+        env:
+          STEM: ${{ steps.name.outputs.stem }}
+        run: |
+          cmake -S tools/consumer -B build/consumer \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$PWD/stage/$STEM"
+          cmake --build build/consumer --config Release --parallel
+          export PATH="$PWD/stage/$STEM/bin:$PATH"
+          if [ -x build/consumer/Release/gbui_consumer.exe ]; then
+            build/consumer/Release/gbui_consumer.exe
+          else
+            build/consumer/gbui_consumer
+          fi
+
+      - name: Archive it
+        shell: bash
+        env:
+          STEM: ${{ steps.name.outputs.stem }}
+        run: |
+          cd stage
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            7z a -tzip "$STEM.zip" "$STEM" > /dev/null
+          else
+            tar czf "$STEM.tar.gz" "$STEM"
+          fi
+          # Written per platform and concatenated below, because only the runner
+          # that built a file can checksum it.
+          if command -v sha256sum > /dev/null; then
+            sha256sum "$STEM.${{ matrix.archive }}" > "$STEM.sha256"
+          else
+            shasum -a 256 "$STEM.${{ matrix.archive }}" > "$STEM.sha256"
+          fi
+          cat "$STEM.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.name.outputs.stem }}
+          path: |
+            stage/${{ steps.name.outputs.stem }}.${{ matrix.archive }}
+            stage/${{ steps.name.outputs.stem }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+
   release:
     name: Publish ${{ inputs.tag || github.ref_name }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # A release with no binaries attached is the thing this stopped being. If a
+    # platform cannot be built the release does not go out half-dressed.
+    needs: package
 
     steps:
       # The default branch, not the tag — deliberately. The changelog is a
@@ -107,6 +282,42 @@ jobs:
             cat notes.md
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Collect the binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      # One SHA256SUMS for the whole release rather than a file each: it is what
+      # `sha256sum -c` reads, and four one-line files are four downloads to
+      # verify one. The per-platform ones are made where the archives are,
+      # because only that runner has them.
+      - name: One list of checksums, and the notes that point at it
+        shell: bash
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          cd artifacts
+          cat ./*.sha256 | sort -k2 > SHA256SUMS
+          rm -f ./*.sha256
+          ls -l
+          cd ..
+          {
+            echo
+            echo "---"
+            echo
+            echo "### Prebuilt libraries"
+            echo
+            echo "A shared library, the headers and the CMake package files, for"
+            echo "each platform. Unpack one, point \`CMAKE_PREFIX_PATH\` at it and"
+            echo "\`find_package(gbui)\` finds it — the archive's README has the"
+            echo "three lines. Built **without the SDL2 backend**, because a"
+            echo "prebuilt library that links SDL2 needs the same SDL2 on your"
+            echo "machine; build from source if you want a window."
+            echo
+            echo "Verify with \`sha256sum -c SHA256SUMS\`."
+          } >> notes.md
+
       # A tag carrying a suffix — v0.3.0-rc.1 — is not the one people should be
       # sent to by default. Everything else is, including 0.x: this project is
       # pre-1.0 and says so in the changelog, and marking every release a
@@ -133,3 +344,8 @@ jobs:
               --verify-tag \
               "${prerelease[@]}"
           fi
+
+          # `--clobber` so a re-run replaces what it uploaded last time instead
+          # of failing on a name that already exists — the same reason the step
+          # above edits rather than refusing.
+          gh release upload "$TAG" artifacts/* --clobber
