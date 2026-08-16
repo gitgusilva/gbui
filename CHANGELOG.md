@@ -350,7 +350,7 @@ commit.
 - **The component set is grouped by four questions instead of one word.**
   "Controls" held a checkbox and a date picker as if they were peers. The groups
   are now **Elements** (22 — leaves with a counterpart in HTML, deciding nothing
-  beyond the theme), **Containers** (14 — anything whose job is the content
+  beyond the theme), **Containers** (16 — anything whose job is the content
   inside it), **Overlays** (7 — anything that leaves the flow and floats),
   **Components** (8 — the composed editors) and **Charts** (9). The questions are
   asked in that order and the order *is* the taxonomy: it is why `panel` and
