@@ -1,4 +1,4 @@
-#include "gbui/widgets/switchToggle.hpp"
+#include "gbui/widgets/toggle.hpp"
 
 #include <algorithm>
 
@@ -10,8 +10,8 @@ namespace gbui {
 // What this shares with its siblings, rather than a copy in each.
 using namespace detail;
 
-bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on,
-                  const SwitchOptions& options) {
+bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on,
+                  const ToggleOptions& options) {
     const bool hovered = input.isHovered(id);
     const bool ring = input.isFocusVisible(id);
 

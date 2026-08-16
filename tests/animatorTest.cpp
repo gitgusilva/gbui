@@ -151,7 +151,7 @@ float knobTravel(Animator& animator, bool on) {
 
     {
         auto column = ui.column({.width = 200.0f});
-        (void)switchToggle(ui, input, "s", on, {});
+        (void)toggle(ui, input, "s", on, {});
         (void)column;
     }
     LayoutContext context;
@@ -199,7 +199,7 @@ TEST("without an animator a switch still lands on its target") {
     Interaction input;
     {
         auto column = ui.column({.width = 200.0f});
-        (void)switchToggle(ui, input, "s", true, {});
+        (void)toggle(ui, input, "s", true, {});
         (void)column;
     }
     LayoutContext context;

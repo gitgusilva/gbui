@@ -729,23 +729,6 @@ std::vector<ComponentInfo> build() {
         "[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, double value, const SliderOptions& options = {});",
     });
     out.push_back(ComponentInfo{
-        "switchToggle",
-        "Controls",
-        "gbui/widgets/switchToggle.hpp",
-        "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\".",
-        "A switch.",
-        "SwitchOptions",
-        {
-            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
-            PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "", false},
-            PropertyInfo{"width", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's track and thumb.", false},
-            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "", false},
-        },
-        false,
-        true,
-        "[[nodiscard]] bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const SwitchOptions& options = {});",
-    });
-    out.push_back(ComponentInfo{
         "textField",
         "Controls",
         "gbui/widgets/textField.hpp",
@@ -790,6 +773,23 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view id, const Time& selected, TimePickerState& state, const TimePickerOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "toggle",
+        "Controls",
+        "gbui/widgets/toggle.hpp",
+        "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\".",
+        "A switch.",
+        "ToggleOptions",
+        {
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's track and thumb.", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "[[nodiscard]] bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const ToggleOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "menuItem",

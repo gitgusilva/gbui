@@ -2711,59 +2711,6 @@
     ]
   },
   {
-    "name": "switchToggle",
-    "group": "Controls",
-    "header": "gbui/widgets/switchToggle.hpp",
-    "summary": "A switch.",
-    "signatures": [
-      "[[nodiscard]] bool switchToggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const SwitchOptions& options = {});"
-    ],
-    "notes": [
-      "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\"."
-    ],
-    "optionsType": "SwitchOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's track and thumb.",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "textField",
     "group": "Controls",
     "header": "gbui/widgets/textField.hpp",
@@ -2969,6 +2916,59 @@
         "kind": "Number",
         "type": "float",
         "default": "28.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "toggle",
+    "group": "Controls",
+    "header": "gbui/widgets/toggle.hpp",
+    "summary": "A switch.",
+    "signatures": [
+      "[[nodiscard]] bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const ToggleOptions& options = {});"
+    ],
+    "notes": [
+      "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\"."
+    ],
+    "optionsType": "ToggleOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's track and thumb.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
         "choices": [],
         "doc": "",
         "optional": false

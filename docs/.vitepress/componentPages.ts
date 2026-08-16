@@ -48,6 +48,25 @@ export const all = table as Component[]
 /** Headers whose components are a group rather than a component. */
 const SPLIT = new Set(['chart.hpp'])
 
+/**
+ * Headers that are one idea across several files, and the page they share.
+ *
+ * The header rule below gets the common case right and this is where it does
+ * not. A date, a time and a date-and-time are the same control with different
+ * amounts of it, and a reader who lands on one wants to see the other two under
+ * it rather than to find them in the sidebar — the same reasoning that already
+ * puts `colorField` beside `colorPicker`, except that these three could not
+ * share a file without breaking "one component, one header".
+ *
+ * The value is the page's slug *and* its title, so adding an entry is one line
+ * and no other list has to learn about it.
+ */
+const TOGETHER: Record<string, string> = {
+  'datePicker.hpp': 'pickers',
+  'timePicker.hpp': 'pickers',
+  'dateTimePicker.hpp': 'pickers',
+}
+
 function stem(header: string) {
   return header.slice(header.lastIndexOf('/') + 1)
 }
@@ -61,18 +80,24 @@ function build(): ComponentPage[] {
   const byKey = new Map<string, Component[]>()
   for (const component of all) {
     const file = stem(component.header)
-    const key = SPLIT.has(file) ? component.name : file
+    const key = SPLIT.has(file) ? component.name : TOGETHER[file] ?? file
     const bucket = byKey.get(key)
     if (bucket) bucket.push(component)
     else byKey.set(key, [component])
   }
 
+  const named = new Set(Object.values(TOGETHER))
   const pages: ComponentPage[] = []
   for (const [key, components] of byKey) {
     // A page holding one component is named after it — `progressBar`, not
     // `progress`. A page holding several takes the header's name, which is the
-    // only name the several of them share.
-    const title = components.length === 1 ? components[0].name : key.replace(/\.hpp$/, '')
+    // only name the several of them share — unless `TOGETHER` gave the page a
+    // name of its own, which is the point of naming it there.
+    const title = named.has(key)
+      ? key
+      : components.length === 1
+        ? components[0].name
+        : key.replace(/\.hpp$/, '')
     // The one the page is named after comes first; the rest keep the
     // metadata's order, which is alphabetical.
     components.sort((a, b) => Number(b.name === title) - Number(a.name === title))

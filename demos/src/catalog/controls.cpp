@@ -29,11 +29,11 @@ void addControlExamples(std::vector<Example>& out) {
                    }});
 
     out.push_back(
-        {"switchToggle", [](Ui& ui, const Interaction& input, State& state) {
+        {"toggle", [](Ui& ui, const Interaction& input, State& state) {
              // A switch reads as "on now" and a checkbox as "will
              // apply" — the only difference between the two, and the
              // reason both exist.
-             if (switchToggle(ui, input, "catalog.switch", state.on, {.label = "Auto fetch"})) {
+             if (toggle(ui, input, "catalog.switch", state.on, {.label = "Auto fetch"})) {
                  state.on = !state.on;
              }
          }});

@@ -288,7 +288,7 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                 text(ui, kit::format("%.0f h", pump.hours),
                      {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
             }
-            if (switchToggle(ui, input, tag, pumps_[i])) pumps_[i] = !pumps_[i];
+            if (toggle(ui, input, tag, pumps_[i])) pumps_[i] = !pumps_[i];
         }
 
         kit::rule(ui, Direction::Column);
@@ -492,17 +492,17 @@ NodeId Scada::build(Frame& frame) {
         spacer(ui);
         kit::pill(ui, "3 UNACK", {.tone = kit::Tone::Alarm});
         {
-            Style toggle;
-            toggle.direction = Direction::Row;
-            toggle.align = Align::Center;
-            toggle.gap = 8.0f;
-            toggle.shrink = 0.0f;
-            auto toggleScope = ui.scope(toggle);
+            Style andonRow;
+            andonRow.direction = Direction::Row;
+            andonRow.align = Align::Center;
+            andonRow.gap = 8.0f;
+            andonRow.shrink = 0.0f;
+            auto toggleScope = ui.scope(andonRow);
             text(ui, autoMode_ ? "AUTO" : "MANUAL",
                  {.color = autoMode_ ? Token::Added : Token::Modified,
                   .weight = FontWeight::SemiBold,
                   .size = 10.5f});
-            if (switchToggle(ui, input, "scada.auto", autoMode_)) autoMode_ = !autoMode_;
+            if (toggle(ui, input, "scada.auto", autoMode_)) autoMode_ = !autoMode_;
         }
         button(
             ui, input, "HOLD",

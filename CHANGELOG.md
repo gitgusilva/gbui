@@ -33,6 +33,21 @@ commit.
   the file they are in is the toolkit's own statement that they are one idea.
   `/components` is the contents page for them.
 
+### Changed
+
+- **`switchToggle` is `toggle`**, and `SwitchOptions` is `ToggleOptions`, in
+  `gbui/widgets/toggle.hpp`. The component is a switch and the documentation
+  still calls it one; `switch` is a C++ keyword and cannot be a function name,
+  which is the whole of the reason and is now written at the top of the header
+  so nobody rediscovers it. Fluent and Carbon landed on the same word for the
+  same reason. **This renames public API**; a compiler finds every call site.
+- Documentation: **the three pickers share one page.** A date, a time and a
+  date-and-time are the same control with different amounts of it, and a reader
+  who lands on one wants the other two under it — the reasoning that already put
+  `colorField` beside `colorPicker`, except these could not share a header
+  without breaking "one component, one header". A page may now gather several
+  headers, and it lists all of them rather than the first.
+
 ### Added
 
 - **A tag now publishes a release.** Until now a tag was the whole of a release:

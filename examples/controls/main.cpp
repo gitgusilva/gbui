@@ -258,7 +258,7 @@ Ui::Scope field(Ui& ui, std::string_view label) {
 
 void togglesTab(Ui& ui, const Interaction& input, Model& model) {
     auto panelScope = panel(ui, {.padding = Edges::all(16.0f), .gap = 14.0f});
-    sectionTitle(ui, "Checkbox, radio, switch", "widgets/checkbox · radio · switchToggle");
+    sectionTitle(ui, "Checkbox, radio, switch", "widgets/checkbox · radio · toggle");
 
     if (checkbox(ui, input, "controls.tags", model.showTags, {.label = "Show tags in graph"})) {
         model.showTags = !model.showTags;
@@ -284,7 +284,7 @@ void togglesTab(Ui& ui, const Interaction& input, Model& model) {
 
     divider(ui, Direction::Column);
 
-    if (switchToggle(ui, input, "controls.autofetch", model.autoFetch,
+    if (toggle(ui, input, "controls.autofetch", model.autoFetch,
                      {.label = "Fetch automatically"})) {
         model.autoFetch = !model.autoFetch;
     }
@@ -292,7 +292,7 @@ void togglesTab(Ui& ui, const Interaction& input, Model& model) {
     // that control is hovered, so the call is unconditional.
     tooltip(ui, input, "controls.autofetch",
             "Fetches every few minutes while the window is open.");
-    if (switchToggle(ui, input, "controls.autofetch.off", false,
+    if (toggle(ui, input, "controls.autofetch.off", false,
                      {.disabled = true, .label = "Disabled switch"})) {
     }
     (void)panelScope;
@@ -871,7 +871,7 @@ void chartsTab(Ui& ui, const Interaction& input, Model& model) {
             auto head = ui.row({.align = Align::Center, .gap = 10.0f});
             sectionTitle(ui, "Frame time, live", "widgets/chart");
             ui.add({.grow = 1.0f});
-            if (switchToggle(ui, input, "controls.fps.pause", model.fpsPaused,
+            if (toggle(ui, input, "controls.fps.pause", model.fpsPaused,
                              {.label = "Paused"})) {
                 model.fpsPaused = !model.fpsPaused;
             }

@@ -59,10 +59,15 @@ export default {
     return pages.map((page) => {
       const alone = page.components.length === 1
       const first = page.components[0]
+      // Usually one, but a page can gather components from more than one
+      // header — the pickers do — and naming only the first would send a
+      // reader to include a file that does not declare what they came for.
+      const headers = [...new Set(page.components.map((component) => component.header))]
+      const includes = headers.map((header) => `\`#include "${header}"\``).join(' ')
       const lines = [
         `# ${page.title}`,
         '',
-        `<span class="gbui-facts">\`#include "${first.header}"\`${alone ? ` · ${facts(first)}` : ` · ${first.group}`}</span>`,
+        `<span class="gbui-facts">${includes}${alone ? ` · ${facts(first)}` : ` · ${first.group}`}</span>`,
         '',
         first.summary,
         '',

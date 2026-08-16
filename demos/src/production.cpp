@@ -259,14 +259,14 @@ NodeId Production::build(Frame& frame) {
             }
         }
         {
-            Style toggle;
-            toggle.direction = Direction::Row;
-            toggle.align = Align::Center;
-            toggle.gap = 8.0f;
-            toggle.shrink = 0.0f;
-            auto toggleScope = ui.scope(toggle);
+            Style andonRow;
+            andonRow.direction = Direction::Row;
+            andonRow.align = Align::Center;
+            andonRow.gap = 8.0f;
+            andonRow.shrink = 0.0f;
+            auto toggleScope = ui.scope(andonRow);
             text(ui, "ANDON", {.color = Token::TextMuted, .size = 10.5f});
-            if (switchToggle(ui, input, "production.andon", andon_)) andon_ = !andon_;
+            if (toggle(ui, input, "production.andon", andon_)) andon_ = !andon_;
         }
         button(ui, input, "CALL SUPPORT",
                {.variant = andon_ ? ButtonVariant::Danger : ButtonVariant::Secondary,

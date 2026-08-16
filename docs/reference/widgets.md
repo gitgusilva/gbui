@@ -450,7 +450,7 @@ elide), a close affordance, and reordering by drag.
 | --- | --- | --- |
 | `checkbox` | `(ui, input, id, checked, options)` | `true` on the frame it was toggled |
 | `radio` | `(ui, input, id, selected, options)` | `true` when chosen; nothing when already selected |
-| `switchToggle` | `(ui, input, id, on, options)` | `true` on the frame it was flipped |
+| `toggle` | `(ui, input, id, on, options)` | `true` on the frame it was flipped |
 | `textField` | `(ui, input, id, TextEditState&, options)` | `TextFieldResult` — changed, moved, submitted, cancelled, toggledReveal |
 | `numberField` | `(ui, input, id, value, options)` | `{value, changed}`, already clamped and stepped |
 | `slider` | `(ui, input, id, value, options)` | `{value, changed}`, snapped to `step` |

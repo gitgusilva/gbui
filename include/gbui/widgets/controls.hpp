@@ -30,5 +30,5 @@
 #include "gbui/widgets/radio.hpp"
 #include "gbui/widgets/richEditor.hpp"
 #include "gbui/widgets/slider.hpp"
-#include "gbui/widgets/switchToggle.hpp"
+#include "gbui/widgets/toggle.hpp"
 #include "gbui/widgets/textField.hpp"
