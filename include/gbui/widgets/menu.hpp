@@ -60,6 +60,16 @@ struct MenuItemOptions {
      * announce "not checked" instead of saying nothing.
      */
     Role role = Role::MenuItem;
+    /**
+     * Its place in the list, one-based, and how long the list is.
+     *
+     * Zero on both is "not one of a set", which is right for a menu: a reader
+     * walking commands does not want them counted. A `select` sets them, and a
+     * *filtered* select sets them from what is shown — "3 of 40" in a list
+     * narrowed to four is three lies in five words.
+     */
+    std::size_t positionInSet = 0;
+    std::size_t setSize = 0;
 };
 
 /** Returns true on the frame it was chosen. */

@@ -16,6 +16,32 @@ commit.
 
 ### Added
 
+- **`select` filters, which is the `combobox` the inventory called the gap that
+  bites first** — a branch picker past about thirty branches is unusable without
+  type-to-filter. An option rather than a component of its own, for the reason
+  `textInput` absorbed two fields: everything that makes a select a select is
+  unchanged by typing into it, and the two would be one control described twice.
+
+  **`SelectResult` grew a `focus`**, and it is the caller's half of the deal: a
+  filter box has to hold the keyboard to be typed into, so the control cannot
+  keep it on the closed box — and a component here never moves focus behind the
+  caller's back. Same contract `label` and `field` already have. Not wiring it
+  leaves a filter that works only once clicked.
+
+  The highlight stays an index into the caller's list rather than into the
+  filtered view of it, which is the invariant this is easiest to get wrong. The
+  match is a case-insensitive substring rather than a fuzzy score, because fuzzy
+  matching reorders the list under the reader and matches things they cannot see
+  the reason for. Escape clears the filter before it closes the list; Space
+  types a space instead of committing, since a combobox that cannot have a space
+  in its query cannot find `feat/nord tuning`; the arrows walk what is on screen
+  rather than stepping into rows that are not.
+
+  The filter box carries `controls` and `activeDescendant` because that is where
+  the keyboard is; the match count is a `Status` live region; and each row
+  reports its place in what is *shown*, since "3 of 40" in a list narrowed to
+  four is three lies in five words. `MenuItemOptions` grew `positionInSet` and
+  `setSize` to carry it.
 - **`carousel`** — a strip of slides, one screenful at a time, with indicators,
   navigators, looping, a fractional `slidesPerPage` and autoplay. It moves by
   *slides* rather than by pages even when several are showing, which is the

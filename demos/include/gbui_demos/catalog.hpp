@@ -77,6 +77,9 @@ struct State {
     ScrollState listScroll{};
     TableState table{};
     SelectState select{};
+    /** The filtering form of the same control, and the value it holds. */
+    SelectState combobox{};
+    std::size_t branch = 0;
     DonutState donut{};
     ChartView view{};
 
@@ -113,6 +116,15 @@ struct State {
     std::vector<std::vector<std::uint8_t>> plates{};
     int plateSide = 0;
     GalleryState gallery{};
+    /**
+     * Where an example wants the keyboard.
+     *
+     * The `Interaction` an example is handed is `const`, so the three
+     * components that *return* a focus target — `label`, `field`, and a
+     * filtering `select` — have nowhere to put their answer. They put it here
+     * and the host applies it after the frame; see `Frame::focus`.
+     */
+    std::string focusRequest{};
 };
 
 /** One component, and the smallest honest use of it. */

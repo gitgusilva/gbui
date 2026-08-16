@@ -844,6 +844,53 @@ buttons nobody can tell apart. The progress bar carries no record at all: it is
 the timer, the timer already pauses whenever a reader is near it, and announcing
 it would be a second message nobody asked for.
 
+### Select, and the combobox it becomes
+
+`filter` turns a `select` into a combobox: a box at the top of the open list
+that narrows it as the reader types. It is an option rather than a component of
+its own for the reason `textInput` absorbed two fields — everything that makes a
+select a select is unchanged by typing into it, and the two would be one control
+described twice.
+
+```cpp
+SelectOptions options{.name = "Branch"};
+options.filter = true;
+const SelectResult result = select(ui, input, "branch", branches, model.branch,
+                                   model.branchList, options);
+if (result.chosen) model.branch = *result.chosen;
+if (result.focus) interaction.focus(*result.focus);   // required when filtering
+```
+
+**`SelectResult::focus` is the caller's half.** A filter box has to hold the
+keyboard to be typed into, so the control cannot keep it on the closed box — and
+a component here never moves focus behind the caller's back, the same contract
+`label` and `field` have. Without wiring it the filter still works, but only
+once clicked.
+
+**The highlight is an index into your list, never into the filtered view.** That
+is the invariant filtering is easiest to get wrong: a highlight stored as "the
+third visible row" is a different option after every keystroke, and the reader
+commits something they never saw. `chosen` is in your numbering too.
+
+The match is a case-insensitive **substring** and not a fuzzy score. Fuzzy
+matching is a ranking problem in a filter's clothing: it reorders the list under
+the reader and matches things they cannot see the reason for. A branch picker
+wants "the ones with `nord` in them", which has one answer.
+
+Escape clears the filter before it closes the list — two meanings for one key in
+the order a reader wants them. Space types a space rather than committing, since
+a combobox that cannot have a space in its query cannot find `feat/nord tuning`;
+Return still commits. The arrows walk what is **on screen**, so they never step
+into rows the filter removed.
+
+**Accessibility.** The filter box carries `controls` and `activeDescendant`,
+because that is where the keyboard is and a reader typing has to be told their
+letters are moving a highlight somewhere they are not. The match count is a
+`Status` live region — a filter that silently drops thirty-seven of forty rows
+has told a sighted reader everything and a screen reader nothing — and each row
+reports its place in *what is shown*, since "3 of 40" in a list narrowed to four
+is three lies in five words.
+
 `menuItem`'s check mark goes on the leading edge for a menu — where every
 desktop menu reserves a gutter for state — and on the trailing edge for a
 select, where the leading edge belongs to the labels being compared. It is

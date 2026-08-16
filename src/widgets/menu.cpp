@@ -48,6 +48,8 @@ bool menuItem(Ui& ui, const Interaction& input, std::string_view id, std::string
                                                   : Flag::Unset,
                   .selected = listOption ? flag(options.selected) : Flag::Unset,
                   .disabled = flag(options.disabled)},
+        .positionInSet = options.positionInSet,
+        .setSize = options.setSize,
     });
 
     const bool tickLeading =

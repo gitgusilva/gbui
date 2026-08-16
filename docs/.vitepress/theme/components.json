@@ -734,7 +734,7 @@
     "name": "select",
     "group": "Elements",
     "header": "gbui/widgets/select.hpp",
-    "summary": "A closed box that opens a list.",
+    "summary": "A closed box that opens a list, and \u2014 with `filter` on \u2014 a combobox.",
     "signatures": [
       "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});"
     ],
@@ -828,6 +828,33 @@
           "Horizontal"
         ],
         "doc": "Whether the open list scrolls at all. `None` clips it instead, for a caller that would rather constrain the list than let it move.",
+        "optional": false
+      },
+      {
+        "name": "filter",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "A box at the top of the open list that narrows it as the reader types. **Hand `SelectResult::focus` to `Interaction::focus` when this is on.** Without it the filter box still works \u2014 a click focuses it \u2014 but it will not have the keyboard the moment the list opens, which is the whole gesture.",
+        "optional": false
+      },
+      {
+        "name": "filterPlaceholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Type to filter\u2026\"",
+        "choices": [],
+        "doc": "The filter box's own hint.",
+        "optional": false
+      },
+      {
+        "name": "emptyMessage",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"No matches\"",
+        "choices": [],
+        "doc": "Drawn where the rows would be when nothing matches. An empty list with no explanation reads as a list that failed to load.",
         "optional": false
       }
     ]
@@ -3127,6 +3154,24 @@
         "default": "Role::MenuItem",
         "choices": [],
         "doc": "What a reader is told this row is. The same distinction `checkSide` draws visually, and it has to be said separately because a screen reader announces the two differently: a **menu** holds commands \u2014 \"New branch, menu item\" \u2014 and a **select** holds values, where the reader also wants \"option, three of twelve\". A command that toggles is `MenuItemCheckbox`, which is what makes `selected` announce \"not checked\" instead of saying nothing.",
+        "optional": false
+      },
+      {
+        "name": "positionInSet",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "0",
+        "choices": [],
+        "doc": "Its place in the list, one-based, and how long the list is. Zero on both is \"not one of a set\", which is right for a menu: a reader walking commands does not want them counted. A `select` sets them, and a *filtered* select sets them from what is shown \u2014 \"3 of 40\" in a list narrowed to four is three lies in five words.",
+        "optional": false
+      },
+      {
+        "name": "setSize",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "0",
+        "choices": [],
+        "doc": "",
         "optional": false
       }
     ]

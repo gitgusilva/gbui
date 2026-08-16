@@ -1,4 +1,21 @@
-// A closed box that opens a list.
+// A closed box that opens a list, and — with `filter` on — a combobox.
+//
+// ---- why the combobox is an option and not a component ----------------------
+//
+// The component inventory calls type-to-filter "the gap that bites first": a
+// branch picker past about thirty branches is unusable without it. It is a flag
+// here rather than a `combobox` beside this, for the reason `textInput`
+// absorbed `textField` and `numberField` — the two would be one control
+// described twice. Everything that makes a select a select is unchanged by
+// typing into it: the value is still an index the caller owns, the highlight is
+// still separate from the value, the list is still a popover on the overlay
+// layer. What filtering adds is a box at the top and a smaller set of rows.
+//
+// The one thing it *does* change is where the keyboard is, and that is why
+// `SelectResult` grew a `focus`. A filter box has to hold the keyboard to be
+// typed into, so the control can no longer keep it on the closed box — and a
+// component here never moves focus behind the caller's back. Same contract
+// `label` and `field` already have.
 #pragma once
 
 #include <cstddef>
@@ -8,6 +25,7 @@
 #include <vector>
 
 #include "gbui/input/interaction.hpp"
+#include "gbui/input/textEdit.hpp"
 #include "gbui/scene/ui.hpp"
 #include "gbui/widgets/floating.hpp"
 #include "gbui/widgets/scroll.hpp"
@@ -41,6 +59,22 @@ struct SelectOptions : FloatingOptions {
     /** Whether the open list scrolls at all. `None` clips it instead, for a
      *  caller that would rather constrain the list than let it move. */
     ScrollAxis listScroll = ScrollAxis::Vertical;
+
+    // ---- the combobox ------------------------------------------------------
+    /**
+     * A box at the top of the open list that narrows it as the reader types.
+     *
+     * **Hand `SelectResult::focus` to `Interaction::focus` when this is on.**
+     * Without it the filter box still works — a click focuses it — but it will
+     * not have the keyboard the moment the list opens, which is the whole
+     * gesture.
+     */
+    bool filter = false;
+    /** The filter box's own hint. */
+    std::string_view filterPlaceholder = "Type to filter…";
+    /** Drawn where the rows would be when nothing matches. An empty list with
+     *  no explanation reads as a list that failed to load. */
+    std::string_view emptyMessage = "No matches";
 };
 
 /**
@@ -54,14 +88,38 @@ struct SelectOptions : FloatingOptions {
  */
 struct SelectState {
     bool open = false;
+    /**
+     * Which row the keys are on — an index into the **whole** list, never into
+     * the filtered view of it.
+     *
+     * That is the invariant filtering is easiest to get wrong: a highlight
+     * stored as "the third visible row" means a different option every time a
+     * character is typed, and the reader commits something they never saw.
+     */
     std::optional<std::size_t> highlighted{};
     /** Where the open list is scrolled to. Written by the component. */
     ScrollState list;
+    /** What has been typed into the filter box. Cleared when the list opens,
+     *  because a filter left over from last time is a list with rows missing
+     *  and nothing on screen saying why. */
+    TextEditState query{};
 };
 
 struct SelectResult {
-    /** Index chosen this frame, or nothing. */
+    /** Index chosen this frame, into the caller's own list — never into the
+     *  filtered view of it. */
     std::optional<std::size_t> chosen{};
+    /**
+     * Focus this, if anything.
+     *
+     * The filter box when the list has just opened, and the closed box when it
+     * has just shut — otherwise the keyboard is left on a node that no longer
+     * exists. Handed back rather than acted on, the same contract `label` and
+     * `field` have: the toolkit does not move focus behind a component's back.
+     *
+     *     if (const auto target = result.focus) interaction.focus(*target);
+     */
+    std::optional<std::string_view> focus{};
 };
 
 /**

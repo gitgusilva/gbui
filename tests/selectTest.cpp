@@ -43,6 +43,9 @@ struct Combo {
                 select(ui, input, "sel", items, value, state, options);
             chosen = result.chosen;
             if (result.chosen) value = result.chosen;
+            // The caller's half of the focus contract, which a filtering select
+            // needs and every other form of it never asks for.
+            if (result.focus) input.focus(*result.focus, FocusSource::Keyboard);
             (void)checkbox(ui, input, "after", false, {.label = "something else"});
             (void)root;
         }
@@ -544,4 +547,188 @@ TEST("twelve-hour is a display, so the stored hour does not move") {
     // The AM/PM column only exists on a twelve-hour picker.
     build(Time{14, 30, 0}, true);
     CHECK(input.frameOf("clock.pm").empty());
+}
+
+// ---- the combobox -----------------------------------------------------------
+//
+// The same component with `filter` on. Everything below is about the one thing
+// filtering can break: two numberings, one of which ends up in a result.
+
+TEST("typing narrows the list, and the value is still the caller's index") {
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);   // opens, and asks for the filter box
+    combo.frame();
+    CHECK(combo.state.open);
+    CHECK(combo.input.isFocused("sel.list.filter"));
+
+    InputFrame typed;
+    typed.text = "feat";
+    combo.frame(typed);
+    combo.frame();
+
+    // Two of five, and they are the two.
+    CHECK(!combo.input.frameOf("sel.list.1").empty());
+    CHECK(!combo.input.frameOf("sel.list.2").empty());
+    CHECK(combo.input.frameOf("sel.list.0").empty());
+    CHECK(combo.input.frameOf("sel.list.4").empty());
+
+    // The highlight fell to the first match rather than staying on a row the
+    // filter has taken away.
+    CHECK(combo.state.highlighted == std::size_t{1});
+
+    // Return commits the *caller's* index, not the position in the view.
+    combo.press(Key::Return);
+    CHECK(combo.chosen == std::size_t{1});
+    CHECK(!combo.state.open);
+}
+
+TEST("the arrows walk what is on screen, not what is underneath it") {
+    // Stepping the underlying index would walk into rows the filter removed,
+    // and the highlight would vanish for several presses at a time.
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame typed;
+    typed.text = "e";   // main? no — feat/a, feat/b, release/1
+    combo.frame(typed);
+    combo.frame();
+    CHECK(combo.state.highlighted == std::size_t{1});
+
+    combo.press(Key::Down);
+    CHECK(combo.state.highlighted == std::size_t{2});
+    combo.press(Key::Down);
+    CHECK(combo.state.highlighted == std::size_t{4});   // straight past "fix/c"
+    combo.press(Key::Down);
+    CHECK(combo.state.highlighted == std::size_t{1});   // and wraps within the view
+}
+
+TEST("Escape clears the filter before it closes the list") {
+    // Two meanings for one key, in the order a reader wants them: the first
+    // press undoes the typing, the second gives up.
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame typed;
+    typed.text = "fix";
+    combo.frame(typed);
+    combo.frame();
+    CHECK(combo.state.query.text == "fix");
+
+    combo.press(Key::Escape);
+    CHECK(combo.state.query.text.empty());
+    CHECK(combo.state.open);
+
+    combo.press(Key::Escape);
+    CHECK(!combo.state.open);
+}
+
+TEST("Space types a space instead of committing, in a filter and only there") {
+    // A combobox that could not have a space in its query is a combobox that
+    // cannot find "feat/nord tuning".
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    combo.press(Key::Space);
+    CHECK(combo.state.open);      // still open: Space did not commit
+    CHECK(!combo.chosen.has_value());
+
+    // Without the filter it is the commit it has always been.
+    Combo plain;
+    plain.frame();
+    plain.focus();
+    plain.press(Key::Space);
+    plain.frame();
+    CHECK(plain.state.open);
+    plain.press(Key::Space);
+    CHECK(!plain.state.open);
+}
+
+TEST("opening clears whatever was typed last time") {
+    // A filter left over is a list with rows missing and nothing saying why.
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame typed;
+    typed.text = "fix";
+    combo.frame(typed);
+    combo.frame();
+    combo.press(Key::Escape);   // clears
+    combo.press(Key::Escape);   // closes
+    CHECK(!combo.state.open);
+
+    combo.frame(typed);         // typed at a closed control: goes nowhere
+    combo.press(Key::Return);
+    combo.frame();
+    CHECK(combo.state.query.text.empty());
+}
+
+TEST("a filter that matches nothing says so, and commits nothing") {
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame typed;
+    typed.text = "zzz";
+    combo.frame(typed);
+    combo.frame();
+
+    CHECK(!combo.state.highlighted.has_value());
+    for (std::size_t i = 0; i < combo.items.size(); ++i) {
+        CHECK(combo.input.frameOf("sel.list." + std::to_string(i)).empty());
+    }
+
+    combo.press(Key::Return);
+    CHECK(!combo.chosen.has_value());
+}
+
+TEST("the match is a substring, and it does not care about case") {
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame typed;
+    typed.text = "FIX/";
+    combo.frame(typed);
+    combo.frame();
+    CHECK(!combo.input.frameOf("sel.list.3").empty());
+    CHECK(combo.input.frameOf("sel.list.0").empty());
+}
+
+TEST("closing hands the keyboard back rather than leaving it on a gone box") {
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+    CHECK(combo.input.isFocused("sel.list.filter"));
+
+    combo.press(Key::Escape);
+    combo.frame();
+    CHECK(combo.input.isFocused("sel"));
 }

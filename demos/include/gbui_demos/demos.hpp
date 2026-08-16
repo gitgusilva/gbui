@@ -17,6 +17,8 @@
 
 #include "gbui/core/geometry.hpp"
 #include "gbui/input/interaction.hpp"
+#include <string>
+
 #include "gbui/scene/ui.hpp"
 
 namespace gbui::demos {
@@ -33,6 +35,19 @@ struct Frame {
     float delta = 0.0f;
     /** The rectangle the tree will be laid out into, in logical pixels. */
     Vec2 viewport{};
+    /**
+     * Where the keyboard should go, if a component asked.
+     *
+     * `Interaction` is handed over `const` on purpose — a demo reads what the
+     * user did and does not rewrite it — but three components here *return* a
+     * focus target rather than moving focus themselves: `label`, `field` and a
+     * filtering `select`. Without somewhere to put the answer, every one of
+     * them was a feature the demos could not show.
+     *
+     * Set it and the host applies it after the frame is built. Empty means
+     * nothing was asked for, which is almost every frame.
+     */
+    std::string focus{};
 };
 
 /**

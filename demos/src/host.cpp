@@ -107,6 +107,12 @@ public:
             stage.border = Border{1.0f, Fill{Token::Border}};
             auto stageScope = ui.scope(stage);
             example_.build(ui, frame.input, state_);
+            // Handed on rather than acted on here, because only the host owns
+            // the `Interaction` — the same relay the components themselves use.
+            if (!state_.focusRequest.empty()) {
+                frame.focus = state_.focusRequest;
+                state_.focusRequest.clear();
+            }
         }
 
         if (info_) {
@@ -318,6 +324,11 @@ NodeId Host::buildTree(MeasureText& measure, const Theme& theme) {
                 lastDelta_,
                 {static_cast<float>(width_), static_cast<float>(height_)}};
     const NodeId root = demo_ ? demo_->build(frame) : ui.scope(Style{}).id();
+
+    // Applied after the build rather than during it, which is the only order
+    // that works: a component asks for focus while it is being built, and the
+    // node it is asking for may not exist until the build has finished.
+    if (!frame.focus.empty()) interaction_.focus(frame.focus);
 
     LayoutContext context;
     context.theme = &theme;

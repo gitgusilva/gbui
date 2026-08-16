@@ -53,6 +53,25 @@ void addOverlayExamples(std::vector<Example>& out) {
                            result.chosen) {
                            state.choice = *result.chosen;
                        }
+
+                       // The same component with `filter` on, which is the
+                       // combobox: past about a dozen branches a plain list
+                       // stops being a way of finding one.
+                       static const std::vector<std::string> many = {
+                           "main",            "develop",        "release/1.4",
+                           "feat/nord-tuning", "feat/wasm-host", "feat/a11y-tree",
+                           "fix/ci-headless", "fix/caret-blink", "fix/table-sort",
+                           "chore/deps",      "chore/licences", "spike/gpu-painter"};
+                       SelectOptions filtered;
+                       filtered.name = "Branch, filtered";
+                       filtered.filter = true;
+                       const SelectResult picked = select(ui, input, "catalog.combobox", many,
+                                                          state.branch, state.combobox, filtered);
+                       if (picked.chosen) state.branch = *picked.chosen;
+                       // The half a caller wires, and the reason it is handed
+                       // back rather than done: a component here never moves
+                       // the keyboard behind the application's back.
+                       if (picked.focus) state.focusRequest = std::string(*picked.focus);
                    }});
 
     out.push_back({"menuItem", [](Ui& ui, const Interaction& input, State& state) {

@@ -1257,3 +1257,54 @@ TEST("every picture in a gallery has a name, even when the caller gave none") {
         CHECK_EQ(stage->setSize, std::size_t{3});
     }
 }
+
+TEST("a filtering select says how much is left, and which row the typing is on") {
+    // A filter that silently drops thirty-seven of forty rows has told a
+    // sighted reader everything and a screen reader nothing.
+    Screen screen;
+    const std::vector<std::string> items{"main", "develop", "feat/one", "feat/two", "fix/three"};
+    SelectState state;
+    state.open = true;
+    state.query.text = "feat";
+    state.query.moveToEnd();
+
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        SelectOptions options;
+        options.name = "Branch";
+        options.filter = true;
+        (void)select(ui, none, "b", items, std::size_t{0}, state, options);
+    });
+
+    // The count, as a polite live region rather than only as small grey text.
+    bool sawCount = false;
+    for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+        const Accessibility* info =
+            screen.arena.accessibility(NodeId{static_cast<std::uint32_t>(i)});
+        if (info && info->role == Role::Status && info->name == "2 of 5 shown") sawCount = true;
+    }
+    CHECK(sawCount);
+
+    // The filter box operates the list and says which row the keys are on: a
+    // reader typing has to be told their letters are moving a highlight
+    // somewhere they are not.
+    const Accessibility* box = screen.of("b.list.filter");
+    CHECK(box != nullptr);
+    if (box) {
+        CHECK(box->role == Role::TextInput);
+        CHECK(box->relations.controls == "b.list");
+        CHECK(box->relations.activeDescendant == "b.list.2");
+    }
+
+    // "3 of 40" in a list narrowed to two is three lies in five words.
+    const Accessibility* first = screen.of("b.list.2");
+    const Accessibility* second = screen.of("b.list.3");
+    if (first) {
+        CHECK(first->role == Role::Option);
+        CHECK_EQ(first->positionInSet, std::size_t{1});
+        CHECK_EQ(first->setSize, std::size_t{2});
+    }
+    if (second) CHECK_EQ(second->positionInSet, std::size_t{2});
+    // And the rows the filter removed are not in the tree at all.
+    CHECK(screen.of("b.list.0") == nullptr);
+}
