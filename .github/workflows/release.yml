@@ -69,7 +69,13 @@ jobs:
           - { os: ubuntu-latest,  label: linux-x86_64,   platform: linux-x86_64,   archive: tar.gz }
           - { os: windows-latest, label: windows-x86_64, platform: windows-x86_64, archive: zip }
           - { os: macos-latest,   label: macos-arm64,    platform: macos-arm64,    archive: tar.gz }
-          - { os: macos-13,       label: macos-x86_64,   platform: macos-x86_64,   archive: tar.gz }
+          # Intel Macs would be a fourth. `macos-13` is retired, and a matrix
+          # entry naming a runner that no longer exists does not fail — it
+          # *queues*, forever, and `needs: package` means the release never
+          # publishes. Which is how 0.3.2 sat unreleased with three of its four
+          # archives built and waiting. Add `macos-15-intel` when there is a
+          # reason to; until then, three platforms that publish beat four that
+          # might not.
 
     steps:
       # The tag, not the default branch — this job builds the thing being

@@ -73,6 +73,11 @@ Releases carry binaries now, and the site has a page to get them from.
   is the same code. The alternative was a download that fails at load time on
   most machines, with a message about a shared object rather than about why.
 
+  Three platforms, not four: `macos-13` is retired, and a matrix entry naming a
+  runner that no longer exists does not fail — it queues forever, and with
+  `needs: package` the release never publishes. Intel Macs come back when there
+  is a reason to add `macos-15-intel`.
+
   **Each archive is consumed before it is allowed out**: configured against,
   built against and *run*, on the machine that produced it, by
   `tools/consumer`. That is the check whose absence 0.3.1 was, and it now
