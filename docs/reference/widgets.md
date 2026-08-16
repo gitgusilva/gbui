@@ -323,6 +323,38 @@ are the view's own — so the press, the drag and the paging are still handled b
 `scrollArea`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
+### Split pane
+
+Two panes and a divider the reader can drag — the shape every IDE-shaped
+application is built from, nested.
+
+```cpp
+const SplitPaneResult result = splitPane(ui, input, "workspace", model.split,
+                                         [&](Ui& ui) { sidebar(ui); },
+                                         [&](Ui& ui) { editor(ui); },
+                                         {.name = "Sidebar width"});
+if (result.changed) model.split = result.position;
+```
+
+**The share is a percentage basis, not a `grow` ratio**, and that is worth
+knowing before reaching for `grow` yourself. This engine computes its free space
+from the *hypothetical* sizes — already clamped to each item's minimum — so two
+panes with a 120-pixel floor take their 240 first and split only what is left:
+asking for a quarter of 600 gets 208 rather than 148. A basis of `p%` plus
+`shrink` is exact, because the overflow the divider causes is taken back in
+proportion to the bases.
+
+The minimums are the *layout's* rather than the drag's, which is what makes them
+hold when the window shrinks under a split nobody touched — the case a clamp in
+a drag handler silently misses.
+
+**Accessibility.** The divider is ARIA's window splitter: a `Separator` that
+takes the keyboard and carries a value, answering the arrows at 2% and Shift at
+10%, plus Home and End. A split only draggable with a pointer is a layout most
+people cannot change. Name it after what it resizes — "Sidebar width" says more
+than "Resize" — and name the panes, since that is what tells a reader which of
+the two the arrows are about to change.
+
 ### Tree view
 
 An expandable hierarchy: a branch sidebar, a file tree, an outline. The

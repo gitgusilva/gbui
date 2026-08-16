@@ -16,6 +16,23 @@ commit.
 
 ### Added
 
+- **`splitPane`** — two panes and a divider the reader can drag, which is the
+  shape every IDE-shaped application is built from.
+
+  **The share is a percentage basis rather than a `grow` ratio**, and finding
+  out why is the useful part: this layout engine computes its free space from
+  the *hypothetical* sizes, which are already clamped to each item's minimum, so
+  two panes with a 120-pixel floor take their 240 first and split only what is
+  left — asking for a quarter of 600 got 208 instead of 148, and with large
+  minimums the fraction stopped meaning anything. A basis of `p%` plus `shrink`
+  is exact: the overflow the divider causes comes back off each pane in
+  proportion to its basis, which lands the leading one at `p × (width −
+  divider)`.
+
+  The minimums are the layout's rather than the drag's, so they hold when the
+  *window* shrinks under a split nobody touched. The divider is ARIA's window
+  splitter — a `Separator` that takes the keyboard and carries a value — because
+  a split only draggable with a pointer is a layout most people cannot change.
 - **`treeView`** — the expandable hierarchy the component inventory calls the
   single biggest gap for a git client. Expansion, keyboard walking and
   virtualisation, which are each easy and never all three.

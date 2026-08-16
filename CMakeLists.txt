@@ -72,6 +72,7 @@ set(GBUI_SOURCES
     src/widgets/select.cpp
     src/widgets/slider.cpp
     src/widgets/spacing.cpp
+    src/widgets/splitPane.cpp
     src/widgets/toggle.cpp
     src/widgets/table.cpp
     src/widgets/tabs.cpp

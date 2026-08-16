@@ -2603,6 +2603,116 @@
     "properties": []
   },
   {
+    "name": "splitPane",
+    "group": "Containers",
+    "header": "gbui/widgets/splitPane.hpp",
+    "summary": "Two panes and a divider the reader can drag.",
+    "signatures": [
+      "SplitPaneResult splitPane(Ui& ui, const Interaction& input, std::string_view id, float position, const std::function<void(Ui&)>& leading, const std::function<void(Ui&)>& trailing, const SplitPaneOptions& options = {});"
+    ],
+    "notes": [
+      "Draws `leading`, a divider, and `trailing`. `position` is the share the leading pane asks for, 0 to 1. It is a *request*: the minimums win over it, so a container too narrow for both gives each what it needs and the fraction stops being reachable \u2014 which is the right answer and the one a caller does not have to write."
+    ],
+    "optionsType": "SplitPaneOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "orientation",
+        "kind": "Enum",
+        "type": "SplitOrientation",
+        "default": "SplitOrientation::Horizontal",
+        "choices": [
+          "Horizontal",
+          "Vertical"
+        ],
+        "doc": "Which way the panes sit, and therefore which pair of arrow keys moves the divider.",
+        "optional": false
+      },
+      {
+        "name": "minLeading",
+        "kind": "Number",
+        "type": "float",
+        "default": "120.0f",
+        "choices": [],
+        "doc": "The smallest each pane may become, in pixels. Enforced by the layout rather than by the drag, which is what makes it hold when the *window* shrinks as well as when the divider moves \u2014 the case a clamp in the drag handler silently misses.",
+        "optional": false
+      },
+      {
+        "name": "minTrailing",
+        "kind": "Number",
+        "type": "float",
+        "default": "120.0f",
+        "choices": [],
+        "doc": "As above, for the other one.",
+        "optional": false
+      },
+      {
+        "name": "dividerWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "7.0f",
+        "choices": [],
+        "doc": "How wide the grab strip is. Wider than the hairline drawn in it: a one-pixel target is a target nobody hits.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the divider is called. \"Sidebar width\" says more than \"Resize\", and it is the only thing a reader has to know which of two panes the arrow keys are about to change.",
+        "optional": false
+      },
+      {
+        "name": "leadingLabel",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What each side is, announced as a group around it. Empty leaves the pane's own contents to speak for it.",
+        "optional": false
+      },
+      {
+        "name": "trailingLabel",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "As above, for the other one.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "table",
     "group": "Containers",
     "header": "gbui/widgets/table.hpp",

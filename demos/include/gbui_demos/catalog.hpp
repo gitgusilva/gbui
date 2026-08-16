@@ -118,6 +118,8 @@ struct State {
     GalleryState gallery{};
     /** What is open in the file tree, and what is chosen in it. */
     TreeState tree{};
+    /** Where the split's divider has been left. */
+    float split = 0.34f;
     /**
      * Where an example wants the keyboard.
      *

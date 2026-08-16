@@ -1399,3 +1399,42 @@ TEST("a tree is one Tab stop, whatever it holds") {
         if (node.focusable && !node.id.empty()) CHECK(node.id == "t");
     }
 }
+
+TEST("a split's divider is a control, not a rule") {
+    // ARIA's window splitter, and the half everybody forgets: a separator that
+    // is only a hairline takes no keyboard and has nothing to report.
+    Screen screen;
+    screen.frame([](Ui& ui) {
+        Interaction none;
+        (void)splitPane(
+            ui, none, "s", 0.3f, [](Ui& inner) { inner.label("sidebar"); },
+            [](Ui& inner) { inner.label("editor"); },
+            {.name = "Sidebar width",
+             .leadingLabel = "Sidebar",
+             .trailingLabel = "Editor",
+             .height = 200.0f});
+    });
+
+    const Accessibility* divider = screen.of("s.divider");
+    CHECK(divider != nullptr);
+    if (divider) {
+        CHECK(divider->role == Role::Separator);
+        CHECK(divider->name == "Sidebar width");
+        CHECK(divider->value.present);
+        CHECK_NEAR(divider->value.now, 0.3);
+    }
+
+    // Both panes are named, so a reader knows which of the two the arrow keys
+    // are about to change.
+    bool sawSidebar = false;
+    bool sawEditor = false;
+    for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+        const Accessibility* info =
+            screen.arena.accessibility(NodeId{static_cast<std::uint32_t>(i)});
+        if (!info) continue;
+        if (info->name == "Sidebar") sawSidebar = true;
+        if (info->name == "Editor") sawEditor = true;
+    }
+    CHECK(sawSidebar);
+    CHECK(sawEditor);
+}

@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(65);
+    out.reserve(66);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -659,6 +659,29 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true);",
+    });
+    out.push_back(ComponentInfo{
+        "splitPane",
+        "Containers",
+        "gbui/widgets/splitPane.hpp",
+        "Draws `leading`, a divider, and `trailing`. `position` is the share the leading pane asks for, 0 to 1. It is a *request*: the minimums win over it, so a container too narrow for both gives each what it needs and the fraction stops being reachable — which is the right answer and the one a caller does not have to write.",
+        "Two panes and a divider the reader can drag.",
+        "SplitPaneOptions",
+        {
+            PropertyInfo{"orientation", PropertyKind::Enum, "SplitOrientation", "SplitOrientation::Horizontal", {"Horizontal", "Vertical"}, "Which way the panes sit, and therefore which pair of arrow keys moves the divider.", false},
+            PropertyInfo{"minLeading", PropertyKind::Number, "float", "120.0f", {}, "The smallest each pane may become, in pixels. Enforced by the layout rather than by the drag, which is what makes it hold when the *window* shrinks as well as when the divider moves — the case a clamp in the drag handler silently misses.", false},
+            PropertyInfo{"minTrailing", PropertyKind::Number, "float", "120.0f", {}, "As above, for the other one.", false},
+            PropertyInfo{"dividerWidth", PropertyKind::Number, "float", "7.0f", {}, "How wide the grab strip is. Wider than the hairline drawn in it: a one-pixel target is a target nobody hits.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the divider is called. \"Sidebar width\" says more than \"Resize\", and it is the only thing a reader has to know which of two panes the arrow keys are about to change.", false},
+            PropertyInfo{"leadingLabel", PropertyKind::Text, "std::string_view", "", {}, "What each side is, announced as a group around it. Empty leaves the pane's own contents to speak for it.", false},
+            PropertyInfo{"trailingLabel", PropertyKind::Text, "std::string_view", "", {}, "As above, for the other one.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "1.0f", {}, "", false},
+        },
+        false,
+        true,
+        "SplitPaneResult splitPane(Ui& ui, const Interaction& input, std::string_view id, float position, const std::function<void(Ui&)>& leading, const std::function<void(Ui&)>& trailing, const SplitPaneOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "table",

@@ -64,6 +64,39 @@ void addContainerExamples(std::vector<Example>& out) {
                                    });
                    }});
 
+    out.push_back({"splitPane", [](Ui& ui, const Interaction& input, State& state) {
+                       // The shape every IDE is: a sidebar beside a pane, with
+                       // a divider the reader owns the position of.
+                       const auto side = [](std::string_view title, Token wash) {
+                           return [title, wash](Ui& inner) {
+                               Style fill;
+                               fill.direction = Direction::Column;
+                               fill.width = Length::percent(100);
+                               fill.height = Length::percent(100);
+                               fill.padding = Edges::all(10.0f);
+                               fill.gap = 6.0f;
+                               fill.background = Fill{wash};
+                               auto scope = inner.scope(fill);
+                               sectionHeading(inner, title);
+                               text(inner, "Drag the divider, or Tab to it and use the arrows.",
+                                    {.color = Token::TextMuted, .size = 11.5f,
+                                     .overflow = TextOverflow::Wrap});
+                               (void)scope;
+                           };
+                       };
+                       const SplitPaneResult result =
+                           splitPane(ui, input, "catalog.split", state.split,
+                                     side("SIDEBAR", Token::Bg),
+                                     side("EDITOR", Token::BgElevated),
+                                     {.minLeading = 90.0f,
+                                      .minTrailing = 120.0f,
+                                      .name = "Sidebar width",
+                                      .leadingLabel = "Sidebar",
+                                      .trailingLabel = "Editor",
+                                      .height = 150.0f});
+                       if (result.changed) state.split = result.position;
+                   }});
+
     out.push_back({"treeView", [](Ui& ui, const Interaction& input, State& state) {
                        // Flat, in pre-order, with a depth on each row — which is
                        // what a `git ls-tree` walk already hands you.

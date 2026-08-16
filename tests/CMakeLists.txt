@@ -6,6 +6,7 @@ add_executable(gbui_tests
     carouselTest.cpp
     galleryTest.cpp
     treeViewTest.cpp
+    splitPaneTest.cpp
     layoutTest.cpp
     themeTest.cpp
     treeTest.cpp
