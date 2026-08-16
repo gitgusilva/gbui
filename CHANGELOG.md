@@ -11,8 +11,31 @@ named here and the reason for it is in the commit.
 
 ## [Unreleased]
 
-Nothing yet. The next version's work lands on `main` and gets a number when it
-ships, not commit by commit.
+Work lands on `main` and gets a number when it ships, not commit by commit.
+
+### Added
+
+- **A preview is as tall as its example needs.** Every component preview on the
+  site was 320 pixels, which is why an open combobox looked broken while the
+  control under it was fine: twelve rows and a filter box want four hundred and
+  a checkbox wants a hundred and forty. `catalog::Example` carries a height, the
+  wasm module reports it, and the page grows its canvas to it. The numbers are
+  measured — `intrinsicMainSize` of each example in the article column — rather
+  than guessed, except for the ten that open onto the overlay layer, which that
+  method cannot see because a popover is out of flow.
+- **`FloatingOptions::dismissOnOutsideClick` and `dismissOnEscape`**, both on.
+  A press somewhere else puts a floating box away, and a caller who wants a box
+  that has to be dismissed on purpose turns it off. `select` did this with four
+  lines nobody else had; the three picker fields each spelt it differently, one
+  of them by comparing tag prefixes against the hovered node.
+- **`pressedOutside(input, {tags…})`**, which is that test with the three ways
+  it goes wrong fixed: it is the press rather than the button being held, it
+  asks the rectangles rather than the hit test — "the press hit nothing tagged"
+  reads as outside when the reader pressed a decorative part of the box — and
+  it takes the anchor as well as the box, so a toggle does not close on the way
+  down and re-open on the way up.
+- **`Interaction::pointerPressed()`** — true for the one frame the button went
+  down, which is what the above needed and what `pointerDown()` is not.
 
 ## [0.3.2] — 2026-08-16
 

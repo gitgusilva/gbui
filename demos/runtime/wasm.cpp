@@ -25,6 +25,7 @@
 #include <emscripten/emscripten.h>
 
 #include "gbui/meta/components.hpp"
+#include "gbui_demos/catalog.hpp"
 #include "gbui_demos/demos.hpp"
 #include "gbui_demos/host.hpp"
 
@@ -361,6 +362,19 @@ EMSCRIPTEN_KEEPALIVE void gbui_demos_restart(void* handle) { asHost(handle)->res
 /** Shows one component's live example instead of an application screen. */
 EMSCRIPTEN_KEEPALIVE int gbui_demos_select_component(void* handle, const char* name) {
     return asHost(handle)->selectComponent(name ? name : "") ? 1 : 0;
+}
+
+/**
+ * How tall one component's example wants its canvas, in logical pixels.
+ *
+ * No handle: it is a property of the example, not of a running host, and the
+ * page wants it before it decides how much room to leave. One number for every
+ * preview is what makes an open combobox look broken when the control is fine —
+ * twelve rows and a filter box want four hundred pixels and a checkbox wants a
+ * hundred and forty.
+ */
+EMSCRIPTEN_KEEPALIVE int gbui_demos_component_height(const char* name) {
+    return demos::catalog::heightOf(name ? name : "");
 }
 
 EMSCRIPTEN_KEEPALIVE void gbui_demos_set_skin(void* handle, const char* id) {

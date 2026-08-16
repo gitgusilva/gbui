@@ -542,7 +542,9 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
     }
     (void)surface;
 
-    if (options.dismissOnOutsideClick && input.pointerDown() && input.dragging().empty()) {
+    if (options.dismissOnOutsideClick &&
+        pressedOutside(input, {ui.qualify(std::string(id) + ".popover"),
+                               ui.qualify(triggerId)})) {
         state.open = false;
     }
     if (options.dismissOnEscape) {

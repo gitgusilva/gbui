@@ -74,7 +74,8 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
     if (!frame.keys.empty() || !frame.text.empty()) keyboardModality_ = true;
     if (frame.pointerDown && !wasDown_) keyboardModality_ = false;
 
-    if (frame.pointerDown && !wasDown_) {
+    pointerPressed_ = frame.pointerDown && !wasDown_;
+    if (pointerPressed_) {
         pressed_ = std::string(under);
         pressStarted_ = pressed_;
         // Clicking anything moves the keyboard with it, and clicking nothing

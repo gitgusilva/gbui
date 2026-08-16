@@ -91,4 +91,9 @@ const Example* find(std::string_view component) {
     return match == all.end() ? nullptr : &*match;
 }
 
+int heightOf(std::string_view component) {
+    const Example* example = find(component);
+    return example && example->height > 0 ? example->height : kDefaultHeight;
+}
+
 }  // namespace gbui::demos::catalog

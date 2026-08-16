@@ -224,6 +224,86 @@ TEST("clicking a row chooses it and closes the list") {
     CHECK(!combo.state.open);
 }
 
+TEST("a press outside puts the list away, and one inside does not") {
+    Combo combo;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+    CHECK(combo.state.open);
+
+    // Inside the list but not on a row — its padding. The old test for this was
+    // "the press hit nothing tagged", which called this outside.
+    const Rect list = combo.input.frameOf("sel.list");
+    combo.clickAt({list.x + 2.0f, list.y + 2.0f});
+    CHECK(combo.state.open);
+
+    combo.clickAt({list.x + list.width / 2.0f, list.bottom() + 60.0f});
+    CHECK(!combo.state.open);
+    CHECK_EQ(combo.value.value_or(99), std::size_t{0});   // and chose nothing
+}
+
+TEST("the press that closes it is the edge, not the button being held") {
+    // Held down outside, frame after frame. A component that answered the
+    // *level* would close on every one of them — which only shows up as a
+    // flicker once something else re-opens on a press, and by then the cause is
+    // three components away.
+    Combo combo;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+
+    InputFrame down;
+    down.pointer = {380.0f, 480.0f};
+    down.pointerDown = true;
+    combo.frame(down);
+    CHECK(!combo.state.open);
+
+    // Re-opened while the button is still down: it must stay open.
+    combo.state.open = true;
+    combo.frame(down);
+    CHECK(combo.state.open);
+}
+
+TEST("a caller can refuse both ways out") {
+    Combo combo;
+    combo.options.dismissOnOutsideClick = false;
+    combo.options.dismissOnEscape = false;
+    combo.frame();
+    combo.focus();
+    combo.press(Key::Return);
+    combo.frame();
+    CHECK(combo.state.open);
+
+    combo.clickAt({380.0f, 480.0f});
+    CHECK(combo.state.open);
+    combo.press(Key::Escape);
+    CHECK(combo.state.open);
+
+    // Still choosable, which is the point of refusing: the list goes away when
+    // the reader answers it and not before.
+    combo.clickAt(combo.centreOf("sel.list.2"));
+    CHECK_EQ(combo.value.value_or(99), std::size_t{2});
+}
+
+TEST("a filtering list closes on an outside press too, and keeps the keyboard honest") {
+    Combo combo;
+    combo.options.filter = true;
+    combo.frame();
+    combo.frame();   // the box has to have been laid out before it can be hit
+    combo.clickAt(combo.centreOf("sel"));
+    combo.frame();
+    CHECK(combo.state.open);
+    CHECK(combo.input.isFocused("sel.list.filter"));
+
+    combo.clickAt({380.0f, 480.0f});
+    CHECK(!combo.state.open);
+    // The keyboard came back to the box rather than staying on a filter box
+    // that no longer exists.
+    CHECK(combo.input.isFocused("sel"));
+}
+
 // ---- pickers ---------------------------------------------------------------
 
 TEST("a date knows its own arithmetic") {

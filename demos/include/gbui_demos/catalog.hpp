@@ -144,7 +144,24 @@ struct Example {
      * a table of fifty type-erased closures is a lot of machinery for that.
      */
     void (*build)(Ui& ui, const Interaction& input, State& state);
+    /**
+     * How tall the preview wants to be, in logical pixels. Zero takes
+     * `kDefaultHeight`.
+     *
+     * Declared per example because one number cannot be right for all of them:
+     * a checkbox is two rows and a combobox with twelve options and a filter
+     * box is four hundred pixels, and giving both the same box is how an open
+     * list ends up looking broken when the control underneath it is fine. The
+     * documentation asks for this after it mounts and grows its canvas to it.
+     */
+    int height = 0;
 };
+
+/** What an example gets when it does not ask for a height. */
+inline constexpr int kDefaultHeight = 320;
+
+/** `Example::height`, or the default — never zero. */
+int heightOf(std::string_view component);
 
 /** Every example, in the order the metadata lists its components. */
 const std::vector<Example>& examples();

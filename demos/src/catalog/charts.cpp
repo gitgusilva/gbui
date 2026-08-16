@@ -14,7 +14,7 @@ void addChartExamples(std::vector<Example>& out) {
                            {.name = "Booked", .values = state.series},
                            {.name = "Forecast", .values = state.other, .fillAlpha = 0.0f}};
                        lineChart(ui, input, "catalog.line", series, {.height = 160.0f});
-                   }});
+                   }, 280});
 
     out.push_back({"chartBrush", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<Series> series = {
@@ -25,7 +25,7 @@ void addChartExamples(std::vector<Example>& out) {
                        lineChart(ui, input, "catalog.brushed", series, state.view,
                                  {.height = 130.0f});
                        chartBrush(ui, input, "catalog.brush", series, state.view);
-                   }});
+                   }, 300});
 
     out.push_back({"chartToolbar", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<Series> series = {
@@ -44,7 +44,7 @@ void addChartExamples(std::vector<Example>& out) {
                        lineChart(ui, input, "catalog.zoomed", series, state.view,
                                  {.height = 150.0f},
                                  {.wheel = true, .wheelModifier = false});
-                   }});
+                   }, 320});
 
     out.push_back({"barChart", [](Ui& ui, const Interaction& input, State&) {
                        const std::vector<std::string> hours = {"06", "07", "08", "09", "10"};
@@ -68,7 +68,7 @@ void addChartExamples(std::vector<Example>& out) {
                                  .shape = BarShape::Lollipop,
                                  .categories = hours,
                                  .categoryAxis = 28.0f});
-                   }});
+                   }, 420});
 
     out.push_back({"donutChart", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<Slice> slices = {{.name = "Direct", .value = 38.0},
@@ -77,7 +77,7 @@ void addChartExamples(std::vector<Example>& out) {
                                                           {.name = "Referral", .value = 17.0}};
                        donutChart(ui, input, "catalog.donut", slices, state.donut,
                                   {.name = "Revenue by channel"});
-                   }});
+                   }, 240});
 
     out.push_back({"heatmap", [](Ui& ui, const Interaction& input, State&) {
                        const std::vector<std::vector<double>> grid = {
@@ -89,7 +89,7 @@ void addChartExamples(std::vector<Example>& out) {
                                {.rows = {"OP-10", "OP-20", "OP-30", "OP-40"},
                                 .columns = {"06", "07", "08", "09", "10"},
                                 .cellSize = 30.0f});
-                   }});
+                   }, 240});
 
     out.push_back({"scatterChart", [](Ui& ui, const Interaction& input, State&) {
                        // The only chart here with a real *x* scale: every other
@@ -104,7 +104,7 @@ void addChartExamples(std::vector<Example>& out) {
                             .points = {{120, 38, 28}, {142, 52, 19}, {166, 71, 34}},
                             .color = Token::Removed}};
                        scatterChart(ui, input, "catalog.scatter", series, {.height = 180.0f});
-                   }});
+                   }, 300});
 
     out.push_back({"candlestickChart", [](Ui& ui, const Interaction& input, State&) {
                        const std::vector<Candle> candles = {
@@ -118,7 +118,7 @@ void addChartExamples(std::vector<Example>& out) {
                                         {.height = 170.0f,
                                          .valueFormat = "%.1f",
                                          .categories = {"08", "09", "10", "11", "12", "13"}});
-                   }});
+                   }, 260});
 
     out.push_back({"radarChart", [](Ui& ui, const Interaction& input, State&) {
                        // Two of them, because the interesting thing about a
@@ -145,7 +145,7 @@ void addChartExamples(std::vector<Example>& out) {
                                    .size = 250.0f,
                                    .grid = RadarGrid::Polygon});
                        (void)scope;
-                   }});
+                   }, 380});
 }
 
 }  // namespace gbui::demos::catalog

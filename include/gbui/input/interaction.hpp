@@ -123,6 +123,16 @@ public:
     Vec2 pointerDelta() const { return {pointer_.x - previousPointer_.x,
                                         pointer_.y - previousPointer_.y}; }
     bool pointerDown() const { return pointerDown_; }
+    /**
+     * True for the one frame the button went down.
+     *
+     * `pointerDown()` is the level and this is the edge, and the difference
+     * matters to anything that answers a press by changing state: a popover
+     * closing on `pointerDown()` closes again on every frame the button is
+     * still held, so anything that re-opens on a press flickers. See
+     * `pressedOutside`, which is the usual reason to want this.
+     */
+    bool pointerPressed() const { return pointerPressed_; }
     /** The tag the current press started on, held until release even when the
      *  pointer leaves it. A slider keeps following the pointer that way. */
     std::string_view dragging() const { return pressed_; }
@@ -215,6 +225,7 @@ private:
     Rect viewport_{};
     Cursor cursor_ = Cursor::Default;
     bool pointerDown_ = false;
+    bool pointerPressed_ = false;
     bool wasDown_ = false;
     bool focusVisible_ = false;
     bool keyboardModality_ = false;

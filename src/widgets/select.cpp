@@ -209,7 +209,7 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
 
     if (driving) {
         for (const KeyEvent& event : input.keys()) {
-            if (event.key == Key::Escape) {
+            if (event.key == Key::Escape && options.dismissOnEscape) {
                 // Escape clears the filter before it closes the list. Two
                 // meanings for one key, in the order a reader wants them: the
                 // first press undoes the typing, the second gives up.
@@ -418,9 +418,14 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     }
     (void)list;
 
-    // A click anywhere else closes the list. `dragging` empty means the press
-    // landed outside every tagged node.
-    if (input.pointerDown() && input.dragging().empty()) close();
+    // A press anywhere else puts the list away — outside the list *and*
+    // outside the closed box, because a press on the box is the toggle above
+    // and closing here as well would shut it on the way down and re-open it on
+    // the way up.
+    if (options.dismissOnOutsideClick && pressedOutside(input, {ui.qualify(listId),
+                                                                ui.qualify(id)})) {
+        close();
+    }
 
     return result;
 }

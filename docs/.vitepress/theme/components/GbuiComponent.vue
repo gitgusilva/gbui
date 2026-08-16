@@ -24,6 +24,18 @@ const running = ref(false)
 const status = ref<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
 const message = ref('')
 
+/**
+ * How tall the stage is, in pixels.
+ *
+ * One number for every component is what makes an open combobox look broken
+ * when the control under it is fine: twelve rows and a filter box want four
+ * hundred pixels, and a checkbox wants a hundred and forty. The example itself
+ * declares what it needs — see `catalog::Example::height` — and this asks the
+ * module for it as soon as the module is there. Until then the idle state is a
+ * button, and this is the box the button sits in.
+ */
+const height = ref(220)
+
 async function run() {
   if (status.value === 'loading') return
   running.value = true
@@ -31,6 +43,14 @@ async function run() {
   try {
     const module = await import(/* @vite-ignore */ withBase('/demo/gbui-embed.js'))
     await nextTick()
+    // Asked for before the mount, so the canvas is already the right size when
+    // the host measures its box — `mountDemo` sizes itself from the element,
+    // and resizing it afterwards would cost a frame at the wrong height.
+    const asked = await module.componentHeight(props.name)
+    if (asked > 0) {
+      height.value = asked
+      await nextTick()
+    }
     demo.value = await module.mountDemo(canvas.value, {
       component: props.name,
       dark: isDark.value,
@@ -50,7 +70,7 @@ onBeforeUnmount(() => demo.value?.destroy())
 </script>
 
 <template>
-  <div class="gbui-component">
+  <div class="gbui-component" :style="{ height: `${height}px` }">
     <!-- Shown from the moment Run is pressed, not from the moment it is ready:
          `mountDemo` sizes itself from the element's box, and a canvas still
          behind `display: none` measures zero by zero. The overlay covers it
@@ -85,12 +105,23 @@ onBeforeUnmount(() => demo.value?.destroy())
 <style scoped>
 .gbui-component {
   position: relative;
-  height: 320px;
+  /* Overridden per component from the example's own declared height; this is
+     only what an idle stage is before the module has been asked. */
+  height: 220px;
   margin: 18px 0 24px;
+  transition: height 0.25s ease;
   border: 1px solid var(--vp-c-divider);
   border-radius: 10px;
   overflow: hidden;
   background: var(--vp-c-bg-alt);
+}
+
+/* WCAG 2.2.2: the stage growing to fit its example is motion like any other,
+   and a reader who has asked for none should simply get the right size. */
+@media (prefers-reduced-motion: reduce) {
+  .gbui-component {
+    transition: none;
+  }
 }
 
 .gbui-component-canvas {

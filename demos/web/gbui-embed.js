@@ -87,6 +87,19 @@ export async function skins() {
 }
 
 /**
+ * How tall one component's example wants its canvas, in logical pixels.
+ *
+ * Declared by the example, because one number cannot be right for all of them:
+ * a checkbox is two rows and a combobox with twelve options and a filter box is
+ * four hundred pixels. Giving both the same box is what makes an open list look
+ * broken when the control under it is fine.
+ */
+export async function componentHeight(name) {
+  const module = await loadModule()
+  return withText(module, name, (text) => module._gbui_demos_component_height(text))
+}
+
+/**
  * Mounts a demo on a canvas and starts it.
  *
  * Options:
@@ -340,6 +353,12 @@ export async function mountDemo(canvas, options = {}) {
       lastFrameAt = 0
       schedule()
       return ok === 1
+    },
+    /** What the mounted example asks its canvas to be, in logical pixels. */
+    componentHeight(name) {
+      return withText(module, name ?? options.component ?? '', (text) =>
+        module._gbui_demos_component_height(text),
+      )
     },
     setDark(dark) {
       settings.dark = !!dark

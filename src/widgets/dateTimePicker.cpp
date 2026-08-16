@@ -201,17 +201,13 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
     // Not closed on picking, unlike the date field: a date *and* a time is two
     // choices, and shutting the popover after the first one means reopening it
     // to make the second.
-    // "Inside" is a prefix test on the hovered tag, because the popover's
-    // children are named after it — a click on the calendar, on a clock column
-    // or on the trigger is not an outside click.
+    // "Inside" is the popover's rectangle and the trigger's, which is what it
+    // should always have been: the version this replaced compared tag prefixes
+    // against the hovered node, so it depended on every child of the popover
+    // being named after it.
     const std::string surfaceId = std::string(id) + ".popover";
-    const std::string_view hovered = input.hovered();
-    const bool inside = (hovered.size() >= surfaceId.size() &&
-                         hovered.substr(0, surfaceId.size()) == surfaceId) ||
-                        (hovered.size() >= triggerId.size() &&
-                         hovered.substr(0, triggerId.size()) == triggerId);
-    if (options.dismissOnOutsideClick && input.pointerDown() && input.dragging().empty() &&
-        !inside) {
+    if (options.dismissOnOutsideClick &&
+        pressedOutside(input, {ui.qualify(surfaceId), ui.qualify(triggerId)})) {
         state.open = false;
     }
     if (options.dismissOnEscape) {

@@ -476,10 +476,13 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
     // same caveat: the application owns "open", so this is the component being
     // helpful rather than the component keeping state.
     //
-    // `dragging` empty means the press landed on nothing tagged, which is the
-    // closest thing to "outside" a tree of tagged controls has. A press *on*
-    // the picker is a drag on one of its rails and must not close it.
-    if (options.dismissOnOutsideClick && input.pointerDown() && input.dragging().empty()) {
+    // Outside the popover *and* outside the trigger: a press on a rail is a
+    // drag on the picker and a press on the trigger is that button's own
+    // business. `pressedOutside` is the shared version of a test three
+    // components used to spell three different ways.
+    if (options.dismissOnOutsideClick &&
+        pressedOutside(input, {ui.qualify(std::string(id) + ".popover"),
+                               ui.qualify(triggerId)})) {
         state.open = false;
     }
     if (options.dismissOnEscape) {

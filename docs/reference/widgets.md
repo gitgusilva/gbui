@@ -853,6 +853,33 @@ The first five take a `FloatingOptions` — `placement`, `gap`, `margin`, `flip`
 it is anchored to an edge rather than to a control, and the one case where it
 *is* anchored to a control says so with `ToastPlacement::Anchored`.
 
+### What closes one
+
+`FloatingOptions` also carries `dismissOnOutsideClick` and `dismissOnEscape`,
+both on. Every open list on every platform closes when you press somewhere
+else, and a reader who has to find the control again to put it away will say
+the control is broken. Off is for the box that has to be dismissed on purpose —
+a form inside a popover, where a stray press would throw away typing.
+
+A component that owns its own open state acts on these itself: `select`, and
+the three fields that open a picker. A caller driving a bare `popover` has to,
+because the popover has nowhere to keep the answer:
+
+```cpp
+if (pressedOutside(input, {"branch.menu", "toolbar.branch"})) open = false;
+```
+
+Both tags matter. The popover *and* the control that opened it are one thing to
+the reader, and closing on the anchor would shut the box on the way down so the
+toggle re-opened it on the way up — a menu that cannot be closed by clicking
+the button that opened it.
+
+`pressedOutside` is the press, not the button being held: `pointerDown()` stays
+true until release, so the naive version fires on every frame of a held press.
+It also asks the two rectangles rather than the hit test, because "the press
+landed on no tagged node" reads as *outside* when somebody presses a decorative
+part of the box itself.
+
 `tooltip` draws nothing when its anchor is not hovered, so the call sits
 unconditionally beside the control it describes. `delay` (0.4 s) is what stops a
 pointer dragged across a toolbar from flashing one per control; it needs an

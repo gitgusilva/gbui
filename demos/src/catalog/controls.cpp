@@ -36,7 +36,7 @@ void addControlExamples(std::vector<Example>& out) {
              if (toggle(ui, input, "catalog.switch", state.on, {.label = "Auto fetch"})) {
                  state.on = !state.on;
              }
-         }});
+         }, 180});
 
     out.push_back({"slider", [](Ui& ui, const Interaction& input, State& state) {
                        if (const SliderResult result =
@@ -45,7 +45,7 @@ void addControlExamples(std::vector<Example>& out) {
                            result.changed) {
                            state.fraction = result.value;
                        }
-                   }});
+                   }, 140});
 
     out.push_back({"textInput", [](Ui& ui, const Interaction& input, State& state) {
                        // Both forms, because the type is the whole point: the
@@ -63,7 +63,7 @@ void addControlExamples(std::vector<Example>& out) {
                                   .maximum = 100.0,
                                   .step = 1.0,
                                   .suffix = " min"});
-                   }});
+                   }, 160});
 
     out.push_back({"textarea", [](Ui& ui, const Interaction& input, State& state) {
                        // Two to four rows: it starts small and opens up as the
@@ -74,7 +74,7 @@ void addControlExamples(std::vector<Example>& out) {
                                  .placeholder = "Describe the change\u2026",
                                  .rows = 2,
                                  .maxRows = 4});
-                   }});
+                   }, 140});
 
     out.push_back({"field", [](Ui& ui, const Interaction& input, State& state) {
                        // The caption, the control and the message as one thing
@@ -94,14 +94,14 @@ void addControlExamples(std::vector<Example>& out) {
                                  textInput(inner, input, "catalog.field", state.text,
                                            {.placeholder = "Repository name", .grow = 1.0f});
                              });
-                   }});
+                   }, 180});
 
     out.push_back({"progressBar", [](Ui& ui, const Interaction&, State& state) {
                        progressBar(ui, {.value = state.fraction, .name = "Cloning"});
                        // Below zero is the indeterminate form, which needs a
                        // clock the application supplies.
                        progressBar(ui, {.value = -1.0, .phase = state.clock, .name = "Fetching"});
-                   }});
+                   }, 140});
 
     out.push_back({"label", [](Ui& ui, const Interaction& input, State& state) {
                        // A label knows what it labels, so clicking it moves
@@ -117,18 +117,18 @@ void addControlExamples(std::vector<Example>& out) {
              if (hyperlink(ui, input, "catalog.link", "Open on GitHub", {.trailing = Icon::Link})) {
                  // An application would open a browser here.
              }
-         }});
+         }, 160});
 
     out.push_back({"colorPicker", [](Ui& ui, const Interaction& input, State& state) {
                        colorPicker(ui, input, "catalog.colorPicker", state.colour,
                                    {.name = "Accent"});
-                   }});
+                   }, 320});
 
     out.push_back({"colorField", [](Ui& ui, const Interaction& input, State& state) {
                        // The same picker behind a swatch, for a form.
                        colorField(ui, input, "catalog.colorField", state.colour,
                                   {{.name = "Accent"}});
-                   }});
+                   }, 360});
 
     out.push_back({"datePicker", [](Ui& ui, const Interaction& input, State& state) {
                        if (const DatePickerResult result = datePicker(
@@ -136,7 +136,7 @@ void addControlExamples(std::vector<Example>& out) {
                            result.chosen) {
                            state.date = result.date;
                        }
-                   }});
+                   }, 340});
 
     out.push_back({"dateField", [](Ui& ui, const Interaction& input, State& state) {
                        if (const DateFieldResult result = dateField(ui, input, "catalog.dateField",
@@ -144,7 +144,7 @@ void addControlExamples(std::vector<Example>& out) {
                            result.changed) {
                            state.date = result.date;
                        }
-                   }});
+                   }, 380});
 
     out.push_back({"timePicker", [](Ui& ui, const Interaction& input, State& state) {
                        if (const TimePickerResult result = timePicker(
@@ -152,7 +152,7 @@ void addControlExamples(std::vector<Example>& out) {
                            result.changed) {
                            state.time = result.time;
                        }
-                   }});
+                   }, 280});
 
     out.push_back({"dateTimePicker", [](Ui& ui, const Interaction& input, State& state) {
                        if (const DateTimePickerResult result = dateTimePicker(
@@ -160,7 +160,7 @@ void addControlExamples(std::vector<Example>& out) {
                            result.changed) {
                            state.stamp = result.when;
                        }
-                   }});
+                   }, 340});
 
     out.push_back({"dateTimeField", [](Ui& ui, const Interaction& input, State& state) {
                        if (const DateTimeFieldResult result = dateTimeField(
@@ -168,11 +168,11 @@ void addControlExamples(std::vector<Example>& out) {
                            result.changed) {
                            state.stamp = result.when;
                        }
-                   }});
+                   }, 380});
 
     out.push_back({"richEditor", [](Ui& ui, const Interaction& input, State& state) {
                        richEditor(ui, input, "catalog.richEditor", state.document, state.rich);
-                   }});
+                   }, 320});
 }
 
 }  // namespace gbui::demos::catalog
