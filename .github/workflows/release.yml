@@ -1,0 +1,135 @@
+name: Release
+
+# Publishes a GitHub release for a tag, with the changelog's own words.
+#
+# Until this existed, a tag was the whole of a release: CI built it and nothing
+# else happened. The consequences were quiet ones — CHANGELOG.md links every
+# version at `releases/tag/v…` and the documentation's version dropdown ends in
+# "Release notes", and all of those led to an empty page. A tag is a git object;
+# a release is the thing people are sent to.
+#
+# The notes are not written here. They are the version's section of
+# CHANGELOG.md, which was written from the history and reviewed in the change
+# that shipped it — see tools/release_notes.sh for why this reads that rather
+# than asking for the text a second time.
+
+on:
+  push:
+    tags: ["v*"]
+  # For a tag that was pushed before this workflow existed, and for a second
+  # attempt after a failed check. Publishing over an existing release updates it
+  # rather than making a duplicate.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The tag to release, e.g. v0.2.1"
+        required: true
+        type: string
+
+# Never cancel a release in flight: the tag is already public by the time this
+# runs, and a half-published release is worse than a slow one.
+concurrency:
+  group: release-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish ${{ inputs.tag || github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # The default branch, not the tag — deliberately. The changelog is a
+      # cumulative record kept on `main`, so it is the one place that has every
+      # released version's section, including a patch cut from its own branch.
+      # The tag is read from it below with `git show`, which is what makes the
+      # checks below about the tag rather than about today.
+      #
+      # It also means a tag pushed before any of this existed can still be
+      # released: v0.2 predates CHANGELOG.md, and reading the changelog out of
+      # that tag would find nothing to say.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Work out what is being released
+        id: version
+        shell: bash
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          case "$tag" in
+            v*) ;;
+            *) echo "::error::$tag is not a v-prefixed tag"; exit 1 ;;
+          esac
+          if ! git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            echo "::error::no such tag: $tag"
+            exit 1
+          fi
+          {
+            echo "tag=$tag"
+            echo "version=${tag#v}"
+          } >> "$GITHUB_OUTPUT"
+
+      # The check that "release: 0.3" needed and did not have: a tag was pushed
+      # for a version that was not being released, and what said so was a human
+      # noticing. CMakeLists.txt is where the version is declared, so the tag
+      # and the declaration have to agree, with 0.2 and 0.2.0 read as one
+      # version because CMake requires three components and a tag does not.
+      - name: The tag and CMakeLists.txt agree
+        shell: bash
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+          declared=$(git show "$tag:CMakeLists.txt" |
+            sed -n 's/^[[:space:]]*VERSION[[:space:]]\+\([0-9][0-9.]*\).*/\1/p' | head -n 1)
+          if [ -z "$declared" ]; then
+            echo "::error::no project VERSION in CMakeLists.txt at $tag"
+            exit 1
+          fi
+          pad() { echo "$1" | awk -F. '{printf "%d.%d.%d\n", $1, $2, $3}'; }
+          if [ "$(pad "$declared")" != "$(pad "${{ steps.version.outputs.version }}")" ]; then
+            echo "::error::$tag declares version $declared in CMakeLists.txt"
+            exit 1
+          fi
+          echo "$tag declares $declared — agreed."
+
+      - name: Take the notes out of the changelog
+        id: notes
+        shell: bash
+        run: |
+          tools/release_notes.sh "${{ steps.version.outputs.version }}" > notes.md
+          {
+            echo "### Release notes for ${{ steps.version.outputs.tag }}"
+            echo
+            cat notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # A tag carrying a suffix — v0.3.0-rc.1 — is not the one people should be
+      # sent to by default. Everything else is, including 0.x: this project is
+      # pre-1.0 and says so in the changelog, and marking every release a
+      # pre-release would leave the repository with no latest release at all.
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          prerelease=()
+          case "$VERSION" in
+            *-*) prerelease=(--prerelease) ;;
+          esac
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG exists — updating its notes."
+            gh release edit "$TAG" --title "gbui $VERSION" --notes-file notes.md
+          else
+            gh release create "$TAG" \
+              --title "gbui $VERSION" \
+              --notes-file notes.md \
+              --verify-tag \
+              "${prerelease[@]}"
+          fi

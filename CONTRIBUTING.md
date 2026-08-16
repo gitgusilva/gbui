@@ -121,16 +121,30 @@ order**, because the order is what went wrong the first time:
    workflow deploys from `main`, and by then every tag it has to build from is
    already there.
 
+Nothing else is hand-written. Pushing a `v*` tag runs
+[`release.yml`](.github/workflows/release.yml), which checks that the tag and
+the `VERSION` in `CMakeLists.txt` at that tag agree, and publishes the GitHub
+release with that version's section of `CHANGELOG.md` as its body —
+`tools/release_notes.sh <version>` prints the same text locally. The notes are
+never typed a second time: the changelog was written from the history and
+reviewed in the change that shipped it, and a second copy starts drifting the
+day it is made. A tag pushed before any of this existed can be released with
+`gh workflow run release.yml -f tag=v0.2`.
+
 A **patch** release is cut from its own branch, never from `main`: branch at the
 tag it fixes, cherry-pick the fix, bump the patch number, tag. `main` is the
 next minor version and has no business in a patch — 0.2.1 is 0.2 and one fix,
-which is the only thing that makes it safe to take.
+which is the only thing that makes it safe to take. Its section still goes in
+the changelog on `main`, because that file is the cumulative record and the
+release workflow reads it from there.
 
 The archived copy is built **from its tag**, in a worktree, so it is what that
 release actually said rather than today's text wearing an old label — and it is
 also why a version leaves `archived` only when its directory is deleted, never
 before. A dropdown entry that 404s is worse than a page saying it is out of
-date.
+date. A version's directory is the release *line*, so it is built from the
+newest tag in it: `/v0.2/` says what 0.2.1 says, because 0.2.1 is what a reader
+of `/v0.2/` would install.
 
 ## Style
 

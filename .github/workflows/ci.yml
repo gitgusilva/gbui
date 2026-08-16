@@ -28,8 +28,16 @@ on:
 # it is every busy afternoon. A per-commit group means what passed on main is
 # recorded for every commit, which is what "the history of what passed stays
 # complete" was supposed to mean in the first place.
+#
+# The **ref** is in the group as well as the commit, and that is not redundant:
+# a release pushes one commit twice, once as a branch update and once as a tag,
+# and the two runs are not the same run — the tag's is the one that says the
+# released artefact builds. Grouped by commit alone the second push cancels the
+# first while it is still queued, which is precisely the run nobody can afford
+# to lose. `git push --tags && git push` is the documented recipe, so this
+# happens on every release.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || format('{0}@{1}', github.ref, github.sha) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -423,19 +431,52 @@ jobs:
   # VitePress fails its build on a dead internal link, so this is a link check
   # as much as a build: a reference page renamed without its links being fixed
   # stops the job.
+  #
+  # It also checks the version dropdown against the tags, which is the other
+  # half of a release and the half that has gone wrong: `build_docs.sh` prints
+  # "no tag for 0.2, skipping" and carries on, so a version listed in `archived`
+  # before its tag was pushed became a live dropdown entry leading to a 404, and
+  # the deploy went green. That check is a second here and belongs on the pull
+  # request rather than after the site is published.
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
+      # Every tag, because that is what the check below is against.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # 24, not 20: versions.ts is read as TypeScript by node itself, both here
+      # and in build_docs.sh, and a node that cannot strip types turns that into
+      # an empty list rather than an error.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
       - run: npm run docs:build
+
+      - name: Every version the dropdown offers has a tag
+        shell: bash
+        run: |
+          versions=$(node --input-type=module -e '
+              import { archived } from "./docs/.vitepress/versions.ts";
+              for (const v of archived) console.log(v);
+          ')
+          status=0
+          for version in $versions; do
+            if git rev-parse -q --verify "refs/tags/v${version}" > /dev/null ||
+               [ -n "$(git tag --list "v${version}.*")" ]; then
+              echo "v${version} ✓"
+            else
+              echo "::error file=docs/.vitepress/versions.ts::archived lists ${version}, but no v${version} tag exists — the dropdown would link to a page that was never built"
+              status=1
+            fi
+          done
+          [ -n "$versions" ] || echo "No archived versions."
+          exit $status
 
       - uses: actions/upload-artifact@v4
         with:

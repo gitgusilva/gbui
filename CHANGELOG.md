@@ -33,6 +33,37 @@ commit.
   the file they are in is the toolkit's own statement that they are one idea.
   `/components` is the contents page for them.
 
+### Added
+
+- **A tag now publishes a release.** Until now a tag was the whole of a release:
+  CI built it and nothing else happened, so every `releases/tag/v…` link in this
+  file and the documentation's "Release notes" entry led to an empty page.
+  `release.yml` publishes the GitHub release, with that version's section of
+  this changelog as its body — read, not rewritten, because notes typed a second
+  time start drifting the day they are made. `tools/release_notes.sh` prints the
+  same text locally. It also checks the tag against the `VERSION` in
+  `CMakeLists.txt` at that tag, which is what `release: 0.3` — tagged, then
+  reverted — had no way of failing on. Releases for 0.2 and 0.2.1 have been
+  published from the sections already written here.
+
+### Fixed
+
+- **A release cancelled its own CI run.** The concurrency group was the commit,
+  and cutting a release pushes one commit twice — once as a tag, once as a
+  branch update. The second push cancelled the first while it was still queued,
+  and the run it took with it was the tag's: the one that says the released
+  artefact builds. The group is the ref and the commit now.
+- **A version could be advertised before its tag existed.** `build_docs.sh`
+  prints "no tag for 0.2, skipping" and carries on, so a version listed in
+  `archived` too early became a live dropdown entry leading nowhere and the
+  deploy still went green. CI checks the list against the tags, on the pull
+  request rather than after publication.
+- An archived version is built from the **newest tag in its line**, so `/v0.2/`
+  says what 0.2.1 says rather than what 0.2 said — 0.2.1 is what a reader of
+  `/v0.2/` would install. The documentation job also runs the node that can read
+  `versions.ts`; on the older one the archived list came back empty instead of
+  failing.
+
 ## [0.2.1] — 2026-08-13
 
 A packaging fix, released from `0.2.x` rather than from `main`: the branch is

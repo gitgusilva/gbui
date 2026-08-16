@@ -83,18 +83,19 @@ fi
 for version in "${versions[@]:-}"; do
     [ -z "$version" ] && continue
 
-    # `v0.2` is the tag this expects, but a release tagged `v0.2.0` is the same
-    # release and skipping it silently would leave a dead entry in the dropdown.
-    tag="v${version}"
-    if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
-        tag=$(git tag --list "v${version}.*" --sort=-v:refname | head -n 1)
-    fi
+    # A version's directory is that release *line*, so the tag to build is the
+    # newest tag in it: `/v0.2/` should say what 0.2.1 says, because 0.2.1 is
+    # what someone reading `/v0.2/` would install. `v0.2` and `v0.2.0` and
+    # `v0.2.1` are all candidates and the version sort picks between them, which
+    # also means a release tagged `v0.2.0` is found rather than skipped in
+    # silence — that would leave a dead entry in the dropdown.
+    tag=$(git tag --list "v${version}" "v${version}.*" --sort=-v:refname | head -n 1)
     if [ -z "$tag" ]; then
         echo "no tag for $version, skipping" >&2
         continue
     fi
 
-    echo "==> $tag"
+    echo "==> v${version} (from ${tag})"
     worktree=$(mktemp -d)
     git worktree add --detach "$worktree" "$tag" >/dev/null
     (
