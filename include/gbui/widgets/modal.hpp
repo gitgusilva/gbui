@@ -17,7 +17,12 @@ struct ModalOptions {
     bool backdrop = true;
     /** Lets the user drag it by its header, kept inside the window. */
     bool draggable = true;
+    /** Beside the title. A dialog that asks something usually wants one; one
+     *  that reports something usually does not. */
     std::optional<Icon> icon{};
+    /** The destructive kind. Recolours the title, and takes `AlertDialog` in
+     *  the accessibility tree — which is what tells a reader they were
+     *  interrupted rather than that they asked. */
     bool danger = false;
 };
 

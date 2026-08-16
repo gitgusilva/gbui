@@ -101,6 +101,67 @@ MEMBER = re.compile(
     re.M | re.S,
 )
 
+# ---- the house style, enforced ----------------------------------------------
+#
+# Two rules, and they are here rather than in a linter because this script is
+# already the thing that reads every header and already fails the build when it
+# cannot. Both exist because the *output* depends on them: the first paragraph
+# of a header becomes the gallery card, and a member's doc comment becomes its
+# row in the properties table.
+#
+# See CONTRIBUTING for the style in full.
+
+# How long an opening paragraph may be before it has stopped being a summary.
+#
+# The failure this catches is specific: `generate_meta` harvests the first
+# paragraph and puts it on the card, so a header that opens with a design
+# argument ships that argument as its summary. A blank comment line ends the
+# paragraph, which is all a long preamble has to do to comply.
+MAX_SUMMARY = 240
+
+# The words this library uses with one meaning everywhere, which therefore need
+# no comment in the forty-odd options structs that repeat them.
+#
+# Documenting `float width` once per struct is forty copies to keep in step, and
+# the house style says a comment that restates the code is deleted rather than
+# improved. Anything *not* on this list is component-specific and has to say
+# what it is — which is the whole of the rule.
+SHARED_NAMES = {
+    # layout, in CSS's own vocabulary
+    "direction", "justify", "align", "gap", "padding", "margin", "overflow",
+    "width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight",
+    "grow", "shrink", "basis", "layer",
+    # appearance
+    "background", "backgroundGradient", "border", "borderWidth", "radius",
+    "opacity", "color", "size", "weight", "slant", "underline", "strikeThrough",
+    "cursor",
+    # identity and state
+    "id", "name", "label", "role", "disabled", "readOnly", "focusable",
+    "placeholder", "leading",
+    # numbers and ranges
+    "minimum", "maximum", "step", "scale", "autoScale", "tickCount",
+    "valueFormat",
+    # things three or more components already agree about
+    "axisWidth", "categories", "grid", "hover", "legend", "link", "tooltip",
+    "rowHeight", "dismissOnEscape", "dismissOnOutsideClick",
+}
+
+# A compound of a shared *dimension* is shared too: `cellPadding` is as
+# self-evident as `padding`, and `scrollbarWidth` as `width`. Only dimensions,
+# deliberately — `secondStep` ends in a shared word and does not mean "the
+# second step", which is exactly the kind of name that needs a sentence.
+SHARED_SUFFIXES = {"width", "height", "padding", "margin", "gap", "radius",
+                   "color", "opacity", "size"}
+
+
+def needs_doc(name):
+    """Whether this member has to carry a doc comment."""
+    if name in SHARED_NAMES:
+        return False
+    words = re.findall(r"[A-Z]?[a-z0-9]+", name)
+    return not (words and words[-1].lower() in SHARED_SUFFIXES)
+
+
 KINDS = [
     ("bool", "Bool"),
     ("float", "Number"),
@@ -401,16 +462,43 @@ def main():
             enums[name] = [v for v in values if re.fullmatch(r"\w+", v)]
 
     entries = []
+    complaints = []
     for path in sorted(WIDGETS.glob("*.hpp")):
         if path.name in UMBRELLAS:
             continue
         group = groups.get(path.name, "Other")
+        header_checked = False
         for entry in parse_header(path, enums):
             entry["group"] = group
             entries.append(entry)
 
+            # The style gate. Reported all at once rather than at the first
+            # failure: a contributor fixing one header should not have to run
+            # this five times to find the other four.
+            if not header_checked:
+                header_checked = True
+                if not entry["headerDoc"]:
+                    complaints.append(
+                        f"{path.name}: opens with no sentence saying what it is")
+                elif len(entry["headerDoc"]) > MAX_SUMMARY:
+                    complaints.append(
+                        f"{path.name}: its opening paragraph is {len(entry['headerDoc'])} "
+                        f"characters and becomes the gallery card — put a blank comment "
+                        f"line after the first sentence")
+            for prop in entry["properties"]:
+                if not prop["doc"] and needs_doc(prop["name"]):
+                    complaints.append(
+                        f"{path.name}: {entry['options']}::{prop['name']} has no doc comment")
+
     if not entries:
         raise SystemExit("generate_meta: parsed no components — the headers changed shape")
+
+    if complaints:
+        for complaint in sorted(set(complaints)):
+            print(complaint, file=sys.stderr)
+        print(f"generate_meta: {len(set(complaints))} header(s) do not meet the house style; "
+              f"see CONTRIBUTING", file=sys.stderr)
+        return 1
 
     order = {name: i for i, name in enumerate(GROUP_ORDER)}
     entries.sort(key=lambda e: (order.get(e["group"], len(order)), e["header"], e["name"]))

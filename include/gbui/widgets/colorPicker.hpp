@@ -77,6 +77,8 @@ struct ColorFieldOptions : ColorPickerOptions {
     /** The trigger's own size. The popover takes `width` from the picker
      *  options above, as everything else does. */
     float height = 28.0f;
+    /** The hex code beside the swatch on the closed control. Off leaves the
+     *  swatch alone, which is what a trigger in a tight toolbar wants. */
     bool showHexOnTrigger = true;
     bool disabled = false;
     /**

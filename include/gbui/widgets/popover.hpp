@@ -65,6 +65,9 @@ struct PopoverOptions : FloatingOptions {
     /** Matches the anchor's width — what a select's list wants. */
     bool matchAnchorWidth = false;
     Edges padding = Edges::all(6.0f);
+    /** Between the things *inside* the surface, as distinct from the padding
+     *  around them. A menu wants a couple of pixels and a calendar wants
+     *  none. */
     float gapBetweenItems = 2.0f;
     /**
      * What the surface is, to a reader who cannot see it float.

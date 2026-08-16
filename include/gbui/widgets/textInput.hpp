@@ -120,6 +120,7 @@ struct TextInputOptions {
      *  A suffix inside the editable text would be a suffix the caret can be put
      *  in the middle of. */
     std::string_view suffix{};
+    /** Where the step buttons go, and whether there are any at all. */
     StepperPlacement steppers = StepperPlacement::Sides;
     /** Below this width the steppers drop to `Stacked` automatically, so a box
      *  in a narrow column shows its value rather than two buttons. */

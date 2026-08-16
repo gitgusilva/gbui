@@ -27,7 +27,7 @@
         "type": "Token",
         "default": "Token::TextMuted",
         "choices": [],
-        "doc": "",
+        "doc": "The text on the wash. Paired with `background`, and the contrast between the two is the caller's to get right \u2014 a pill is one node and there is nothing here that can check it.",
         "optional": false
       }
     ]
@@ -60,7 +60,7 @@
           "Ghost",
           "Danger"
         ],
-        "doc": "",
+        "doc": "Which of the four this is. `Secondary` by default, because a screen where everything is primary has no primary.",
         "optional": false
       },
       {
@@ -907,7 +907,7 @@
         "type": "int",
         "default": "2",
         "choices": [],
-        "doc": "",
+        "doc": "Digits in the label `showValue` draws. It does **not** round the value: the caller's number is untouched, and a slider that quietly rounded it would be one you cannot set to a third.",
         "optional": false
       },
       {
@@ -1350,7 +1350,7 @@
           "Stacked",
           "None"
         ],
-        "doc": "",
+        "doc": "Where the step buttons go, and whether there are any at all.",
         "optional": false
       },
       {
@@ -1832,7 +1832,7 @@
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "",
+        "doc": "Passed in, never held. The row draws the state and the application owns it, which is the contract every component here has.",
         "optional": false
       },
       {
@@ -1841,7 +1841,7 @@
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "",
+        "doc": "As above. Separate from what the pointer is over, because a list often wants the keyboard's row lit instead.",
         "optional": false
       },
       {
@@ -2396,7 +2396,7 @@
           "Horizontal",
           "Vertical"
         ],
-        "doc": "",
+        "doc": "A strip along the top or a rail down the side. Both arrow pairs step it either way, so the keys do not change when the layout does.",
         "optional": false
       },
       {
@@ -2528,7 +2528,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "*Reserved, and currently draws nothing.** `Border` is all four edges, so a toolbar's rule has to be a sibling: write `divider(ui, Direction::Column)` after the toolbar until the primitive grows per-edge widths. Named rather than removed, because the option is the right shape and only the primitive is missing.",
         "optional": false
       }
     ]
@@ -2608,7 +2608,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "Whether the container underneath draws one.",
         "optional": false
       },
       {
@@ -2626,7 +2626,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "It fades out when nothing is pointing at it, the way an overlay bar does.",
         "optional": false
       },
       {
@@ -2706,7 +2706,7 @@
         "type": "std::string_view",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "Drawn right-aligned in the mono face, and drawn *only*: the row does not bind it. A menu is where a shortcut is advertised; the application is where it is handled.",
         "optional": false
       },
       {
@@ -2754,7 +2754,7 @@
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "",
+        "doc": "The destructive one, in the error colour \u2014 which is the only warning a reader gets before pressing it.",
         "optional": false
       },
       {
@@ -2850,7 +2850,7 @@
         "type": "std::optional<Icon>",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "Beside the title. A dialog that asks something usually wants one; one that reports something usually does not.",
         "optional": true
       },
       {
@@ -2859,7 +2859,7 @@
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "",
+        "doc": "The destructive kind. Recolours the title, and takes `AlertDialog` in the accessibility tree \u2014 which is what tells a reader they were interrupted rather than that they asked.",
         "optional": false
       }
     ]
@@ -2986,7 +2986,7 @@
         "type": "float",
         "default": "2.0f",
         "choices": [],
-        "doc": "",
+        "doc": "Between the things *inside* the surface, as distinct from the padding around them. A menu wants a couple of pixels and a calendar wants none.",
         "optional": false
       },
       {
@@ -3083,7 +3083,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "The hex code beside the swatch on the closed control. Off leaves the swatch alone, which is what a trigger in a tight toolbar wants.",
         "optional": false
       },
       {
@@ -3350,7 +3350,7 @@
         "type": "CalendarLocale",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "The first day of the week, twelve month names and seven day initials. Answered rather than solved \u2014 see the note above `CalendarLocale`.",
         "optional": false
       },
       {
@@ -3359,7 +3359,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "Marks today with a dot. A dot rather than a ring, so it cannot be mistaken for the selection or for where the keyboard is.",
         "optional": false
       },
       {
@@ -3430,7 +3430,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "A small cross on the trigger once there is a value. Off where the field is required and empty is not an answer.",
         "optional": false
       },
       {
@@ -3501,7 +3501,7 @@
         "type": "DatePickerOptions",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "The two halves, each configured exactly as it would be on its own \u2014 bounds, locale, pattern. Passed through rather than restated, which is what keeps this one calendar and one clock instead of a third of each.",
         "optional": false
       },
       {
@@ -3510,7 +3510,7 @@
         "type": "TimePickerOptions",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "As above.",
         "optional": false
       },
       {
@@ -3572,7 +3572,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "Off leaves the keys and the document and nothing to click, which is what an editor whose buttons live somewhere else wants.",
         "optional": false
       },
       {
@@ -3652,7 +3652,7 @@
         "type": "bool",
         "default": "false",
         "choices": [],
-        "doc": "",
+        "doc": "A third column. Off, because most times are picked to the minute and a column nobody uses is a column in the way.",
         "optional": false
       },
       {
@@ -3670,7 +3670,7 @@
         "type": "int",
         "default": "1",
         "choices": [],
-        "doc": "",
+        "doc": "How the seconds column is filled: every second at 1, every fifteenth at 15. The step *for seconds* \u2014 not the second step.",
         "optional": false
       },
       {
@@ -3697,7 +3697,7 @@
         "type": "ClockLocale",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "The words: AM, PM, and the separator. The pattern decides the shape and this decides the words, which is how one formatter covers Brazilian, American and ISO without a locale database.",
         "optional": false
       },
       {
@@ -4056,7 +4056,7 @@
         "type": "float",
         "default": "22.0f",
         "choices": [],
-        "doc": "",
+        "doc": "Room for the category names. Zero draws none.",
         "optional": false
       },
       {
@@ -4074,7 +4074,7 @@
         "type": "std::optional<Token>",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "As above, for the other direction.",
         "optional": true
       },
       {
@@ -4198,7 +4198,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "Which of the three buttons the strip carries. All of them by default; drop the ones a chart has no room for.",
         "optional": false
       },
       {
@@ -4207,7 +4207,7 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "",
+        "doc": "As above.",
         "optional": false
       },
       {
@@ -4234,7 +4234,7 @@
         "type": "double",
         "default": "0.02",
         "choices": [],
-        "doc": "",
+        "doc": "The narrowest the view may get, as a fraction of the whole. The same floor `BrushOptions` uses, so the two controls agree about how far in a reader is allowed to go.",
         "optional": false
       },
       {
@@ -4417,7 +4417,7 @@
         "type": "std::vector<std::string>",
         "default": "",
         "choices": [],
-        "doc": "",
+        "doc": "As above, along the top.",
         "optional": false
       },
       {
@@ -4498,7 +4498,7 @@
         "type": "float",
         "default": "16.0f",
         "choices": [],
-        "doc": "",
+        "doc": "The same, along the top.",
         "optional": false
       },
       {
@@ -4852,7 +4852,7 @@
         "type": "Scale",
         "default": "0.0, 0.0",
         "choices": [],
-        "doc": "",
+        "doc": "As above, for the other one.",
         "optional": false
       },
       {
@@ -4924,7 +4924,7 @@
         "type": "std::string_view",
         "default": "\"%.0f\"",
         "choices": [],
-        "doc": "",
+        "doc": "The same, for the x value. Two formats because the axes are two different quantities \u2014 seconds against dollars.",
         "optional": false
       },
       {
@@ -4960,7 +4960,7 @@
         "type": "float",
         "default": "0.6f",
         "choices": [],
-        "doc": "",
+        "doc": "How solid a dot is. Under one on purpose: overlapping points then read as denser rather than hiding each other, and density is most of the information in a crowded scatter.",
         "optional": false
       },
       {

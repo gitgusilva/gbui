@@ -72,14 +72,21 @@ struct TimePickerState {
 struct TimePickerOptions {
     /** Twelve-hour display with an AM/PM column. The *value* is always 0–23. */
     bool use24Hour = true;
+    /** A third column. Off, because most times are picked to the minute and a
+     *  column nobody uses is a column in the way. */
     bool showSeconds = false;
     /** Coarser columns: 5 or 15 for a picker nobody needs to the minute. */
     int minuteStep = 1;
+    /** How the seconds column is filled: every second at 1, every fifteenth at
+     *  15. The step *for seconds* — not the second step. */
     int secondStep = 1;
     /** Times outside these cannot be chosen. Leave both at midnight for none —
      *  a range of nothing is not a range anybody wants. */
     Time minimum{0, 0, 0};
     Time maximum{0, 0, 0};
+    /** The words: AM, PM, and the separator. The pattern decides the shape and
+     *  this decides the words, which is how one formatter covers Brazilian,
+     *  American and ISO without a locale database. */
     ClockLocale locale{};
     float height = 176.0f;
     float columnWidth = 58.0f;

@@ -93,6 +93,33 @@ commit.
 
 ### Changed
 
+- **The header house style is a gate, not a habit.**
+  `tools/generate_meta.py` now fails — and CI with it — when a widget header
+  opens with no sentence saying what it is, when that opening paragraph runs
+  past 240 characters, or when an options member has no doc comment.
+
+  It is in the generator rather than in a linter because the generator is
+  already the thing that reads every header, and because the **output** depends
+  on both: the first paragraph becomes the gallery card and a member's comment
+  becomes its row in the properties table, so a header that skips either ships a
+  blank in the documentation. A check that lives beside the harvest cannot drift
+  from it.
+
+  The length rule catches one specific failure the roadmap named: a header whose
+  first line is a design argument ships that argument as its summary. A blank
+  `//` line ends the paragraph, which is all a long preamble has to do.
+
+  **The member rule has an exemption, and it is the interesting half.** The
+  words this library uses with one meaning everywhere — `width`, `gap`,
+  `disabled`, `padding`, `grow`, and any compound ending in a dimension such as
+  `cellPadding` — need no comment, because documenting `float width` in forty
+  structs is forty copies to keep in step and is exactly the restating-the-code
+  comment the style says to delete. They are listed in `SHARED_NAMES` with the
+  reason. Everything else is specific to its component and has to say what it
+  is; 35 members did not, and now do. Three of those were a parser artefact
+  worth fixing anyway — `columnLabels`, `falling` and the candlestick's
+  `categoryAxis` were sharing a comment with the member above them, so the
+  generated table had them blank.
 - **Accessibility is now a rule, not a milestone.** Rule 7 in `CONTRIBUTING`:
   every component that is added or changed carries working accessibility in the
   same commit, with a case in `tests/accessibilityTest.cpp`. The last case in

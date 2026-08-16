@@ -119,7 +119,11 @@ struct DatePickerOptions {
     Date maximum{};
     /** Drawn with a dot under it. Invalid draws none. */
     Date today = Date::today();
+    /** The first day of the week, twelve month names and seven day initials.
+     *  Answered rather than solved — see the note above `CalendarLocale`. */
     CalendarLocale locale{};
+    /** Marks today with a dot. A dot rather than a ring, so it cannot be
+     *  mistaken for the selection or for where the keyboard is. */
     bool showToday = true;
     /**
      * How big a day cell would like to be.

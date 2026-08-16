@@ -13,6 +13,8 @@ namespace gbui {
 enum class ButtonVariant { Primary, Secondary, Ghost, Danger };
 
 struct ButtonOptions {
+    /** Which of the four this is. `Secondary` by default, because a screen
+     *  where everything is primary has no primary. */
     ButtonVariant variant = ButtonVariant::Secondary;
     /** Drawn before the label, in the label's colour. */
     std::optional<Icon> leading{};

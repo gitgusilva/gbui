@@ -42,8 +42,11 @@ struct VirtualListOptions {
 
     // Passed through to the scroll container underneath.
     float step = 48.0f;
+    /** Whether the container underneath draws one. */
     bool scrollbar = true;
     float scrollbarWidth = 10.0f;
+    /** It fades out when nothing is pointing at it, the way an overlay bar
+     *  does. */
     bool autoHideScrollbar = true;
     bool focusable = true;
     float grow = 1.0f;

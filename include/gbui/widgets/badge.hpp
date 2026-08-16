@@ -9,6 +9,9 @@ namespace gbui {
 
 struct BadgeOptions {
     Token background = Token::BgOverlay;
+    /** The text on the wash. Paired with `background`, and the contrast
+     *  between the two is the caller's to get right — a pill is one node and
+     *  there is nothing here that can check it. */
     Token foreground = Token::TextMuted;
 };
 

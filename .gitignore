@@ -29,3 +29,4 @@ compile_commands.json
 # The roadmap is a working document, not part of the published site.
 ROADMAP.md
 docs/roadmap.md
+__pycache__/

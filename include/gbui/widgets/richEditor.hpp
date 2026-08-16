@@ -140,6 +140,8 @@ struct RichEditorOptions {
     /** What the `BlockStyle` dropdown lists. Empty takes
      *  `defaultBlockChoices()`. */
     std::vector<BlockChoice> blockChoices{};
+    /** Off leaves the keys and the document and nothing to click, which is
+     *  what an editor whose buttons live somewhere else wants. */
     bool showToolbar = true;
     std::string_view placeholder = "Write something…";
     float minHeight = 220.0f;

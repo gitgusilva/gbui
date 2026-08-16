@@ -52,7 +52,11 @@ struct DateTimePickerState {
 };
 
 struct DateTimePickerOptions {
+    /** The two halves, each configured exactly as it would be on its own —
+     *  bounds, locale, pattern. Passed through rather than restated, which is
+     *  what keeps this one calendar and one clock instead of a third of each. */
     DatePickerOptions date{};
+    /** As above. */
     TimePickerOptions time{};
     /** The clock beside the calendar, or under it. Beside is the default
      *  because a calendar is wider than it is tall and the pair balances. */
@@ -82,6 +86,8 @@ struct DateTimeFieldOptions : DateTimePickerOptions {
      * ends and the time begins.
      */
     std::string_view pattern = "dd/MM/yyyy HH:mm";
+    /** A small cross on the trigger once there is a value. Off where the field
+     *  is required and empty is not an answer. */
     bool clearable = true;
     bool disabled = false;
     float width = 240.0f;

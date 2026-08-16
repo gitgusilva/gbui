@@ -8,7 +8,11 @@
 namespace gbui {
 
 struct ListRowOptions {
+    /** Passed in, never held. The row draws the state and the application owns
+     *  it, which is the contract every component here has. */
     bool selected = false;
+    /** As above. Separate from what the pointer is over, because a list often
+     *  wants the keyboard's row lit instead. */
     bool hovered = false;
     float height = 28.0f;
     Edges padding = Edges::symmetric(0.0f, 12.0f);

@@ -361,7 +361,10 @@ ChartResult lineChart(Ui& ui, const Interaction& input, std::string_view id,
                       const ChartOptions& options = {}, const ChartZoom& zoom = {});
 
 struct ChartToolbarOptions {
+    /** Which of the three buttons the strip carries. All of them by default;
+     *  drop the ones a chart has no room for. */
     bool zoomIn = true;
+    /** As above. */
     bool zoomOut = true;
     /** Puts the whole series back. Disabled while it already is whole, because
      *  a button that does nothing is worse than one that is not there — the
@@ -374,6 +377,9 @@ struct ChartToolbarOptions {
      * a reader who wants that has the sweep, which says exactly what to keep.
      */
     double step = 0.4;
+    /** The narrowest the view may get, as a fraction of the whole. The same
+     *  floor `BrushOptions` uses, so the two controls agree about how far in a
+     *  reader is allowed to go. */
     double minSpan = 0.02;
     /**
      * How the buttons are drawn.
@@ -576,6 +582,7 @@ struct PointSeries {
 struct ScatterOptions {
     /** Fixed bounds for each axis. Left alone, both come from the data. */
     Scale xScale{0.0, 0.0};
+    /** As above, for the other one. */
     Scale yScale{0.0, 0.0};
     bool autoScale = true;
     std::optional<int> tickCount{};
@@ -584,12 +591,17 @@ struct ScatterOptions {
     std::optional<bool> grid{};
     bool hover = true;
     std::string_view valueFormat = "%.0f";
+    /** The same, for the x value. Two formats because the axes are two
+     *  different quantities — seconds against dollars. */
     std::string_view xFormat = "%.0f";
     /** Room under the plot for the x labels. Zero draws none. */
     float xAxis = 20.0f;
     /** The radii the weights are spread across, when there are weights. */
     float minRadius = 5.0f;
     float maxRadius = 26.0f;
+    /** How solid a dot is. Under one on purpose: overlapping points then read
+     *  as denser rather than hiding each other, and density is most of the
+     *  information in a crowded scatter. */
     float fillAlpha = 0.6f;
     /** How near the pointer has to be, in pixels, to pick a dot. */
     float hitRadius = 14.0f;
@@ -639,6 +651,7 @@ struct HeatmapOptions {
     /** Names down the side and along the top. Fewer than there are rows or
      *  columns leaves the rest unlabelled rather than renumbering them. */
     std::vector<std::string> rows{};
+    /** As above, along the top. */
     std::vector<std::string> columns{};
     Scale scale{0.0, 0.0};
     bool autoScale = true;
@@ -660,6 +673,7 @@ struct HeatmapOptions {
     float radius = 2.0f;
     /** Room for the labels. Zero draws none. */
     float rowLabels = 34.0f;
+    /** The same, along the top. */
     float columnLabels = 16.0f;
     bool hover = true;
     std::string_view valueFormat = "%.0f";
@@ -743,10 +757,12 @@ struct CandlestickOptions {
      */
     float maxBodyWidth = 14.0f;
     std::vector<std::string> categories{};
+    /** Room for the category names. Zero draws none. */
     float categoryAxis = 22.0f;
     /** Unset takes the theme's added/removed colours, which are already the
      *  two a reader of this application associates with up and down. */
     std::optional<Token> rising{};
+    /** As above, for the other direction. */
     std::optional<Token> falling{};
     /**
      * Draw rising candles as an outline instead of a solid body.

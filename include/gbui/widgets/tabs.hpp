@@ -37,6 +37,8 @@ struct TabItem {
 enum class TabsOrientation { Horizontal, Vertical };
 
 struct TabsOptions {
+    /** A strip along the top or a rail down the side. Both arrow pairs step it
+     *  either way, so the keys do not change when the layout does. */
     TabsOrientation orientation = TabsOrientation::Horizontal;
     /** The strip's thickness: its height when horizontal, its width when
      *  vertical. */

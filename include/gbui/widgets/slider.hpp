@@ -28,6 +28,9 @@ struct SliderOptions {
     float height = 20.0f;
     /** Shows the value at the right of the track. */
     bool showValue = false;
+    /** Digits in the label `showValue` draws. It does **not** round the value:
+     *  the caller's number is untouched, and a slider that quietly rounded it
+     *  would be one you cannot set to a third. */
     int decimals = 2;
     /** What this slider is called, for a reader who cannot see the caption
      *  beside it. Unnecessary when a `label` or a `field` names it — those

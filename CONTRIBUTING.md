@@ -177,6 +177,48 @@ code, and a comment that restates it goes stale silently. Anything surprising �
 a workaround, a spec quirk, a bug that shipped once — is worth a sentence, and
 the bug that shipped once is worth naming so it does not come back.
 
+### A header's shape, and the two parts of it that are checked
+
+Every header in `include/gbui/widgets/` opens the same way, and the first two
+lines of that shape are **enforced by `tools/generate_meta.py`**, which CI runs
+with `--check`. They are enforced because the output depends on them, not for
+tidiness: the generator harvests a header's first paragraph onto the gallery
+card and a member's doc comment into the properties table, so a header that
+skips either ships a blank in the documentation.
+
+```cpp
+// A single-line input, and a type that says what it accepts.      // <- the card
+//
+// The HTML shape on purpose: one element with a `type`, rather …  // <- the argument
+#pragma once
+…
+struct TextInputOptions {
+    /** Digits after the point. Zero also stops a point being typed at all. */
+    int decimals = 0;
+    float width = kAuto;              // <- no comment needed; see below
+};
+```
+
+1. **One sentence saying what the thing is, then a blank comment line, then
+   everything about *why* it is the way it is.** A blank `//` ends the paragraph,
+   which is all a long preamble has to do. The gate fails a header with no
+   opening sentence, and one whose opening paragraph runs past 240 characters —
+   at that length it has stopped being a summary and started being the argument,
+   and the argument belongs after the blank line.
+2. **Every options member carries a `/** … *&#47;`**, *except* the words this
+   library uses with one meaning everywhere: `width`, `gap`, `disabled`,
+   `padding`, `grow` and the rest of the layout and appearance vocabulary, plus
+   any compound ending in a dimension — `cellPadding`, `scrollbarWidth`. Those
+   are listed in `SHARED_NAMES` in the generator, with the reason. Documenting
+   `float width` in forty structs is forty copies to keep in step, and it is
+   exactly the comment the rule above says to delete. Anything else is specific
+   to the component and has to say what it is.
+
+The rest of the shape is convention rather than gate, and the best files here
+already follow it: `/** … *&#47;` on every declaration; an explanatory comment
+inside a function gets a blank line above it and explains why rather than what;
+a comment that restates the code is deleted, not improved.
+
 The library builds with `-Wall -Wextra -Wpedantic -Wshadow -Wconversion
 -Wsign-conversion -Werror`, or `/W4 /WX` under MSVC — `GBUI_WERROR`, on by
 default for a standalone build and on in every CI job. `-Wconversion` is the one

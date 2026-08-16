@@ -28,6 +28,9 @@ enum class CheckSide { Leading, Trailing };
 
 struct MenuItemOptions {
     std::optional<Icon> leading{};
+    /** Drawn right-aligned in the mono face, and drawn *only*: the row does
+     *  not bind it. A menu is where a shortcut is advertised; the application
+     *  is where it is handled. */
     std::string_view shortcut{};
     /** The chosen value: a check mark and the strong text colour. */
     bool selected = false;
@@ -39,6 +42,8 @@ struct MenuItemOptions {
      *  the list would return. */
     bool highlighted = false;
     bool disabled = false;
+    /** The destructive one, in the error colour — which is the only warning a
+     *  reader gets before pressing it. */
     bool danger = false;
     /** Whether Tab can land on it. A list whose owner drives the highlight — a
      *  select — turns this off, so Tab leaves the control instead of walking

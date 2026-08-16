@@ -153,10 +153,15 @@ jobs:
   # on believing it. So the generator runs here and the build fails if what it
   # produces differs from what is committed.
   generated:
-    name: generated files are current
+    name: generated files are current, and the headers meet the house style
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The same command does both. It has to read every header to regenerate
+      # the table, so checking the two things the table depends on — an opening
+      # sentence, and a doc comment on every option that is not shared
+      # vocabulary — costs nothing and cannot drift from what the generator
+      # actually harvests. See CONTRIBUTING.
       - name: Regenerate the component metadata
         run: python3 tools/generate_meta.py --check
 
