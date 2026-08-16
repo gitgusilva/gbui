@@ -75,7 +75,8 @@ void addChartExamples(std::vector<Example>& out) {
                                                           {.name = "Partner", .value = 24.0},
                                                           {.name = "Self-serve", .value = 21.0},
                                                           {.name = "Referral", .value = 17.0}};
-                       donutChart(ui, input, "catalog.donut", slices, state.donut);
+                       donutChart(ui, input, "catalog.donut", slices, state.donut,
+                                  {.name = "Revenue by channel"});
                    }});
 
     out.push_back({"heatmap", [](Ui& ui, const Interaction& input, State&) {

@@ -221,7 +221,7 @@ void Production::stations(Ui& ui, const Interaction& input) {
                       break;
               }
           },
-          {.rowHeight = 34.0f, .rowLines = true});
+          {.rowHeight = 34.0f, .rowLines = true, .name = "Stations"});
 }
 
 NodeId Production::build(Frame& frame) {
@@ -266,7 +266,9 @@ NodeId Production::build(Frame& frame) {
             andonRow.shrink = 0.0f;
             auto toggleScope = ui.scope(andonRow);
             text(ui, "ANDON", {.color = Token::TextMuted, .size = 10.5f});
-            if (toggle(ui, input, "production.andon", andon_)) andon_ = !andon_;
+            if (toggle(ui, input, "production.andon", andon_, {.name = "Andon"})) {
+                andon_ = !andon_;
+            }
         }
         button(ui, input, "CALL SUPPORT",
                {.variant = andon_ ? ButtonVariant::Danger : ButtonVariant::Secondary,

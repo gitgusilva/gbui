@@ -164,7 +164,8 @@ void Grid::mix(Ui& ui, const Interaction& input) {
         {.name = "Hydro", .value = 260.0, .color = Token::Graph1},
         {.name = "Import", .value = 170.0, .color = Token::Graph5},
     };
-    donutChart(ui, input, "grid.mix", slices, mix_, {.size = 150.0f, .legendMaxHeight = 160.0f});
+    donutChart(ui, input, "grid.mix", slices, mix_,
+               {.size = 150.0f, .legendMaxHeight = 160.0f, .name = "Generation mix"});
 }
 
 void Grid::feeders(Ui& ui, const Interaction& input) {
@@ -236,7 +237,7 @@ void Grid::feeders(Ui& ui, const Interaction& input) {
                       break;
               }
           },
-          {.rowHeight = 32.0f, .rowLines = true});
+          {.rowHeight = 32.0f, .rowLines = true, .name = "Feeders"});
 }
 
 void Grid::ties(Ui& ui) {

@@ -6,6 +6,8 @@
 //     gbui_demo weather --shot out.ppm   render one frame and exit
 //     gbui_demo weather --svg out.svg    record the same frame as SVG
 //     gbui_demo --stills out/            a still of every screen, no window
+//     gbui_demo --coverage               every component has a live example
+//     gbui_demo --a11y                   every control on every screen has a name
 //
 //     --size W H     logical size, default the screen's own design size
 //     --scale S      device pixels per logical pixel
@@ -84,6 +86,75 @@ int reportCoverage() {
     return problems;
 }
 
+/**
+ * Every Tab stop in every screen and every example that has nothing to say.
+ *
+ * The other half of `tests/accessibilityTest`. That one covers the *library* —
+ * a component that grows a role but no name fails it — and this one covers the
+ * **call sites**, which is where the names the toolkit cannot invent have to
+ * come from: an icon-only button, a chart, a table. The toolkit has no way to
+ * guess those and deliberately does not try, so nothing but a walk over the
+ * real screens can tell whether anyone supplied them.
+ *
+ * One frame each, headless, no window and no font required.
+ */
+int reportAccessibility() {
+    int problems = 0;
+
+    const auto audit = [&](demos::Host& host, std::string_view what) {
+        host.frame(0.0f);
+        // Twice: a component that reads last frame's geometry — a caret, a
+        // popover, a chart's plot — builds nothing useful on the first.
+        host.frame(0.0f);
+        const AccessibilityTree tree = host.accessibility();
+
+        // Which controls are named by something else. A caption pointed at one
+        // is a name; the tree has already resolved that onto the control, so
+        // this only has to look at what came out.
+        for (const AccessibilityNode& node : tree.nodes) {
+            if (node.role == Role::None) continue;
+            const bool needsName =
+                node.role == Role::Button || node.role == Role::Link ||
+                node.role == Role::Checkbox || node.role == Role::Radio ||
+                node.role == Role::Switch || node.role == Role::Slider ||
+                node.role == Role::SpinButton || node.role == Role::TextInput ||
+                node.role == Role::ComboBox || node.role == Role::Option ||
+                node.role == Role::Tab || node.role == Role::MenuItem ||
+                node.role == Role::Figure || node.role == Role::Table ||
+                node.role == Role::Dialog || node.role == Role::AlertDialog;
+            if (!needsName || !node.name.empty() || node.labelledBy != 0) continue;
+            std::printf("%.*s: a %.*s with no name%s%.*s\n",
+                        static_cast<int>(what.size()), what.data(),
+                        static_cast<int>(roleName(node.role).size()), roleName(node.role).data(),
+                        node.tag.empty() ? "" : " — ",
+                        static_cast<int>(node.tag.size()), node.tag.data());
+            ++problems;
+        }
+    };
+
+    demos::HostOptions options;
+    options.width = 1280;
+    options.height = 800;
+    for (const demos::DemoInfo& entry : demos::catalogue()) {
+        demos::Host host(options);
+        if (!host.select(entry.id)) continue;
+        const Vec2 size = host.designSize();
+        host.resize(static_cast<int>(size.x), static_cast<int>(size.y), 1.0f);
+        audit(host, entry.id);
+    }
+    for (const demos::catalog::Example& example : demos::catalog::examples()) {
+        demos::Host host(options);
+        if (!host.selectComponent(example.component)) continue;
+        const Vec2 size = host.designSize();
+        host.resize(static_cast<int>(size.x), static_cast<int>(size.y), 1.0f);
+        audit(host, example.component);
+    }
+
+    std::printf("%zu screens, %zu examples, %d unnamed\n", demos::catalogue().size(),
+                demos::catalog::examples().size(), problems);
+    return problems;
+}
+
 void printCatalogue() {
     std::printf("%-12s  %-26s  %s\n", "ID", "TITLE", "SECTOR");
     for (const demos::DemoInfo& entry : demos::catalogue()) {
@@ -148,6 +219,9 @@ int main(int argc, char** argv) {
         }
         if (std::strcmp(argument, "--coverage") == 0) {
             return reportCoverage() == 0 ? 0 : 1;
+        }
+        if (std::strcmp(argument, "--a11y") == 0) {
+            return reportAccessibility() == 0 ? 0 : 1;
         }
         if (std::strcmp(argument, "--components") == 0) {
             for (const meta::ComponentInfo& entry : meta::components()) {

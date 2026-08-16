@@ -59,6 +59,22 @@ commit.
   the chart options' `name`, `MenuItemOptions::role`, `PopoverOptions::role` and
   `name`, and `BoxOptions::role` and `name`.
 
+- **`gbui_demo --a11y`, which audits the call sites.** The other half of
+  `tests/accessibilityTest`: that one covers the *library*, and this walks the
+  accessibility tree of every demo screen and every catalogue example and fails
+  naming any control that has nothing to announce. It exists because the names
+  the toolkit cannot invent — an icon-only button, a chart, a table — are the
+  application's to supply, and nothing but a walk over the real screens can tell
+  whether anyone did. `Host::accessibility()` exposes the tree for it, and CI
+  runs it beside `--coverage`.
+
+  **It found sixteen on its first run**, all in the six demo screens: five
+  unnamed tables, three charts, six switches and a slider. All fixed — and one
+  of them was a library gap rather than a call-site one: `ToggleOptions`,
+  `CheckboxOptions` and `RadioOptions` had no way to be named when the words are
+  drawn *beside* the control instead of by it, which is exactly how the SCADA
+  screen lays its pump switches out. They take a `name` now, defaulting to the
+  label.
 - **The accessibility tree, and a diff of it.** Stage 4:
   `buildAccessibilityTree(arena, root, interaction)` reads the records above into
   one node per thing a reader can perceive, and `diffAccessibility` says what

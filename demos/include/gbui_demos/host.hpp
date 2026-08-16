@@ -17,6 +17,7 @@
 #include <string_view>
 #include <vector>
 
+#include "gbui/a11y/tree.hpp"
 #include "gbui/anim/animator.hpp"
 #include "gbui/core/cursor.hpp"
 #include "gbui/input/interaction.hpp"
@@ -155,6 +156,20 @@ public:
 
     /** What the pointer should look like, decided by the node under it. */
     Cursor cursor() const { return interaction_.cursor(); }
+
+    /**
+     * What the last `frame` built, as a screen reader would meet it.
+     *
+     * Exposed because the tree is the only way to check a *call site*: the
+     * toolkit names everything it can, and a name it cannot invent — an
+     * icon-only button, a chart, a table — is the application's to supply.
+     * `gbui_demo --a11y` walks this over every screen and every example and
+     * fails naming what it found, which is the same gate
+     * `tests/accessibilityTest` is for the library.
+     */
+    AccessibilityTree accessibility() const {
+        return buildAccessibilityTree(arena_, root_, interaction_);
+    }
 
     /** The tag of the control holding the keyboard, or empty. An embedder uses
      *  it to decide whether a key belongs to the screen or to itself — a demo

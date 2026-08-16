@@ -130,6 +130,17 @@ jobs:
             test -s "$shot" || { echo "$shot is empty"; exit 1; }
           done
 
+      # The other half of `tests/accessibilityTest`. That one covers the
+      # library — a component with a role and no name fails it — and this
+      # covers the *call sites*, where the names the toolkit cannot invent have
+      # to come from: an icon-only button, a chart, a table. Nothing but a walk
+      # over the real screens can tell whether anyone supplied them.
+      - name: Every control on every screen has a name
+        if: runner.os == 'Linux'
+        run: |
+          ./build/demos/gbui_demo --coverage
+          ./build/demos/gbui_demo --a11y
+
       - name: Keep the frame, for looking at when something changed
         if: runner.os == 'Linux' && matrix.cc == 'gcc'
         uses: actions/upload-artifact@v4

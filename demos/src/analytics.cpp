@@ -197,7 +197,7 @@ void Analytics::mixPanel(Ui& ui, const Interaction& input) {
         {.name = "Referral", .value = 6.0},
     };
     donutChart(ui, input, "analytics.mix", slices, channels_,
-               {.size = 176.0f, .legendMaxHeight = 176.0f});
+               {.size = 176.0f, .legendMaxHeight = 176.0f, .name = "Revenue by channel"});
 }
 
 void Analytics::accountsPanel(Ui& ui, const Interaction& input) {
@@ -284,7 +284,7 @@ void Analytics::accountsPanel(Ui& ui, const Interaction& input) {
                     break;
             }
         },
-        {.rowHeight = 32.0f, .zebra = true});
+        {.rowHeight = 32.0f, .zebra = true, .name = "Top accounts"});
 
     // The table reports that the reader asked for a different order; reordering
     // the data is this file's job, because only it knows how to compare two of

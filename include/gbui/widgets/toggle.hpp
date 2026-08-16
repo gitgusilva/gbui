@@ -16,6 +16,16 @@ namespace gbui {
 struct ToggleOptions {
     bool disabled = false;
     std::string_view label{};
+    /**
+     * What a reader is told this is, when the label is not it.
+     *
+     * The label by default, which is right whenever there is one. Needed where
+     * the words are drawn *beside* the control rather than by it — a row that
+     * lays out its own caption and passes an empty `label` — because then there
+     * is nothing for the control to borrow and "switch, on" is all a reader
+     * gets.
+     */
+    std::string_view name{};
     /** Zero takes the active design's track and thumb. */
     float width = 0.0f;
     float height = 0.0f;

@@ -81,6 +81,7 @@ std::vector<ComponentInfo> build() {
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "Drawn to the right of the box; empty draws the box alone.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it — a row that lays out its own caption and passes an empty `label` — because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.", false},
             PropertyInfo{"size", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's box size and corner.", false},
         },
         false,
@@ -218,6 +219,7 @@ std::vector<ComponentInfo> build() {
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it — a row that lays out its own caption and passes an empty `label` — because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.", false},
             PropertyInfo{"size", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's size.", false},
         },
         false,
@@ -437,6 +439,7 @@ std::vector<ComponentInfo> build() {
         {
             PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
             PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it — a row that lays out its own caption and passes an empty `label` — because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.", false},
             PropertyInfo{"width", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's track and thumb.", false},
             PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "", false},
         },

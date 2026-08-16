@@ -265,7 +265,7 @@ void Logistics::fleet(Ui& ui, const Interaction& input) {
                       break;
               }
           },
-          {.rowHeight = 34.0f, .zebra = true});
+          {.rowHeight = 34.0f, .zebra = true, .name = "Fleet"});
 }
 
 NodeId Logistics::build(Frame& frame) {

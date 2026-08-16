@@ -18,7 +18,7 @@ bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected,
     // reader announces "selected" from it. `selected` belongs to rows and tabs.
     ui.accessible({
         .role = Role::Radio,
-        .name = options.label,
+        .name = options.name.empty() ? options.label : options.name,
         .state = {.checked = flag(selected), .disabled = flag(options.disabled)},
     });
     {

@@ -171,6 +171,15 @@
         "optional": false
       },
       {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it \u2014 a row that lays out its own caption and passes an empty `label` \u2014 because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.",
+        "optional": false
+      },
+      {
         "name": "size",
         "kind": "Number",
         "type": "float",
@@ -699,6 +708,15 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it \u2014 a row that lays out its own caption and passes an empty `label` \u2014 because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.",
         "optional": false
       },
       {
@@ -1520,6 +1538,15 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What a reader is told this is, when the label is not it. The label by default, which is right whenever there is one. Needed where the words are drawn *beside* the control rather than by it \u2014 a row that lays out its own caption and passes an empty `label` \u2014 because then there is nothing for the control to borrow and \"switch, on\" is all a reader gets.",
         "optional": false
       },
       {

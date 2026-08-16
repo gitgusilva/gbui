@@ -20,7 +20,7 @@ bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checke
     // name a node the keyboard can never reach.
     ui.accessible({
         .role = Role::Checkbox,
-        .name = options.label,
+        .name = options.name.empty() ? options.label : options.name,
         .state = {.checked = flag(checked), .disabled = flag(options.disabled)},
     });
     {

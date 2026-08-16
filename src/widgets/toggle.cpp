@@ -28,7 +28,7 @@ bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on,
     // undo the distinction this component exists for.
     ui.accessible({
         .role = Role::Switch,
-        .name = options.label,
+        .name = options.name.empty() ? options.label : options.name,
         .state = {.checked = flag(on), .disabled = flag(options.disabled)},
     });
     {

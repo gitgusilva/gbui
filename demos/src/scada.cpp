@@ -288,7 +288,12 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                 text(ui, kit::format("%.0f h", pump.hours),
                      {.color = Token::TextMuted, .role = FontRole::Mono, .size = 10.0f});
             }
-            if (toggle(ui, input, tag, pumps_[i])) pumps_[i] = !pumps_[i];
+            // The pump's own name, not the row's text: the switch is the
+            // thing a reader operates and "P-401A, switch, on" is what they
+            // need, not "switch, on" beside a name they have to remember.
+            if (toggle(ui, input, tag, pumps_[i], {.label = {}, .name = pump.name})) {
+                pumps_[i] = !pumps_[i];
+            }
         }
 
         kit::rule(ui, Direction::Column);
@@ -314,7 +319,9 @@ void Scada::vesselsAndPumps(Ui& ui, const Interaction& input) {
                                                 .maximum = 600.0,
                                                 .step = 5.0,
                                                 .disabled = autoMode_,
-                                                .grow = 0.0f});
+                                                .grow = 0.0f,
+                                                .name = "Flow setpoint",
+                                                .valueText = "cubic metres an hour"});
             result.changed) {
             setpoint_ = result.value;
         }
@@ -502,7 +509,9 @@ NodeId Scada::build(Frame& frame) {
                  {.color = autoMode_ ? Token::Added : Token::Modified,
                   .weight = FontWeight::SemiBold,
                   .size = 10.5f});
-            if (toggle(ui, input, "scada.auto", autoMode_)) autoMode_ = !autoMode_;
+            if (toggle(ui, input, "scada.auto", autoMode_, {.name = "Automatic control"})) {
+                autoMode_ = !autoMode_;
+            }
         }
         button(
             ui, input, "HOLD",

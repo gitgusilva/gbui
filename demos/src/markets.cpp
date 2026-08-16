@@ -822,7 +822,7 @@ void Markets::tapePanel(Ui& ui, const Interaction& input) {
                     break;
             }
         },
-        {.rowHeight = 26.0f, .zebra = true});
+        {.rowHeight = 26.0f, .zebra = true, .name = "Time and sales"});
 }
 
 void Markets::watchPanel(Ui& ui, const Interaction& input) {
@@ -897,7 +897,7 @@ void Markets::watchPanel(Ui& ui, const Interaction& input) {
                     break;
             }
         },
-        {.rowHeight = 34.0f, .zebra = true});
+        {.rowHeight = 34.0f, .zebra = true, .name = "Watchlist"});
 
     // Picking a row is picking the company the whole desk is on.
     if (result.selectionChanged && watch_.selected < watchlist_.size()) {

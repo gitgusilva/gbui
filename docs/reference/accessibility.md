@@ -20,8 +20,14 @@ exactly how it should be built.
 Every component that is added or changed in this repository carries working
 accessibility in the same commit. It is [rule 7 in
 CONTRIBUTING](https://github.com/gitgusilva/gbui/blob/main/CONTRIBUTING.md), and
-`tests/accessibilityTest.cpp` is the gate: its last case walks a form and fails
-on any Tab stop with no role, or with nothing to announce.
+two gates hold it:
+
+- `tests/accessibilityTest.cpp` covers the **library** — its last case walks a
+  form and fails on any Tab stop with no role, or with nothing to announce.
+- `gbui_demo --a11y` covers the **call sites**, walking the tree of every demo
+  screen and every catalogue example. It exists because the names the toolkit
+  cannot invent — an icon-only button, a chart, a table — are the application's
+  to supply, and it found sixteen missing the first time it ran.
 
 ## Setting it
 
