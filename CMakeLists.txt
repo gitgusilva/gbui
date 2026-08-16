@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(gbui
-    VERSION 0.3.0
+    VERSION 0.3.1
     DESCRIPTION "A retained-mode UI toolkit with flexbox layout and themeable components"
     LANGUAGES CXX)
 

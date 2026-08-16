@@ -71,6 +71,17 @@ struct Composer {
         frame(event);
     }
 
+    /** The same press, with the platform's shortcut modifier held. */
+    void command(Key key, bool shift = false) {
+        InputFrame event;
+        KeyEvent stroke;
+        stroke.key = key;
+        stroke.modifiers.shift = shift;
+        stroke.modifiers.withCommand();
+        event.keys.push_back(stroke);
+        frame(event);
+    }
+
     void type(std::string_view what) {
         InputFrame event;
         event.text = std::string(what);
@@ -132,16 +143,9 @@ TEST("the modified Return is what submits, and it leaves the text alone") {
     composer.type("a note");
 
     const std::string before = composer.state.edit.text;
-#if defined(__APPLE__)
-    InputFrame event;
-    KeyEvent stroke;
-    stroke.key = Key::Return;
-    stroke.modifiers.meta = true;
-    event.keys.push_back(stroke);
-    composer.frame(event);
-#else
-    composer.press(Key::Return, /*shift=*/false, /*ctrl=*/true);
-#endif
+    // Ctrl, or Cmd on a Mac, which is what `withCommand` holds down — writing
+    // the `#ifdef` here instead left the macOS half uncompiled and wrong.
+    composer.command(Key::Return);
 
     CHECK(composer.last.submitted);
     CHECK(!composer.last.changed);

@@ -14,6 +14,30 @@ named here and the reason for it is in the commit.
 Nothing yet. The next version's work lands on `main` and gets a number when it
 ships, not commit by commit.
 
+## [0.3.1] — 2026-08-16
+
+A portability fix, and the two jobs that caught it. The library's own sources
+are the same ones 0.3 shipped; what would not build is the test suite on a Mac
+and the sample that links against an installed prefix.
+
+### Fixed
+
+- **`Modifiers` had a reader for the platform's shortcut key and no writer.**
+  `command()` answers "Ctrl, or Cmd on a Mac", so everything that had to *make*
+  such an event wrote the `#ifdef` again instead — two test harnesses so far,
+  and the second spelt the field `meta`, which is not a field. Only one branch
+  of a copy like that ever compiles, so the machine you are on cannot tell you:
+  it built here and on both Linux jobs and failed on macOS. `withCommand()`
+  holds down whichever key the reader reads, and both harnesses now call it.
+- **`components.hpp` stopped exporting `text` and `button` and nothing noticed.**
+  Splitting "controls" into elements and components moved them to
+  `elements.hpp`, which is what the guide has told callers to include ever
+  since — but the consumer sample was still on the old umbrella. No in-tree
+  build catches that, because everything in the tree includes the specific
+  header it wants; the consumer is the only thing that asks the *installed*
+  prefix for an umbrella and finds out what is in it. It now includes all four,
+  which is the whole point of it.
+
 ## [0.3] — 2026-08-16
 
 The release that made the toolkit reachable. Everything below the components is

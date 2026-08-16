@@ -27,11 +27,7 @@ KeyEvent commandKey(Key which, bool shift = false) {
     KeyEvent event;
     event.key = which;
     event.modifiers.shift = shift;
-#if defined(__APPLE__)
-    event.modifiers.super = true;
-#else
-    event.modifiers.ctrl = true;
-#endif
+    event.modifiers.withCommand();
     return event;
 }
 

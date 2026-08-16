@@ -39,6 +39,23 @@ struct Modifiers {
         return ctrl;
 #endif
     }
+
+    /**
+     * Holds down whichever key `command()` reads, and returns itself.
+     *
+     * The reader existed without the writer, so everything that had to *make*
+     * one of these — two test harnesses so far — wrote the `#ifdef` again, and
+     * the second copy spelt `super` wrong. Only one branch of a copy like that
+     * ever compiles, so the compiler cannot say so on the machine you are on.
+     */
+    Modifiers& withCommand() {
+#if defined(__APPLE__)
+        super = true;
+#else
+        ctrl = true;
+#endif
+        return *this;
+    }
 };
 
 struct KeyEvent {

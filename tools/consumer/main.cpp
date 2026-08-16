@@ -4,6 +4,12 @@
 //
 // It draws nothing on screen on purpose: the point is the link, and a test that
 // needs a display cannot run on a build machine.
+//
+// All four umbrella headers are included even though two names are enough to
+// link, and that is deliberate: an umbrella that stops exporting what a caller
+// reaches for is a break no in-tree build notices — every one of those includes
+// its own headers directly. This is the only place that asks the *installed*
+// prefix for `elements.hpp` and gets told whether `text` is still in it.
 #include <cstdio>
 
 #include "gbui/layout/layout.hpp"
@@ -11,6 +17,9 @@
 #include "gbui/scene/ui.hpp"
 #include "gbui/style/theme.hpp"
 #include "gbui/widgets/components.hpp"
+#include "gbui/widgets/containers.hpp"
+#include "gbui/widgets/elements.hpp"
+#include "gbui/widgets/overlays.hpp"
 
 int main() {
     gbui::Arena arena;
