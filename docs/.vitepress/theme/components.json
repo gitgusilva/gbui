@@ -1972,7 +1972,16 @@
         "type": "float",
         "default": "30.0f",
         "choices": [],
-        "doc": "",
+        "doc": "How big a day cell would like to be. A preference, not a promise: seven of these plus six gaps is a wide grid, and a calendar in a narrow column or a popover against the edge of a small window gets less than that. The cells shrink to fit rather than running out of the box, down to `minimumCellSize` and no further.",
+        "optional": false
+      },
+      {
+        "name": "minimumCellSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "22.0f",
+        "choices": [],
+        "doc": "The floor the cells shrink to. Below about this a two-digit day stops being readable, and a grid that has to scroll sideways is worse than one that is merely tight.",
         "optional": false
       },
       {
@@ -3231,7 +3240,7 @@
           "Vertical",
           "Horizontal"
         ],
-        "doc": "Scrolls its own contents once `maxHeight` bites, rather than making the caller wrap everything in a scroll view. The axis is the caller's: `ScrollAxis::None` clips instead, which is what a popover that must never scroll wants.",
+        "doc": "Scrolls its own contents once `maxHeight` bites, rather than making the caller wrap everything in a scroll view. The axis is the caller's: `ScrollAxis::None` clips instead, which is what a popover that must never scroll wants. **`scrollState` has to be set too, or this does nothing.** Both of them together are what turns the ceiling into a scroll; an axis on its own leaves the box clipped, which looks like the popup simply lost its last rows. Three callers had set exactly this and only this, and the calendar opened near the bottom of a window was missing a week with no way to reach it. There is no default state to fall back on: state belongs to the application here as it does everywhere else.",
         "optional": false
       },
       {

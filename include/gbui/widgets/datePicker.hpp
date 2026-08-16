@@ -7,6 +7,7 @@
 
 #include "gbui/input/interaction.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/widgets/scroll.hpp"
 
 namespace gbui {
 
@@ -99,6 +100,16 @@ struct DatePickerState {
     /** Where the keyboard is, which moves without choosing — the same split a
      *  select makes between its highlight and its value. */
     Date focusedDay{};
+    /**
+     * Where the open calendar is scrolled to, when it opened somewhere too
+     * short for it.
+     *
+     * A field near the bottom of a window has no room for six weeks either way,
+     * and the popover caps itself at the room there is. Without somewhere to
+     * keep an offset that cap is a clip and the last week is unreachable —
+     * which is what happened. Written by the component, like `SelectState::list`.
+     */
+    ScrollState popup;
 };
 
 struct DatePickerOptions {
@@ -110,7 +121,19 @@ struct DatePickerOptions {
     Date today = Date::today();
     CalendarLocale locale{};
     bool showToday = true;
+    /**
+     * How big a day cell would like to be.
+     *
+     * A preference, not a promise: seven of these plus six gaps is a wide grid,
+     * and a calendar in a narrow column or a popover against the edge of a
+     * small window gets less than that. The cells shrink to fit rather than
+     * running out of the box, down to `minimumCellSize` and no further.
+     */
     float cellSize = 30.0f;
+    /** The floor the cells shrink to. Below about this a two-digit day stops
+     *  being readable, and a grid that has to scroll sideways is worse than one
+     *  that is merely tight. */
+    float minimumCellSize = 22.0f;
     float gap = 2.0f;
 };
 

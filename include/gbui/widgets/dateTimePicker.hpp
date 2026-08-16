@@ -44,6 +44,11 @@ std::string formatDateTime(const DateTime& when, std::string_view pattern,
 struct DateTimePickerState {
     DatePickerState calendar{};
     TimePickerState clock{};
+    /** Where the open pair is scrolled to, when it opened somewhere too short
+     *  for it — a calendar and a clock need more room than either alone. Its
+     *  own rather than the calendar's, because the field embeds the inline
+     *  calendar and never opens the calendar's own popover. */
+    ScrollState popup;
 };
 
 struct DateTimePickerOptions {

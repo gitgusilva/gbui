@@ -15,10 +15,20 @@ using namespace detail;
 Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
                   std::string_view anchorId, const PopoverOptions& options) {
     const Rect anchor = input.frameOf(anchorId);
-    const float width = options.matchAnchorWidth && anchor.width > 0.0f
-                            ? anchor.width
-                            : std::clamp(input.frameOf(id).width, options.minWidth,
-                                         options.maxWidth);
+    const Rect bounds = boundsFor(input, options);
+
+    float width = options.matchAnchorWidth && anchor.width > 0.0f
+                      ? anchor.width
+                      : std::clamp(input.frameOf(id).width, options.minWidth, options.maxWidth);
+    // The window is a ceiling over `minWidth`, not the other way round. A
+    // caller's minimum is what the contents need to be usable, and on a window
+    // narrower than that the honest answer is "as much as there is": a box
+    // placed wider than its bounds hangs off the edge, and the placement engine
+    // can only slide it sideways, never make it fit. The calendar is where this
+    // shows — 7 cells and 6 gaps is a real minimum — and the contents shrink to
+    // whatever they are given, so handing them less is the recoverable half.
+    const float widthAvailable = std::max(0.0f, bounds.width - 2.0f * options.margin);
+    if (widthAvailable > 0.0f) width = std::min(width, widthAvailable);
 
     Vec2 size = estimateSize(input, id, {width, 120.0f});
     // A ceiling is part of the *placement* question, not just the drawing one:
@@ -26,7 +36,6 @@ Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
     // it flips above an anchor it would have fitted below.
     if (!isAuto(options.maxHeight)) size.y = std::min(size.y, options.maxHeight);
 
-    const Rect bounds = boundsFor(input, options);
     PlacementResult placed = place(anchor, {width, size.y}, bounds, placementOptionsFrom(options));
 
     // How much room the side it landed on actually has. The placement engine

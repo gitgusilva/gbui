@@ -304,6 +304,94 @@ TEST("a date picker draws a whole month and reports the day clicked") {
     CHECK(!frame({}).chosen);
 }
 
+TEST("a calendar fits the width it is given") {
+    // 200 px is narrower than seven 30-px cells and six gaps, which is 222. The
+    // grid used to be rigid, so what happened was not a reflow but a clip: the
+    // last column was simply not on screen, and nothing said so.
+    Arena arena;
+    Theme theme = Theme::dark();
+    Interaction input;
+    DatePickerState state;
+    state.visible = Date{2026, 8, 1};
+
+    const float container = 200.0f;
+    const auto frame = [&] {
+        arena.reset();
+        Ui ui(arena);
+        {
+            auto column = ui.column({.width = container});
+            (void)datePicker(ui, input, "cal", Date{2026, 8, 11}, state, {});
+            (void)column;
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        layout(arena, ui.root(), Rect{0, 0, container, 400}, context);
+        input.update(arena, ui.root(), {});
+    };
+    // Three: one to lay out, one for the cell size to read that layout back,
+    // one for the result of it. The component is honest about being a frame
+    // behind here and nothing depends on the first one being right.
+    frame();
+    frame();
+    frame();
+
+    const Date first{2026, 8, 1};
+    // The 1st of August 2026 is a Saturday, and the week starts on Monday, so
+    // the first row runs from the 27th of July to the 2nd of August.
+    const Rect monday = input.frameOf("cal." + std::to_string(first.serial() - 5));
+    const Rect saturday = input.frameOf("cal." + std::to_string(first.serial()));
+    CHECK(!monday.empty());
+    CHECK(!saturday.empty());
+
+    // Every column is inside the container, which is the whole claim.
+    CHECK(saturday.right() <= container + 0.01f);
+    // …by having shrunk, rather than by having lost a column.
+    CHECK(saturday.width < 30.0f);
+    CHECK(saturday.width >= 22.0f);
+    // Still square, and still seven of them.
+    CHECK_NEAR(saturday.width, saturday.height);
+    CHECK_NEAR(saturday.x - monday.x, (saturday.width + 2.0f) * 5.0f);
+}
+
+TEST("a date field with no room below scrolls instead of losing a week") {
+    // A window too short for a calendar either way. The popover caps itself at
+    // the room there is — it always did — but with nowhere to keep an offset
+    // that cap was a clip, and the last week was unreachable.
+    Arena arena;
+    Theme theme = Theme::dark();
+    Interaction input;
+    DatePickerState state;
+    state.visible = Date{2026, 8, 1};
+    state.open = true;
+
+    const Rect window{0, 0, 400, 220};
+    const auto frame = [&] {
+        arena.reset();
+        Ui ui(arena);
+        {
+            auto column = ui.column({.padding = Edges{90.0f, 10.0f, 10.0f, 10.0f}});
+            (void)dateField(ui, input, "field", Date{2026, 8, 11}, state, {});
+            (void)column;
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        layout(arena, ui.root(), window, context);
+        input.update(arena, ui.root(), {});
+    };
+    frame();
+    frame();
+    frame();
+
+    const Rect surface = input.frameOf("field.popover");
+    CHECK(!surface.empty());
+    // Inside the window on both axes: that is what "respects the space" means.
+    CHECK(surface.bottom() <= window.bottom() + 0.01f);
+    CHECK(surface.right() <= window.right() + 0.01f);
+    // And the part that did not fit is reachable rather than gone.
+    CHECK(state.popup.contentSize > state.popup.viewportSize);
+    CHECK(state.popup.scrollable());
+}
+
 TEST("hsv survives the trip a picker actually makes") {
     // Round-tripping a saturated colour is exact enough to edit with.
     const Color samples[] = {Color{37, 99, 235}, Color{34, 197, 94}, Color{255, 171, 0}};

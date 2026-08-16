@@ -367,12 +367,13 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
     popoverOptions.maxWidth = options.width + 24.0f;
     popoverOptions.padding = Edges::all(12.0f);
     popoverOptions.gapBetweenItems = 0.0f;
-    // The picker is a fixed height; nothing inside it should scroll.
-    // Scrolls inside rather than overflowing. `popover` already works out
-    // how much room there is and caps the box at it; without a scroll that cap
-    // is just a clip, and a calendar opened near the bottom of the window loses
-    // its last week with no way to reach it.
+    // Scrolls inside rather than overflowing. `popover` caps itself at the room
+    // the side it landed on actually has, and without a scroll — and the state
+    // that scroll needs, which is the half that was missing here — that cap is
+    // just a clip: a picker opened near the bottom of the window loses its
+    // swatches with no way to reach them.
     popoverOptions.scroll = ScrollAxis::Vertical;
+    popoverOptions.scrollState = &state.popup;
 
     auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     ColorPickerOptions inner = options;

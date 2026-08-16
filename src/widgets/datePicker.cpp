@@ -197,6 +197,19 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
         }
     }
 
+    // The width the grid was actually given last frame, which is the only way a
+    // build-stage component can know: the stages run one way, so this frame's
+    // geometry does not exist yet. Nothing depends on it being right on the
+    // first frame — the cells shrink on their own — it only lets the square
+    // cells stay square and the today dot stay under the number.
+    const float measuredWidth = input.frameOf(gridId).width;
+    const float cellSize = [&] {
+        if (measuredWidth <= 0.0f) return options.cellSize;
+        const float fits = (measuredWidth - 6.0f * options.gap) / 7.0f;
+        return std::clamp(fits, std::min(options.minimumCellSize, options.cellSize),
+                          options.cellSize);
+    }();
+
     Style panel;
     panel.direction = Direction::Column;
     panel.gap = 8.0f;
@@ -211,6 +224,10 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
         header.gap = 4.0f;
         auto headerScope = ui.scope(header);
 
+        // The arrows are already square and already rigid — an icon-only button
+        // takes its height for its width and never shrinks — which is the half
+        // of this that was right all along. What was missing is something for
+        // the row to give *instead*, and that is the month below.
         button(ui, "", {.leading = Icon::ChevronLeft, .height = 26.0f, .id = previousId});
         if (input.clicked(previousId)) state.visible = monthShifted(state.visible, -1);
 
@@ -220,9 +237,16 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             // the *next* button below was built inside this box — centred,
             // grown and given the box's height instead of its own, which is
             // why the two arrows came out different sizes.
+            //
+            // `basis = 0` with `minWidth = 0` is what lets the month be the
+            // part that gives: without the minimum, flexbox floors a box at its
+            // content and a long month name pushes the next arrow off the row.
             Style title;
             title.grow = 1.0f;
+            title.shrink = 1.0f;
             title.basis = 0.0f;
+            title.minWidth = 0.0f;
+            title.overflow = Overflow::Hidden;
             title.justify = Justify::Center;
             auto titleScope = ui.scope(title);
             const std::string label =
@@ -230,7 +254,11 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
                     options.locale.months[static_cast<std::size_t>(state.visible.month - 1)]) +
                 " " + std::to_string(state.visible.year);
             text(ui, label,
-                 {.color = Token::TextStrong, .weight = FontWeight::SemiBold, .size = 13.0f});
+                 {.color = Token::TextStrong,
+                  .weight = FontWeight::SemiBold,
+                  .size = 13.0f,
+                  .align = TextAlign::Center,
+                  .grow = 1.0f});
             (void)titleScope;
         }
 
@@ -250,17 +278,33 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
         Style row;
         row.direction = Direction::Row;
         row.gap = options.gap;
+        // A week gives horizontally and never vertically. Squeezing the rows is
+        // the one way of fitting a calendar that makes it unreadable — the days
+        // stop being square and the whole grid reads as a smear — and it is not
+        // needed, because a calendar with no room to be its own height scrolls.
+        row.shrink = 0.0f;
         return ui.scope(row);
     };
+
+    // The floor a cell may shrink to, which is also the floor for the header
+    // row above it — the two grids have to keep their columns lined up, so
+    // whatever gives has to give in both.
+    const float floorSize = std::min(options.minimumCellSize, options.cellSize);
 
     {
         auto row = weekRow();
         for (int i = 0; i < 7; ++i) {
             const int weekday = (options.locale.firstDayOfWeek + i) % 7;
             Style cell;
-            cell.width = options.cellSize;
+            cell.width = cellSize;
             cell.height = 20.0f;
-            cell.shrink = 0.0f;
+            // Was rigid, and that is what made the calendar wider than whatever
+            // it was put in: seven cells and six gaps is 222 px at the default
+            // size, and a popover against the edge of a narrow window has less.
+            // A rigid grid does not overflow visibly — it is clipped — so the
+            // last column simply was not there.
+            cell.shrink = 1.0f;
+            cell.minWidth = floorSize;
             cell.justify = Justify::Center;
             cell.align = Align::Center;
             auto cellScope = ui.scope(cell);
@@ -290,9 +334,10 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             const bool hovered = input.isHovered(dayId) && enabled;
 
             Style cell;
-            cell.width = options.cellSize;
-            cell.height = options.cellSize;
-            cell.shrink = 0.0f;
+            cell.width = cellSize;
+            cell.height = cellSize;
+            cell.shrink = 1.0f;
+            cell.minWidth = floorSize;
             cell.justify = Justify::Center;
             cell.align = Align::Center;
             cell.radius = 6.0f;
@@ -317,10 +362,18 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             // Today gets a dot rather than a ring, so it cannot be mistaken for
             // the selection or for the keyboard's position.
             if (options.showToday && options.today.valid() && day == options.today && !isSelected) {
+                // Centred under the number, which means under the cell as it
+                // really came out rather than as it was asked for: `left` and
+                // `top` are pixels, so a cell that shrank would otherwise carry
+                // its dot off to the right. Last frame's geometry, like the
+                // cell size above.
+                const Rect frame = input.frameOf(dayId);
+                const float width = frame.width > 0.0f ? frame.width : cellSize;
+                const float height = frame.height > 0.0f ? frame.height : cellSize;
                 Style dot;
                 dot.position = Position::Absolute;
-                dot.left = options.cellSize / 2.0f - 2.0f;
-                dot.top = options.cellSize - 8.0f;
+                dot.left = width / 2.0f - 2.0f;
+                dot.top = height - 8.0f;
                 dot.width = 4.0f;
                 dot.height = 4.0f;
                 dot.radius = 2.0f;
@@ -410,14 +463,22 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
 
     PopoverOptions popoverOptions;
     popoverOptions.placement = Placement::Bottom;
-    popoverOptions.minWidth = 240.0f;
-    popoverOptions.maxWidth = 320.0f;
-    popoverOptions.padding = Edges::all(10.0f);
-    // Scrolls inside rather than overflowing. `popover` already works out
-    // how much room there is and caps the box at it; without a scroll that cap
-    // is just a clip, and a calendar opened near the bottom of the window loses
+    // Derived from the grid rather than guessed at. The numbers here were 240
+    // and 320, and 240 is *one pixel under* what seven default cells and six
+    // gaps and the padding need — so the calendar was clipped by two pixels in
+    // the ordinary case, before any question of a narrow window came up.
+    const Edges padding = Edges::all(10.0f);
+    const float grid = 7.0f * options.cellSize + 6.0f * options.gap;
+    popoverOptions.minWidth = grid + padding.horizontal();
+    popoverOptions.maxWidth = popoverOptions.minWidth;
+    popoverOptions.padding = padding;
+    // Scrolls inside rather than overflowing. `popover` already works out how
+    // much room there is and caps the box at it; without a scroll — and the
+    // state that scroll needs, which is the half that was missing — that cap is
+    // just a clip, and a calendar opened near the bottom of the window loses
     // its last week with no way to reach it.
     popoverOptions.scroll = ScrollAxis::Vertical;
+    popoverOptions.scrollState = &state.popup;
 
     auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     const DatePickerResult picked =

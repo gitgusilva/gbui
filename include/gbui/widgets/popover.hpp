@@ -37,10 +37,20 @@ struct PopoverOptions : FloatingOptions {
     /** Lets a popup grow past the window's edge, for a caller that would rather
      *  clip than scroll. Off, because the default should be reachable. */
     bool allowOverflow = false;
-    /** Scrolls its own contents once `maxHeight` bites, rather than making the
-     *  caller wrap everything in a scroll view. The axis is the caller's:
-     *  `ScrollAxis::None` clips instead, which is what a popover that must
-     *  never scroll wants. */
+    /**
+     * Scrolls its own contents once `maxHeight` bites, rather than making the
+     * caller wrap everything in a scroll view. The axis is the caller's:
+     * `ScrollAxis::None` clips instead, which is what a popover that must never
+     * scroll wants.
+     *
+     * **`scrollState` has to be set too, or this does nothing.** Both of them
+     * together are what turns the ceiling into a scroll; an axis on its own
+     * leaves the box clipped, which looks like the popup simply lost its last
+     * rows. Three callers had set exactly this and only this, and the calendar
+     * opened near the bottom of a window was missing a week with no way to
+     * reach it. There is no default state to fall back on: state belongs to the
+     * application here as it does everywhere else.
+     */
     ScrollAxis scroll = ScrollAxis::Vertical;
     /**
      * Where the scroll position lives, when the popover scrolls its own

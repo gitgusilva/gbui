@@ -119,10 +119,33 @@ public:
         place(root, Rect{viewport.x + margin.left, viewport.y + margin.top, width, height});
     }
 
-    /** Natural size along one axis. The axis is the caller's, not this node's:
-     *  a row asks its children for their width even when a child is itself a
-     *  column, and getting that backwards makes every auto-sized box collapse. */
+    /**
+     * Natural size along one axis. The axis is the caller's, not this node's:
+     * a row asks its children for their width even when a child is itself a
+     * column, and getting that backwards makes every auto-sized box collapse.
+     *
+     * The answer is clamped by this node's own minimum and maximum, and that is
+     * not a detail — it is the difference between a container that is as tall
+     * as its contents and one that is *nearly* as tall. A control that declares
+     * a floor rather than a fixed size is the common case, not the exotic one:
+     * `button` sets `minHeight` deliberately ("a floor, not a fixed size", so a
+     * large label is not cropped) and leaves the height auto. Measured without
+     * the floor, a button reports the height of the glyph inside it — around
+     * seven pixels short — and every row holding one measures short with it.
+     *
+     * Seven pixels is enough to matter, because the two things that read this
+     * number are the two that cannot afford it: an auto-sized box gives its
+     * children less than it drew, and a scroll view computes a content size
+     * under the real one and stops short of the end. The calendar in a popover
+     * was both at once — the box measured a header's worth too short, so the
+     * last week hung out of it and the scroll would not reach.
+     */
     float intrinsicAlong(NodeId id, bool horizontal, float available) {
+        return clampIntrinsic(id, horizontal, intrinsicContentAlong(id, horizontal, available));
+    }
+
+    /** `intrinsicAlong` without the clamp — the content's own measurement. */
+    float intrinsicContentAlong(NodeId id, bool horizontal, float available) {
         const Node& node = arena_[id];
         const Style& style = node.style;
         // Intrinsic sizing has no basis to share out, so a percentage is auto.
@@ -173,6 +196,22 @@ public:
             return total + edgeTotal;
         }
         return largest + edgeTotal;
+    }
+
+    /**
+     * A measurement held between this node's own minimum and maximum.
+     *
+     * A percentage cannot be resolved here — intrinsic sizing has no basis to
+     * take a share of — so one is left alone rather than guessed at, which is
+     * the same answer the explicit size gets a few lines above.
+     */
+    float clampIntrinsic(NodeId id, bool horizontal, float size) {
+        const Style& style = arena_[id].style;
+        const float minimum = sizeOf(horizontal ? style.minWidth : style.minHeight, kAuto);
+        const float maximum = sizeOf(horizontal ? style.maxWidth : style.maxHeight, kAuto);
+        if (!isAuto(maximum)) size = std::min(size, maximum);
+        if (!isAuto(minimum)) size = std::max(size, minimum);
+        return size;
     }
 
     /**

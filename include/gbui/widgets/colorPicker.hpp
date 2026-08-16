@@ -7,6 +7,7 @@
 #include "gbui/core/color.hpp"
 #include "gbui/input/interaction.hpp"
 #include "gbui/scene/ui.hpp"
+#include "gbui/widgets/scroll.hpp"
 
 namespace gbui {
 
@@ -24,6 +25,10 @@ struct ColorPickerState {
     /** Whether the popover form is showing. Ignored by the inline form, which
      *  is always open by definition. */
     bool open = false;
+    /** Where the open picker is scrolled to, when it opened somewhere too short
+     *  for it. The square, two rails, a readout and a row of swatches is a tall
+     *  popup, and against the bottom of a window it has to be reachable. */
+    ScrollState popup;
     /** Set once from a `Color` — afterwards the picker owns the hue. */
     void set(Color color) { value = Hsv::fromColor(color); }
     Color color() const { return value.toColor(); }

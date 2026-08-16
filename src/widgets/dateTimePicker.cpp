@@ -170,7 +170,11 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
     popoverOptions.minWidth = 420.0f;
     popoverOptions.maxWidth = 560.0f;
     popoverOptions.padding = Edges::all(10.0f);
+    // The axis alone does nothing — see `PopoverOptions::scroll`. Without the
+    // state to keep an offset in, the ceiling the popover puts on itself is a
+    // clip, and this is the tallest of the three fields.
     popoverOptions.scroll = ScrollAxis::Vertical;
+    popoverOptions.scrollState = &state.popup;
 
     auto surface = popover(ui, input, std::string(id) + ".popover", triggerId, popoverOptions);
     const DateTimePickerResult picked = dateTimePicker(
