@@ -17,4 +17,5 @@
 #include "gbui/widgets/menu.hpp"
 #include "gbui/widgets/modal.hpp"
 #include "gbui/widgets/popover.hpp"
+#include "gbui/widgets/toast.hpp"
 #include "gbui/widgets/tooltip.hpp"

@@ -3037,6 +3037,121 @@
     ]
   },
   {
+    "name": "toast",
+    "group": "Overlays",
+    "header": "gbui/widgets/toast.hpp",
+    "summary": "Short-lived messages, stacked in a corner and gone on their own.",
+    "signatures": [
+      "ToastResult toast(Ui& ui, const Interaction& input, ToastState& state, float delta, const ToastOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the stack and advances its timers. `delta` is the frame's own seconds. Called once per outlet, near the end of the frame \u2014 it draws on the overlay layer, so where it sits in the tree decides nothing about where it appears, but building it last keeps it above anything that shares that layer. **It never takes the keyboard.** A message that stole focus would interrupt whatever the reader was typing, and the live region is what delivers it instead; only the \u00d7 and the action are Tab stops, and only while they exist."
+    ],
+    "optionsType": "ToastOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placement",
+        "kind": "Enum",
+        "type": "ToastPlacement",
+        "default": "ToastPlacement::TopRight",
+        "choices": [
+          "TopLeft",
+          "TopCenter",
+          "TopRight",
+          "BottomLeft",
+          "BottomCenter",
+          "BottomRight",
+          "Anchored"
+        ],
+        "doc": "Which corner, edge or anchor the stack sits against. Which way it *grows* follows from it and is not a second decision.",
+        "optional": false
+      },
+      {
+        "name": "group",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Which entries this outlet shows. Empty shows the ungrouped ones.",
+        "optional": false
+      },
+      {
+        "name": "anchorId",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The tag `ToastPlacement::Anchored` measures against.",
+        "optional": false
+      },
+      {
+        "name": "bounds",
+        "kind": "Opaque",
+        "type": "Rect",
+        "default": "",
+        "choices": [],
+        "doc": "The rectangle the corners are measured from. Empty is the window. What lets a stack live inside a panel rather than over the whole screen \u2014 a docked tool reporting into its own pane rather than across the application it is embedded in.",
+        "optional": false
+      },
+      {
+        "name": "progress",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A bar draining across the foot of each toast, showing the time left. Drawn only where there *is* a time left: a toast with no duration has nothing to count down and gets none.",
+        "optional": false
+      },
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "4",
+        "choices": [],
+        "doc": "How many are on screen at once. The rest wait their turn, which is better than a stack taller than the window.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "340.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "Between two toasts in the stack.",
+        "optional": false
+      },
+      {
+        "name": "margin",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "Between the stack and the edge it is anchored to.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Notifications\"",
+        "choices": [],
+        "doc": "What the region is called. A reader arriving at it out of context is otherwise told only that something changed.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "tooltip",
     "group": "Overlays",
     "header": "gbui/widgets/tooltip.hpp",

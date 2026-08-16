@@ -16,6 +16,44 @@ commit.
 
 ### Added
 
+- **`toast`** — short-lived messages, stacked in a corner and gone on their own.
+  The last of the three the component inventory called *blocking*, and the one
+  it described as "a queue, a timer and a live region".
+
+  The queue is `ToastState`, owned by the application. That matters more here
+  than usual: toasts are raised from anywhere — a network reply, a file watcher,
+  a shortcut three screens away — and a component that owned them would be a
+  component with a global.
+
+  **The id is the whole of the grouping.** Two entries with the same id are one
+  toast with a count on it, and an empty id is derived from the kind, the title
+  and the message — so a retry loop reports "still offline ×40" instead of forty
+  copies of one sentence, which is the failure every application's first toast
+  queue has. `group` is a second and different axis: it routes an entry to an
+  *outlet*, so a dialog can report into itself while the application's messages
+  go to the corner.
+
+  **Placement is six corners, or anywhere at all.** `ToastPlacement::Anchored`
+  puts the stack against a tagged node with the same engine a popover uses, and
+  `bounds` says which rectangle the corners are measured from, so a stack can
+  live inside a panel. Which way it *grows* is never a decision the caller
+  makes. A bottom stack does not measure itself to find its own bottom either —
+  the container is the whole column and `justify` puts the toasts at the end of
+  it, which is right on the first frame where arithmetic on last frame's height
+  is not.
+
+  **The timer stops while it is being read**, which is Toastify's behaviour and
+  also what WCAG's "enough time" rule asks for: the stack pauses while the
+  pointer is over a toast or the keyboard is inside it. `duration = 0` never
+  expires. Only what is on screen ages, so an entry waiting behind `maxVisible`
+  has not started its clock. The progress bar is drawn only where there is a
+  time to show, and dims while paused.
+
+  Each toast is its own live region — `Status` for info and success, `Alert` for
+  warning and error, because the next thing the reader was about to do will not
+  work. The stack never takes the keyboard, and each × is named after its
+  message, since four buttons called "Dismiss" are four buttons nobody can tell
+  apart.
 - **An accessibility layer: every control now says what it is.** Until this,
   a `Node` carried a style, a tag and a frame and nothing that said what it
   *was* — a screen reader was handed one blank rectangle where an application

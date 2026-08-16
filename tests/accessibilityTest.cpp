@@ -1041,3 +1041,71 @@ TEST("a modal confines Tab to itself, and gives the keyboard back when it closes
     frame();
     CHECK(input.isFocused("elsewhere"));
 }
+
+/**
+ * A toast is the one component here whose *only* job is to be announced.
+ *
+ * Which means the role is not decoration on top of the drawing: it is the
+ * delivery mechanism, and a stack of messages a reader is never told about is a
+ * stack of messages that were not sent.
+ */
+TEST("a toast is a live region, and which one depends on the news") {
+    Screen screen;
+    ToastState toasts;
+    toasts.push({.id = "saved", .kind = ToastKind::Success, .title = "Saved",
+                 .message = "3 commits", .duration = 0.0});
+    toasts.push({.id = "failed", .kind = ToastKind::Error, .title = "Fetch failed",
+                 .message = "Could not reach origin.", .duration = 0.0});
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)toast(ui, none, toasts, 0.0f, {.bounds = kWindow});
+    });
+
+    // Polite waits for a pause; an error interrupts, because the next thing the
+    // reader was about to do will not work.
+    const Accessibility* saved = screen.of("toast.saved");
+    CHECK(saved != nullptr);
+    if (saved) {
+        CHECK(saved->role == Role::Status);
+        CHECK(saved->name == "Saved");
+        CHECK(saved->description == "3 commits");
+    }
+    const Accessibility* failed = screen.of("toast.failed");
+    CHECK(failed != nullptr);
+    if (failed) CHECK(failed->role == Role::Alert);
+
+    // "3 of 4" is the only thing telling a reader where they are in a stack.
+    if (saved && failed) {
+        CHECK_EQ(saved->setSize, std::size_t{2});
+        CHECK_EQ(failed->setSize, std::size_t{2});
+        CHECK(saved->positionInSet != failed->positionInSet);
+    }
+
+    // Four buttons all called "Dismiss" are four buttons nobody can tell apart.
+    const Accessibility* close = screen.of("toast.failed.close");
+    CHECK(close != nullptr);
+    if (close) {
+        CHECK(close->role == Role::Button);
+        CHECK(close->name == "Dismiss: Fetch failed");
+    }
+}
+
+TEST("a toast never takes the keyboard, and only its controls are Tab stops") {
+    // A message that stole focus would interrupt whatever the reader was
+    // typing. The live region delivers it instead.
+    Screen screen;
+    ToastState toasts;
+    toasts.push({.id = "t", .message = "Deleted three files", .duration = 0.0,
+                 .action = "Undo"});
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)toast(ui, none, toasts, 0.0f, {.bounds = kWindow});
+    });
+
+    for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+        const Node& node = screen.arena[NodeId{static_cast<std::uint32_t>(i)}];
+        if (!node.focusable) continue;
+        // Only the × and the action; never the card, never the stack.
+        CHECK(node.id == "toast.t.close" || node.id == "toast.t.action");
+    }
+}

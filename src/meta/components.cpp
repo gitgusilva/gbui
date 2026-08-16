@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(60);
+    out.reserve(61);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -783,6 +783,29 @@ std::vector<ComponentInfo> build() {
         true,
         true,
         "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "toast",
+        "Overlays",
+        "gbui/widgets/toast.hpp",
+        "Draws the stack and advances its timers. `delta` is the frame's own seconds. Called once per outlet, near the end of the frame — it draws on the overlay layer, so where it sits in the tree decides nothing about where it appears, but building it last keeps it above anything that shares that layer. **It never takes the keyboard.** A message that stole focus would interrupt whatever the reader was typing, and the live region is what delivers it instead; only the × and the action are Tab stops, and only while they exist.",
+        "Short-lived messages, stacked in a corner and gone on their own.",
+        "ToastOptions",
+        {
+            PropertyInfo{"placement", PropertyKind::Enum, "ToastPlacement", "ToastPlacement::TopRight", {"TopLeft", "TopCenter", "TopRight", "BottomLeft", "BottomCenter", "BottomRight", "Anchored"}, "Which corner, edge or anchor the stack sits against. Which way it *grows* follows from it and is not a second decision.", false},
+            PropertyInfo{"group", PropertyKind::Text, "std::string_view", "", {}, "Which entries this outlet shows. Empty shows the ungrouped ones.", false},
+            PropertyInfo{"anchorId", PropertyKind::Text, "std::string_view", "", {}, "The tag `ToastPlacement::Anchored` measures against.", false},
+            PropertyInfo{"bounds", PropertyKind::Opaque, "Rect", "", {}, "The rectangle the corners are measured from. Empty is the window. What lets a stack live inside a panel rather than over the whole screen — a docked tool reporting into its own pane rather than across the application it is embedded in.", false},
+            PropertyInfo{"progress", PropertyKind::Bool, "bool", "true", {}, "A bar draining across the foot of each toast, showing the time left. Drawn only where there *is* a time left: a toast with no duration has nothing to count down and gets none.", false},
+            PropertyInfo{"maxVisible", PropertyKind::Number, "std::size_t", "4", {}, "How many are on screen at once. The rest wait their turn, which is better than a stack taller than the window.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "340.0f", {}, "", false},
+            PropertyInfo{"gap", PropertyKind::Number, "float", "8.0f", {}, "Between two toasts in the stack.", false},
+            PropertyInfo{"margin", PropertyKind::Number, "float", "16.0f", {}, "Between the stack and the edge it is anchored to.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "\"Notifications\"", {}, "What the region is called. A reader arriving at it out of context is otherwise told only that something changed.", false},
+        },
+        false,
+        true,
+        "ToastResult toast(Ui& ui, const Interaction& input, ToastState& state, float delta, const ToastOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "tooltip",

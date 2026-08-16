@@ -75,6 +75,7 @@ set(GBUI_SOURCES
     src/widgets/text.cpp
     src/widgets/textarea.cpp
     src/widgets/textInput.cpp
+    src/widgets/toast.cpp
     src/widgets/timePicker.cpp
     src/widgets/toolbar.cpp
     src/widgets/tooltip.cpp

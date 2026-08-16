@@ -1,6 +1,7 @@
 add_executable(gbui_tests
     main.cpp
     accessibilityTest.cpp
+    toastTest.cpp
     layoutTest.cpp
     themeTest.cpp
     treeTest.cpp

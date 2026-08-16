@@ -7,6 +7,41 @@
 namespace gbui::demos::catalog {
 
 void addOverlayExamples(std::vector<Example>& out) {
+    out.push_back({"toast", [](Ui& ui, const Interaction& input, State& state) {
+                       // Seeded once and then left alone: the queue belongs to
+                       // the application, and the reader dismissing one is the
+                       // application's answer, not the component's.
+                       // One sticky and one on a timer, so the preview shows
+                       // both halves: an error that waits to be dealt with, and
+                       // a success whose bar drains and takes it away.
+                       const auto present = [&](std::string_view id) {
+                           for (const ToastEntry& entry : state.toasts.items) {
+                               if (entry.id == id) return true;
+                           }
+                           return false;
+                       };
+                       if (!present("fetch")) {
+                           state.toasts.push({.id = "fetch",
+                                              .kind = ToastKind::Error,
+                                              .title = "Fetch failed",
+                                              .message = "Could not reach origin.",
+                                              .duration = 0.0,
+                                              .action = "Retry"});
+                       }
+                       if (!present("pushed")) {
+                           state.toasts.push({.id = "pushed",
+                                              .kind = ToastKind::Success,
+                                              .title = "Pushed",
+                                              .message = "3 commits to origin/main.",
+                                              .duration = 8.0});
+                       }
+                       toast(ui, input, state.toasts, state.delta,
+                             {.placement = ToastPlacement::BottomRight,
+                              .bounds = input.viewport(),
+                              .width = 250.0f,
+                              .margin = 14.0f});
+                   }});
+
     out.push_back({"select", [](Ui& ui, const Interaction& input, State& state) {
                        static const std::vector<std::string> branches = {"main", "feat/nord-tuning",
                                                                          "fix/ci-headless"};

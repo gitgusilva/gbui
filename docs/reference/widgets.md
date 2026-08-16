@@ -675,16 +675,19 @@ for itself would need to keep state, and a toolkit that keeps state cannot
 rebuild its tree.
 
 ```cpp
-void      tooltip(Ui&, const Interaction&, anchorId, std::string_view text, options);
-Ui::Scope popover(Ui&, const Interaction&, id, anchorId, options);
-bool      menuItem(Ui&, const Interaction&, id, std::string_view label, options);
-void      menuSeparator(Ui&);
-Modal     modal(Ui&, const Interaction&, id, title, Vec2 position, options);
-Ui::Scope modalActions(Ui&);
+void        tooltip(Ui&, const Interaction&, anchorId, std::string_view text, options);
+Ui::Scope   popover(Ui&, const Interaction&, id, anchorId, options);
+bool        menuItem(Ui&, const Interaction&, id, std::string_view label, options);
+void        menuSeparator(Ui&);
+Modal       modal(Ui&, const Interaction&, id, title, Vec2 position, options);
+Ui::Scope   modalActions(Ui&);
+ToastResult toast(Ui&, const Interaction&, ToastState&, float delta, options);
 ```
 
-Every one of them takes a `FloatingOptions` — `placement`, `gap`, `margin`,
-`flip`, `shift`, `bounds` — as the base of its own options struct.
+The first five take a `FloatingOptions` — `placement`, `gap`, `margin`, `flip`,
+`shift`, `bounds` — as the base of their own options struct. `toast` does not:
+it is anchored to an edge rather than to a control, and the one case where it
+*is* anchored to a control says so with `ToastPlacement::Anchored`.
 
 `tooltip` draws nothing when its anchor is not hovered, so the call sits
 unconditionally beside the control it describes. `delay` (0.4 s) is what stops a
@@ -696,6 +699,63 @@ unbounded, it means the room actually available on the side it lands on, less
 the margin — so a popup that would run past the bottom of the window stops at it
 and scrolls inside instead. Pass a `ScrollState*` for that scrolling; null means
 it clips without moving. `matchAnchorWidth` is what a select's list wants.
+
+### Toast
+
+Short-lived messages, stacked in a corner and gone on their own. The queue is
+`ToastState`, owned by the application like every other piece of state here —
+and it matters more than usual, because toasts are raised from *anywhere*: a
+network reply, a file watcher, a shortcut three screens away. A component that
+owned them would be a component with a global.
+
+```cpp
+state.toasts.push({.kind = ToastKind::Error, .message = "Could not reach origin."});
+…
+toast(ui, input, model.toasts, delta);          // once, near the end of the frame
+```
+
+**The id is the whole of the grouping.** `push` treats two entries with the same
+id as one and bumps a count instead of stacking a second copy, and an empty id
+is derived from the kind, the title and the message — so a retry loop reports
+"still offline ×40" rather than forty copies of one sentence. Set an id
+explicitly where messages that read alike are genuinely different events.
+
+**Where it goes.** Six corners and edges, or `ToastPlacement::Anchored` against
+a tagged node using the same placement engine a popover uses. `bounds` says
+which rectangle the corners are measured from, so a stack can live inside a
+panel rather than over the window. Which way the stack *grows* is never a
+decision the caller makes — away from the edge it is anchored to, so a top-left
+stack reads downwards and a bottom-right one upwards.
+
+A bottom stack does not measure itself to find its own bottom: the container is
+the whole column and `justify` puts the toasts at the end of it, which is
+correct on the first frame where arithmetic on last frame's height would not be.
+
+**`group` is a second axis, and a different one.** It routes an entry to an
+outlet: a `toast()` call carrying a group shows only the entries in it, which is
+how a dialog reports into itself while the application's messages go to the
+corner.
+
+**The timer stops while it is being read.** A message that vanishes mid-sentence
+was not delivered either, so the stack pauses while the pointer is over a toast
+or the keyboard is inside it — Toastify's behaviour, and what WCAG's "enough
+time" rule asks for. `duration = 0` never expires, which is the right answer for
+anything the reader has to act on. Only what is *on screen* ages: an entry
+waiting behind `maxVisible` has not been read, so its clock has not started.
+
+`progress` draws a bar draining across the foot, and only where there is a time
+to show — a sticky toast gets none, because a full bar under it would say the
+opposite of what is true. It dims while paused, which is the only way the pause
+is visible.
+
+**Accessibility.** Each toast is its own live region: `Status` for info and
+success, which waits for a pause, and `Alert` for warning and error, which
+interrupts — because the next thing the reader was about to do will not work.
+The stack never takes the keyboard; only the × and the action are Tab stops, and
+each × is named after its message, since four buttons called "Dismiss" are four
+buttons nobody can tell apart. The progress bar carries no record at all: it is
+the timer, the timer already pauses whenever a reader is near it, and announcing
+it would be a second message nobody asked for.
 
 `menuItem`'s check mark goes on the leading edge for a menu — where every
 desktop menu reserves a gutter for state — and on the trailing edge for a
