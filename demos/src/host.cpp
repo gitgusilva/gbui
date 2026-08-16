@@ -303,10 +303,28 @@ Theme Host::themeFor() const {
 }
 
 Design Host::designFor() const {
-    if (skinId_ == "material") return Design::material();
-    if (skinId_ == "cupertino") return Design::cupertino();
-    if (skinId_ == "fluent") return Design::fluent();
-    return Design::gitbox();
+    Design chosen = Design::gitbox();
+    if (skinId_ == "material") chosen = Design::material();
+    else if (skinId_ == "cupertino") chosen = Design::cupertino();
+    else if (skinId_ == "fluent") chosen = Design::fluent();
+
+    // ---- the skin changes colour and behaviour, not the layout -------------
+    //
+    // Each design carries its own control height — Material's is 40 against
+    // this one's 30, which is Material 3's own number and correct for
+    // Material. In a *demo* it is the wrong thing to vary: switching skin
+    // reflows every screen, rows change height, a dense table becomes a sparse
+    // one, and what the reader is trying to compare — the palette, the corner,
+    // the press — moves out from under them while they compare it.
+    //
+    // So the geometry that reflows is pinned to the reference design and
+    // everything that does not is the skin's: the radius, the fills, the
+    // borders, the ripple, the motion. An application shipping one skin should
+    // *not* do this; it wants the design's own metrics, which is why this lives
+    // in the demo host and not in `Design`.
+    const Design reference = Design::gitbox();
+    chosen.controlHeight = reference.controlHeight;
+    return chosen;
 }
 
 NodeId Host::buildTree(MeasureText& measure, const Theme& theme) {

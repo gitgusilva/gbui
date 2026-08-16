@@ -36,6 +36,13 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   down and re-open on the way up.
 - **`Interaction::pointerPressed()`** — true for the one frame the button went
   down, which is what the above needed and what `pointerDown()` is not.
+- **The documentation is one sidebar** rather than four navbar entries that
+  each swapped the left column for a different tree. A reader who wanted a
+  component page from the middle of the guide had to go up, across and back
+  down, and the sidebar they were reading vanished on the way. The whole map is
+  on screen wherever you are now, PrimeVue-style, and the navbar keeps only
+  what is not navigation: the version, the search, the source.
+
 - **`drawer`** — a panel that comes in from an edge, named in the component
   inventory and missing until now. Modal by default: a backdrop and the
   keyboard trapped inside, which is a phone's navigation drawer; `modal = false`
@@ -64,6 +71,17 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   content's way. Fully faded draws nothing at all rather than a transparent
   track, because a bar nobody can see that pages the view when clicked is worse
   than no bar.
+
+### Changed
+
+- **A skin swap in the demos changes colour and behaviour, not layout.** Each
+  design carries its own control height — Material's 40 against the reference
+  30, which is Material 3's own number and right for Material — and varying it
+  reflowed every demo screen, so the thing a reader was trying to compare moved
+  out from under them while they compared it. The demo host pins the metrics
+  that reflow and lets the palette, the corner, the border, the ripple and the
+  motion be what differs. An application shipping one skin should not do this,
+  which is why it lives in the host and not in `Design`.
 
 ## [0.3.2] — 2026-08-16
 

@@ -7,6 +7,25 @@ import { current, isArchived, versionLink, versionMenu } from './versions'
 const version = process.env.GBUI_DOCS_VERSION ?? current
 const base = process.env.GBUI_DOCS_BASE ?? '/'
 
+/**
+ * The same sidebar on every route.
+ *
+ * VitePress keys sidebars by path prefix and falls back to no sidebar at all
+ * for a path no key matches, so "one sidebar everywhere" is spelt as one entry
+ * per top-level path rather than as a bare array — a bare array works, but the
+ * landing page then gets a sidebar too, which is the one page that should be
+ * the hero and nothing else.
+ */
+function everywhere(items: unknown[]) {
+  return {
+    '/guide/': items,
+    '/reference/': items,
+    '/components': items,
+    '/demos': items,
+    '/download': items,
+  } as never
+}
+
 // The documentation site. Content lives in Markdown next to this file; the
 // sidebar is written by hand rather than generated, because the order a reader
 // needs is not the order a directory listing gives.
@@ -22,83 +41,81 @@ export default defineConfig({
   head: [['meta', { name: 'theme-color', content: '#2563eb' }]],
 
   themeConfig: {
-    nav: [
-      { text: 'Guide', link: '/guide/introduction' },
-      { text: 'Reference', link: '/reference/overview' },
-      { text: 'Components', link: '/components' },
-      { text: 'Demos', link: '/demos' },
-      { text: 'Download', link: '/download' },
-      versionMenu(),
-    ],
+    // ---- one bar, one tree -------------------------------------------------
+    //
+    // The navbar used to carry Guide, Reference, Components and Demos, and each
+    // of them swapped the sidebar underneath for a different one. That makes
+    // the left column mean something different depending on where you already
+    // are, so a reader who wants a component page from the middle of the guide
+    // has to go up to the navbar, across, and back down — and the sidebar they
+    // were reading disappears on the way.
+    //
+    // Everything is one tree now, the way PrimeVue and most large component
+    // sites do it: the whole map is on screen wherever you are, and the navbar
+    // keeps only what is not navigation — the version, the search, the source.
+    nav: [versionMenu()],
 
-    sidebar: {
-      // Every component is a route, and the sidebar is the list of them; both
+    sidebar: everywhere([
+      {
+        text: 'Getting started',
+        items: [
+          { text: 'Introduction', link: '/guide/introduction' },
+          { text: 'Installation', link: '/guide/installation' },
+          { text: 'Download a build', link: '/download' },
+          { text: 'Your first window', link: '/guide/first-window' },
+        ],
+      },
+      {
+        text: 'Concepts',
+        collapsed: false,
+        items: [
+          { text: 'Architecture', link: '/guide/architecture' },
+          { text: 'Building a tree', link: '/guide/building-a-tree' },
+          { text: 'Layout', link: '/guide/layout' },
+          { text: 'Theming', link: '/guide/theming' },
+          { text: 'Input and focus', link: '/guide/input' },
+          { text: 'Motion', link: '/guide/motion' },
+          { text: 'Memory', link: '/guide/memory' },
+        ],
+      },
+      {
+        text: 'Going further',
+        collapsed: true,
+        items: [
+          { text: 'Writing a component', link: '/guide/writing-a-component' },
+          { text: 'Icons', link: '/guide/icons' },
+          { text: 'Writing a backend', link: '/guide/writing-a-backend' },
+          { text: 'Testing', link: '/guide/testing' },
+        ],
+      },
+      {
+        text: 'Demos',
+        collapsed: true,
+        items: [{ text: 'The screens', link: '/demos' }],
+      },
+      // Every component is a route and the sidebar is the list of them; both
       // come from the generated metadata. See .vitepress/componentPages.ts.
-      '/components': componentSidebar(),
-      '/demos': [
-        {
-          text: 'Demos',
-          items: [
-            { text: 'The screens', link: '/demos' },
-            { text: 'Components', link: '/components' },
-            { text: 'Your first window', link: '/guide/first-window' },
-            { text: 'Writing a component', link: '/guide/writing-a-component' },
-          ],
-        },
-      ],
-      '/guide/': [
-        {
-          text: 'Getting started',
-          items: [
-            { text: 'Introduction', link: '/guide/introduction' },
-            { text: 'Installation', link: '/guide/installation' },
-            { text: 'Download a build', link: '/download' },
-            { text: 'Your first window', link: '/guide/first-window' },
-          ],
-        },
-        {
-          text: 'Concepts',
-          items: [
-            { text: 'Architecture', link: '/guide/architecture' },
-            { text: 'Building a tree', link: '/guide/building-a-tree' },
-            { text: 'Layout', link: '/guide/layout' },
-            { text: 'Theming', link: '/guide/theming' },
-            { text: 'Input and focus', link: '/guide/input' },
-            { text: 'Motion', link: '/guide/motion' },
-            { text: 'Memory', link: '/guide/memory' },
-          ],
-        },
-        {
-          text: 'Going further',
-          items: [
-            { text: 'Writing a component', link: '/guide/writing-a-component' },
-            { text: 'Icons', link: '/guide/icons' },
-            { text: 'Writing a backend', link: '/guide/writing-a-backend' },
-            { text: 'Testing', link: '/guide/testing' },
-          ],
-        },
-      ],
-      '/reference/': [
-        {
-          text: 'Reference',
-          items: [
-            { text: 'Overview', link: '/reference/overview' },
-            { text: 'core', link: '/reference/core' },
-            { text: 'style', link: '/reference/style' },
-            { text: 'scene', link: '/reference/scene' },
-            { text: 'layout', link: '/reference/layout' },
-            { text: 'input', link: '/reference/input' },
-            { text: 'a11y', link: '/reference/accessibility' },
-            { text: 'anim', link: '/reference/anim' },
-            { text: 'overlay', link: '/reference/overlay' },
-            { text: 'paint', link: '/reference/paint' },
-            { text: 'widgets', link: '/reference/widgets' },
-            { text: 'charts', link: '/reference/charts' },
-            { text: 'platform', link: '/reference/platform' },
-          ],
-        },
-      ],
-    },
+      ...componentSidebar(),
+      {
+        text: 'Reference',
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/reference/overview' },
+          { text: 'core', link: '/reference/core' },
+          { text: 'style', link: '/reference/style' },
+          { text: 'scene', link: '/reference/scene' },
+          { text: 'layout', link: '/reference/layout' },
+          { text: 'input', link: '/reference/input' },
+          { text: 'a11y', link: '/reference/accessibility' },
+          { text: 'anim', link: '/reference/anim' },
+          { text: 'overlay', link: '/reference/overlay' },
+          { text: 'paint', link: '/reference/paint' },
+          { text: 'widgets', link: '/reference/widgets' },
+          { text: 'charts', link: '/reference/charts' },
+          { text: 'platform', link: '/reference/platform' },
+        ],
+      },
+    ]),
 
     socialLinks: [{ icon: 'github', link: 'https://github.com/gitgusilva/gbui' }],
 
