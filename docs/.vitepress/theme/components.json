@@ -1839,6 +1839,125 @@
     ]
   },
   {
+    "name": "carousel",
+    "group": "Containers",
+    "header": "gbui/widgets/carousel.hpp",
+    "summary": "A strip of slides, one screenful at a time.",
+    "signatures": [
+      "CarouselResult carousel(Ui& ui, const Interaction& input, std::string_view id, std::size_t count, CarouselState& state, float delta, const std::function<void(Ui&, std::size_t)>& slide, const CarouselOptions& options = {});"
+    ],
+    "notes": [
+      "Draws `count` slides and shows the ones around `state.first`. `slide` is called for **every** index, not only the visible ones: a carousel is a handful of things and the whole strip has to exist for the movement between them to be a movement rather than a cut. A list long enough for that to matter is a `virtualList`, not a carousel. `delta` is the frame's own seconds, and only autoplay reads it."
+    ],
+    "optionsType": "CarouselOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "orientation",
+        "kind": "Enum",
+        "type": "CarouselOrientation",
+        "default": "CarouselOrientation::Horizontal",
+        "choices": [
+          "Horizontal",
+          "Vertical"
+        ],
+        "doc": "Which way the strip runs, and therefore which pair of arrow keys moves it.",
+        "optional": false
+      },
+      {
+        "name": "slidesPerPage",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "How many slides are on screen at once, and **a fraction is allowed**. 2.5 shows two and half of the next, which is not decoration: a strip cut cleanly at the edge looks like it ends there, and half a slide is the only thing that says there is more without spending a control on saying it.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "12.0f",
+        "choices": [],
+        "doc": "Between two slides. Taken out of the room they share, so the arithmetic stays exact however many are showing.",
+        "optional": false
+      },
+      {
+        "name": "loop",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Past the last slide is the first. Off, because a strip that silently starts over is a strip a reader cannot tell they have finished.",
+        "optional": false
+      },
+      {
+        "name": "autoplay",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "Seconds between automatic advances. Zero \u2014 the default \u2014 never moves. On, it also draws a pause button, and that is not optional: see the note at the top of this header.",
+        "optional": false
+      },
+      {
+        "name": "indicators",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The row of dots, which is also how a reader jumps straight to one.",
+        "optional": false
+      },
+      {
+        "name": "navigators",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The two arrows. Off for a strip driven entirely by its indicators or by the keyboard.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the strip is of \u2014 \"Screenshots\", \"Recent commits\".",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "220.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "compare",
     "group": "Containers",
     "header": "gbui/widgets/compare.hpp",
@@ -1917,6 +2036,113 @@
         "default": "240.0f",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "gallery",
+    "group": "Containers",
+    "header": "gbui/widgets/gallery.hpp",
+    "summary": "One picture at a time, out of a set, with the rest along the bottom.",
+    "signatures": [
+      "GalleryResult gallery(Ui& ui, const Interaction& input, std::string_view id, const std::vector<GalleryItem>& items, GalleryState& state, const GalleryOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the set and shows `state.current`. An empty set draws nothing at all, rather than an empty frame that looks like a picture failed to load."
+    ],
+    "optionsType": "GalleryOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "thumbnails",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The strip along the bottom, which is also how a reader jumps straight to one. Off leaves the arrows and the keyboard.",
+        "optional": false
+      },
+      {
+        "name": "thumbnailSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "56.0f",
+        "choices": [],
+        "doc": "How big one thumbnail is. Square, because a strip of mixed shapes is a strip whose targets move as the reader scrolls it.",
+        "optional": false
+      },
+      {
+        "name": "captions",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The line under the main picture.",
+        "optional": false
+      },
+      {
+        "name": "navigators",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The two arrows over the picture.",
+        "optional": false
+      },
+      {
+        "name": "loop",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Past the last picture is the first.",
+        "optional": false
+      },
+      {
+        "name": "fit",
+        "kind": "Opaque",
+        "type": "ImageFit",
+        "default": "ImageFit::Contain",
+        "choices": [],
+        "doc": "How the main picture meets a box that is not its shape. `Contain`, so nothing is cropped: a gallery is for looking at whole pictures.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the set is of \u2014 \"Screenshots\", \"Site survey, March\".",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "320.0f",
+        "choices": [],
+        "doc": "The main picture's box. The thumbnails and the caption are extra.",
         "optional": false
       },
       {

@@ -42,6 +42,28 @@ State freshState() {
             p[3] = ring < 11.0f ? 0 : 255;
         }
     }
+    // Four plates for the gallery: the same idea in four hues, so the strip
+    // reads as a set rather than as one picture repeated.
+    constexpr int kPlate = 96;
+    state.plateSide = kPlate;
+    for (int plate = 0; plate < 4; ++plate) {
+        std::vector<std::uint8_t> pixels(static_cast<std::size_t>(kPlate) * kPlate * 4, 0);
+        const float hue = static_cast<float>(plate) * 1.7f;
+        for (int y = 0; y < kPlate; ++y) {
+            for (int x = 0; x < kPlate; ++x) {
+                const float u = static_cast<float>(x) / (kPlate - 1);
+                const float v = static_cast<float>(y) / (kPlate - 1);
+                std::uint8_t* p =
+                    pixels.data() +
+                    (static_cast<std::size_t>(y) * kPlate + static_cast<std::size_t>(x)) * 4;
+                p[0] = static_cast<std::uint8_t>(90.0f + 140.0f * std::fabs(std::sin(hue + u)));
+                p[1] = static_cast<std::uint8_t>(70.0f + 150.0f * std::fabs(std::sin(hue + v)));
+                p[2] = static_cast<std::uint8_t>(120.0f + 110.0f * std::fabs(std::cos(hue + u * v)));
+                p[3] = 255;
+            }
+        }
+        state.plates.push_back(std::move(pixels));
+    }
     return state;
 }
 

@@ -64,6 +64,56 @@ void addContainerExamples(std::vector<Example>& out) {
                                    });
                    }});
 
+    out.push_back({"gallery", [](Ui& ui, const Interaction& input, State& state) {
+                       static const char* captions[] = {
+                           "Ridge line, first light", "The long approach",
+                           "Above the inversion", "Down the east face"};
+                       std::vector<GalleryItem> items;
+                       items.reserve(state.plates.size());
+                       for (std::size_t i = 0; i < state.plates.size(); ++i) {
+                           items.push_back({.image = Bitmap{state.plates[i].data(),
+                                                            state.plateSide, state.plateSide, 0},
+                                            .caption = captions[i],
+                                            .alt = captions[i]});
+                       }
+                       gallery(ui, input, "catalog.gallery", items, state.gallery,
+                               {.thumbnailSize = 44.0f,
+                                .loop = true,
+                                .name = "Site survey",
+                                .height = 150.0f,
+                                .grow = 1.0f});
+                   }});
+
+    out.push_back({"carousel", [](Ui& ui, const Interaction& input, State& state) {
+                       // Two and a half across, so the strip says there is more
+                       // without spending a control on saying it — and on a
+                       // clock, which is what the pause button is for.
+                       static const Token washes[] = {Token::Graph1, Token::Graph2,
+                                                      Token::Graph3, Token::Graph4,
+                                                      Token::Graph5, Token::Graph6};
+                       carousel(ui, input, "catalog.carousel", 6, state.carousel, state.delta,
+                                [](Ui& inner, std::size_t index) {
+                                    Style card;
+                                    card.width = Length::percent(100);
+                                    card.height = Length::percent(100);
+                                    card.justify = Justify::Center;
+                                    card.align = Align::Center;
+                                    card.radius = 8.0f;
+                                    card.background = Fill{washes[index]};
+                                    auto scope = inner.scope(card);
+                                    text(inner, "SLIDE " + std::to_string(index + 1),
+                                         {.color = Token::AccentFg,
+                                          .weight = FontWeight::SemiBold});
+                                    (void)scope;
+                                },
+                                {.slidesPerPage = 2.5f,
+                                 .loop = true,
+                                 .autoplay = 2.5,
+                                 .name = "Screenshots",
+                                 .height = 110.0f,
+                                 .grow = 1.0f});
+                   }});
+
     out.push_back({"compare", [](Ui& ui, const Interaction& input, State& state) {
                        // Two flat washes rather than two photographs: the
                        // catalogue decodes no images, and the point of the

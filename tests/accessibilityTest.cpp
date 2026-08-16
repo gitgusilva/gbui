@@ -1150,3 +1150,110 @@ TEST("a comparison is a slider, and says which side it is revealing") {
     CHECK(sawBefore);
     CHECK(sawAfter);
 }
+
+TEST("a carousel hides the slides that are not on screen") {
+    // What PrimeVue does, and it is right: a reader walking a carousel is
+    // walking what is *on screen*. Eight slides all present at once turns a
+    // control into a list they have to find their way out of.
+    Screen screen;
+    CarouselState state;
+    state.first = 2;
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)carousel(ui, none, "strip", 6, state, 0.0f,
+                       [](Ui& inner, std::size_t index) {
+                           inner.label("slide " + std::to_string(index));
+                       },
+                       {.slidesPerPage = 2.0f, .name = "Screenshots", .height = 80.0f});
+    });
+
+    const Accessibility* region = screen.of("strip");
+    CHECK(region != nullptr);
+    if (region) {
+        CHECK(region->role == Role::Group);
+        CHECK(region->name == "Screenshots");
+    }
+
+    for (std::size_t i = 0; i < 6; ++i) {
+        const Accessibility* info = screen.of("strip." + std::to_string(i));
+        CHECK(info != nullptr);
+        if (!info) continue;
+        // Two showing from index 2.
+        CHECK_EQ(info->hidden, !(i == 2 || i == 3));
+        // "3 of 6" is the only thing that says where in the strip they are.
+        CHECK_EQ(info->setSize, std::size_t{6});
+        CHECK_EQ(info->positionInSet, i + 1);
+    }
+}
+
+TEST("a carousel's dots are a tab list, and say which is in force") {
+    // One of the two patterns ARIA blesses for a carousel, and the one that
+    // fits: the dots are a set of choices with exactly one in force, and the
+    // strip is the single keyboard stop they follow.
+    Screen screen;
+    CarouselState state;
+    state.first = 1;
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)carousel(ui, none, "strip", 4, state, 0.0f,
+                       [](Ui& inner, std::size_t) { inner.label("x"); },
+                       {.name = "Screenshots", .height = 80.0f});
+    });
+
+    const Accessibility* dots = screen.of("strip.dots");
+    CHECK(dots != nullptr);
+    if (dots) {
+        CHECK(dots->role == Role::TabList);
+        CHECK(dots->relations.activeDescendant == "strip.dot.1");
+    }
+
+    const Accessibility* current = screen.of("strip.dot.1");
+    const Accessibility* other = screen.of("strip.dot.2");
+    if (current) {
+        CHECK(current->role == Role::Tab);
+        CHECK(current->name == "Slide 2");
+        CHECK(current->state.selected == Flag::True);
+    }
+    if (other) CHECK(other->state.selected == Flag::False);
+}
+
+TEST("every picture in a gallery has a name, even when the caller gave none") {
+    // An unnamed picture in a set of nine is "image, image, image". The
+    // fallback is not a guess about *what* it is — nothing can guess that — it
+    // is a guess about where it is, which is at least true.
+    Screen screen;
+    std::vector<std::uint8_t> pixels(4 * 4 * 4, 128);
+    const Bitmap plate{pixels.data(), 4, 4, 0};
+    const std::vector<GalleryItem> items{
+        {.image = plate, .caption = "Ridge line", .alt = "A ridge at first light"},
+        {.image = plate, .caption = "The approach"},
+        {.image = plate},
+    };
+    GalleryState state;
+    state.current = 1;
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)gallery(ui, none, "g", items, state,
+                      {.thumbnailSize = 30.0f, .name = "Site survey", .height = 100.0f});
+    });
+
+    // The alt wins where there is one; the caption stands in where there is
+    // not — a caption that describes the photograph *is* the alt text.
+    const Accessibility* first = screen.of("g.thumb.0");
+    if (first) CHECK(first->name == "A ridge at first light");
+    const Accessibility* second = screen.of("g.thumb.1");
+    if (second) CHECK(second->name == "The approach");
+    const Accessibility* third = screen.of("g.thumb.2");
+    if (third) CHECK(third->name == "Image 3 of 3");
+
+    // The stage is the picture, not a group wrapping one: there is exactly one
+    // thing here, and a wrapper would put a level between the reader and it.
+    const Accessibility* stage = screen.of("g.stage");
+    CHECK(stage != nullptr);
+    if (stage) {
+        CHECK(stage->role == Role::Image);
+        CHECK(stage->name == "The approach");
+        CHECK_EQ(stage->positionInSet, std::size_t{2});
+        CHECK_EQ(stage->setSize, std::size_t{3});
+    }
+}

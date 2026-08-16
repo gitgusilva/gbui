@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(62);
+    out.reserve(64);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -489,6 +489,30 @@ std::vector<ComponentInfo> build() {
         "Ui::Scope box(Ui& ui, const BoxOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "carousel",
+        "Containers",
+        "gbui/widgets/carousel.hpp",
+        "Draws `count` slides and shows the ones around `state.first`. `slide` is called for **every** index, not only the visible ones: a carousel is a handful of things and the whole strip has to exist for the movement between them to be a movement rather than a cut. A list long enough for that to matter is a `virtualList`, not a carousel. `delta` is the frame's own seconds, and only autoplay reads it.",
+        "A strip of slides, one screenful at a time.",
+        "CarouselOptions",
+        {
+            PropertyInfo{"orientation", PropertyKind::Enum, "CarouselOrientation", "CarouselOrientation::Horizontal", {"Horizontal", "Vertical"}, "Which way the strip runs, and therefore which pair of arrow keys moves it.", false},
+            PropertyInfo{"slidesPerPage", PropertyKind::Number, "float", "1.0f", {}, "How many slides are on screen at once, and **a fraction is allowed**. 2.5 shows two and half of the next, which is not decoration: a strip cut cleanly at the edge looks like it ends there, and half a slide is the only thing that says there is more without spending a control on saying it.", false},
+            PropertyInfo{"gap", PropertyKind::Number, "float", "12.0f", {}, "Between two slides. Taken out of the room they share, so the arithmetic stays exact however many are showing.", false},
+            PropertyInfo{"loop", PropertyKind::Bool, "bool", "false", {}, "Past the last slide is the first. Off, because a strip that silently starts over is a strip a reader cannot tell they have finished.", false},
+            PropertyInfo{"autoplay", PropertyKind::Number, "double", "0.0", {}, "Seconds between automatic advances. Zero — the default — never moves. On, it also draws a pause button, and that is not optional: see the note at the top of this header.", false},
+            PropertyInfo{"indicators", PropertyKind::Bool, "bool", "true", {}, "The row of dots, which is also how a reader jumps straight to one.", false},
+            PropertyInfo{"navigators", PropertyKind::Bool, "bool", "true", {}, "The two arrows. Off for a strip driven entirely by its indicators or by the keyboard.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the strip is of — \"Screenshots\", \"Recent commits\".", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "220.0f", {}, "", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "CarouselResult carousel(Ui& ui, const Interaction& input, std::string_view id, std::size_t count, CarouselState& state, float delta, const std::function<void(Ui&, std::size_t)>& slide, const CarouselOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "compare",
         "Containers",
         "gbui/widgets/compare.hpp",
@@ -509,6 +533,29 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "CompareResult compare(Ui& ui, const Interaction& input, std::string_view id, float position, const std::function<void(Ui&)>& before, const std::function<void(Ui&)>& after, const CompareOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "gallery",
+        "Containers",
+        "gbui/widgets/gallery.hpp",
+        "Draws the set and shows `state.current`. An empty set draws nothing at all, rather than an empty frame that looks like a picture failed to load.",
+        "One picture at a time, out of a set, with the rest along the bottom.",
+        "GalleryOptions",
+        {
+            PropertyInfo{"thumbnails", PropertyKind::Bool, "bool", "true", {}, "The strip along the bottom, which is also how a reader jumps straight to one. Off leaves the arrows and the keyboard.", false},
+            PropertyInfo{"thumbnailSize", PropertyKind::Number, "float", "56.0f", {}, "How big one thumbnail is. Square, because a strip of mixed shapes is a strip whose targets move as the reader scrolls it.", false},
+            PropertyInfo{"captions", PropertyKind::Bool, "bool", "true", {}, "The line under the main picture.", false},
+            PropertyInfo{"navigators", PropertyKind::Bool, "bool", "true", {}, "The two arrows over the picture.", false},
+            PropertyInfo{"loop", PropertyKind::Bool, "bool", "false", {}, "Past the last picture is the first.", false},
+            PropertyInfo{"fit", PropertyKind::Opaque, "ImageFit", "ImageFit::Contain", {}, "How the main picture meets a box that is not its shape. `Contain`, so nothing is cropped: a gallery is for looking at whole pictures.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the set is of — \"Screenshots\", \"Site survey, March\".", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "320.0f", {}, "The main picture's box. The thumbnails and the caption are extra.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "GalleryResult gallery(Ui& ui, const Interaction& input, std::string_view id, const std::vector<GalleryItem>& items, GalleryState& state, const GalleryOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "listRow",

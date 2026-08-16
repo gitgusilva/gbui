@@ -16,6 +16,34 @@ commit.
 
 ### Added
 
+- **`carousel`** — a strip of slides, one screenful at a time, with indicators,
+  navigators, looping, a fractional `slidesPerPage` and autoplay. It moves by
+  *slides* rather than by pages even when several are showing, which is the
+  convention that keeps a four-across gallery usable: "next" is the thing after
+  the one you are looking at.
+
+  **An autoplaying carousel always draws a pause button, and there is no option
+  to remove it.** WCAG's "pause, stop, hide" is a rule rather than a judgement,
+  and an option to remove the button would be a switch labelled "make this
+  inaccessible". Hovering the slides pauses it and so does the keyboard being
+  inside them — but *not* reaching for a control, because the first attempt
+  paused on focus anywhere in the carousel and pressing Play then left focus on
+  Play and refused to move.
+
+  Off-screen slides are `hidden` from the accessibility tree rather than left in
+  it: eight slides all present at once turns a control into a list a reader has
+  to find their way out of. The dots are a `TabList` with `activeDescendant`,
+  one of the two patterns ARIA blesses for a carousel.
+- **`gallery`** — one picture at a time out of a set, with arrows, a caption and
+  a thumbnail strip that keeps the current one in view. Every picture has a
+  name: its `alt`, its caption, or "Image 3 of 9", because an unnamed picture in
+  a set of nine is "image, image, image".
+
+  **Zoom, rotate, flip, download and fullscreen are absent**, and each for a
+  reason written into the header rather than left to be discovered: the first
+  two need a transform on a node that the painter has not got, download needs a
+  native file dialog and nothing here touches the filesystem, and fullscreen is
+  a second window. A rotate button that does not rotate is worse than no button.
 - **`compare`** — two things in the same rectangle with a handle saying how much
   of each, which is the shape PrimeVue calls Compare and every before-and-after
   on the web is. Both sides are drawn at the full size of the box and one is

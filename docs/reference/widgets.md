@@ -323,6 +323,57 @@ are the view's own — so the press, the drag and the paging are still handled b
 `scrollArea`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
+### Carousel
+
+A strip of slides, one screenful at a time. The content is a callback and the
+*position* is the component's business, which is what makes it a container:
+`CarouselState::first` is the index of the slide at the leading edge, and it
+moves by **slides** rather than by pages even when several are showing — "next"
+is the thing after the one you are looking at, not a jump that takes away
+everything you were reading.
+
+`slidesPerPage` takes a fraction. 2.5 shows two and half of the next, which is
+not decoration: a strip cut cleanly at the edge looks like it ends there, and
+half a slide is the only thing that says otherwise without spending a control on
+saying it.
+
+**An autoplaying carousel always draws a pause button, and there is no option to
+remove it.** Anything that moves on its own for more than five seconds needs a
+way to stop it — WCAG's "pause, stop, hide", one of the few rules that is a rule
+rather than a judgement — so an option to remove the button would be a switch
+labelled "make this inaccessible". Hovering the *slides* pauses it too, and so
+does the keyboard being inside them; reaching for a control does not, because
+otherwise pressing Play would leave focus on Play and refuse to move.
+
+**Accessibility.** The strip is one keyboard stop and the arrows move inside it,
+the roving pattern `tabs` already uses. Slides that are off screen are `hidden`
+from the accessibility tree rather than left in it — what PrimeVue does, and
+right: eight slides all present at once turns a control into a list a reader has
+to find their way out of. Each carries "3 of 8". The dots are a `TabList` of
+`Tab`s with `activeDescendant` on the current one, which is one of the two
+patterns ARIA blesses for a carousel and the one that fits.
+
+### Gallery
+
+One picture at a time out of a set, with the rest along the bottom: a main
+image, arrows over it, a caption, and a thumbnail strip that doubles as the way
+to jump straight to one. The strip keeps the current thumbnail in view, so forty
+pictures are walkable from the keyboard.
+
+**What it is not.** PrimeVue's Gallery also zooms, rotates, flips, downloads and
+goes fullscreen. Each of those is missing because the thing under it does not
+exist yet, and a rotate button that does not rotate is worse than no button:
+zoom and rotate need a transform on a node, which the painter has not got;
+download needs a native file dialog, and nothing here touches the filesystem;
+fullscreen is a second window. All four are named in the header against the work
+that unblocks them.
+
+**Accessibility.** Every picture has a name — its `alt`, or its caption, or
+"Image 3 of 9" — because an unnamed picture in a set of nine is "image, image,
+image". The stage *is* the image rather than a group wrapping one, since there
+is exactly one thing there. One keyboard stop for the whole gallery, with the
+thumbnails a `TabList` following it.
+
 ### Compare
 
 Two things in the same rectangle, with a handle that says how much of each — a

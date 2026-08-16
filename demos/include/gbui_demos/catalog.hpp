@@ -57,6 +57,8 @@ struct State {
     ToastState toasts{};
     /** Where the before-and-after seam has been left. */
     float seam = 0.55f;
+    /** Which slide the carousel is on, and whether it is still playing. */
+    CarouselState carousel{};
 
     TextEditState text{"themes/nord", 11, 11};
     /** A number box's state is a string like any other input's: while it has
@@ -105,6 +107,12 @@ struct State {
      */
     std::vector<std::uint8_t> picture{};
     int pictureSide = 0;
+    /** Four more of the same, in different hues, for the gallery. Drawn rather
+     *  than loaded for the reason above: the catalogue decodes nothing, and a
+     *  screenshot has to match on every machine. */
+    std::vector<std::vector<std::uint8_t>> plates{};
+    int plateSide = 0;
+    GalleryState gallery{};
 };
 
 /** One component, and the smallest honest use of it. */

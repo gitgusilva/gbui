@@ -45,6 +45,7 @@ set(GBUI_SOURCES
     src/widgets/badge.cpp
     src/widgets/box.cpp
     src/widgets/button.cpp
+    src/widgets/carousel.cpp
     src/widgets/chart.cpp
     src/widgets/checkbox.cpp
     src/widgets/colorPicker.cpp
@@ -52,6 +53,7 @@ set(GBUI_SOURCES
     src/widgets/datePicker.cpp
     src/widgets/dateTimePicker.cpp
     src/widgets/field.cpp
+    src/widgets/gallery.cpp
     src/widgets/icon.cpp
     src/widgets/image.cpp
     src/widgets/icons.cpp
