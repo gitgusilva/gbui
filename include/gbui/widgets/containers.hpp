@@ -27,6 +27,7 @@
 #include "gbui/widgets/toolbar.hpp"
 
 // ---- views over content ----------------------------------------------------
+#include "gbui/widgets/compare.hpp"
 #include "gbui/widgets/marquee.hpp"
 #include "gbui/widgets/scroll.hpp"
 #include "gbui/widgets/table.hpp"

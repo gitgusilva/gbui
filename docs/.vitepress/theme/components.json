@@ -1839,6 +1839,107 @@
     ]
   },
   {
+    "name": "compare",
+    "group": "Containers",
+    "header": "gbui/widgets/compare.hpp",
+    "summary": "Two things in the same rectangle, with a handle that says how much of each.",
+    "signatures": [
+      "CompareResult compare(Ui& ui, const Interaction& input, std::string_view id, float position, const std::function<void(Ui&)>& before, const std::function<void(Ui&)>& after, const CompareOptions& options = {});"
+    ],
+    "notes": [
+      "Draws `before` under `after`, with `after` revealed from the leading edge up to `position`. Both callbacks are built at the **full size of the box** and both are built every frame \u2014 that is what makes the two comparable, and it is also why they should be cheap: this is a picture against a picture, not two dashboards."
+    ],
+    "optionsType": "CompareOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "orientation",
+        "kind": "Enum",
+        "type": "CompareOrientation",
+        "default": "CompareOrientation::Horizontal",
+        "choices": [
+          "Horizontal",
+          "Vertical"
+        ],
+        "doc": "Which way the seam travels. Horizontal for two pictures, vertical for two things read top to bottom \u2014 a chart against its own baseline.",
+        "optional": false
+      },
+      {
+        "name": "slideOnHover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "The handle follows the pointer without anything being pressed. Off, because a comparison is something a reader *sets* and then looks at, and a seam that moves whenever the pointer crosses the picture cannot be left anywhere. On for a gallery of thumbnails where the gesture is the whole interaction and there is nothing to leave it at.",
+        "optional": false
+      },
+      {
+        "name": "handleWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "3.0f",
+        "choices": [],
+        "doc": "How wide the bar down the seam is. The grip on it is drawn from this.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is being compared \u2014 \"Before and after retouching\".",
+        "optional": false
+      },
+      {
+        "name": "beforeLabel",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What each side is. Announced with the value, because \"60 percent\" says nothing on its own: sixty percent of *what*, revealing *what*. A reader who cannot see either picture has only these two words to tell them which way the handle is moving them.",
+        "optional": false
+      },
+      {
+        "name": "afterLabel",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "As above, for the side the handle reveals \u2014 and the one the value is announced in terms of, since that is the one moving.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "listRow",
     "group": "Containers",
     "header": "gbui/widgets/listRow.hpp",

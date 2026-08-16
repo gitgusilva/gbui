@@ -55,6 +55,8 @@ struct State {
     /** The toast queue. Seeded rather than empty, because an example that
      *  shows nothing until the reader presses something shows nothing. */
     ToastState toasts{};
+    /** Where the before-and-after seam has been left. */
+    float seam = 0.55f;
 
     TextEditState text{"themes/nord", 11, 11};
     /** A number box's state is a string like any other input's: while it has

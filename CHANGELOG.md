@@ -16,6 +16,25 @@ commit.
 
 ### Added
 
+- **`compare`** — two things in the same rectangle with a handle saying how much
+  of each, which is the shape PrimeVue calls Compare and every before-and-after
+  on the web is. Both sides are drawn at the full size of the box and one is
+  revealed over the other, because a comparison laid out side by side is asking
+  the reader to remember rather than to see.
+
+  **The seam is a percentage, not a measured width**, and that is the whole
+  design: a clip sized from last frame's geometry is a frame late and jumps on
+  every resize, while a percentage resolves during layout and is right on the
+  first frame. The content inside the clip is `100 / position` percent of it,
+  which comes back out to the full width — a layout identity rather than an
+  arithmetic one. The handle is placed by two flexible spacers for the same
+  reason, and that also keeps it wholly inside the box at either end.
+
+  It is a slider and genuinely one — value, range, arrow keys at 2%, Page at
+  10%, Home and End — rather than PrimeVue's hidden range input beside a div.
+  The value is announced as `"60% Retouched"`, because "60 percent" alone says
+  neither how much of what nor revealing what, and both sides stay named in the
+  tree whatever the handle is doing.
 - **`toast`** — short-lived messages, stacked in a corner and gone on their own.
   The last of the three the component inventory called *blocking*, and the one
   it described as "a queue, a timer and a live region".

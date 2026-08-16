@@ -64,6 +64,35 @@ void addContainerExamples(std::vector<Example>& out) {
                                    });
                    }});
 
+    out.push_back({"compare", [](Ui& ui, const Interaction& input, State& state) {
+                       // Two flat washes rather than two photographs: the
+                       // catalogue decodes no images, and the point of the
+                       // example is the seam and the handle.
+                       const auto wash = [](Token colour, std::string_view caption) {
+                           return [colour, caption](Ui& inner) {
+                               Style fill;
+                               fill.width = Length::percent(100);
+                               fill.height = Length::percent(100);
+                               fill.justify = Justify::Center;
+                               fill.align = Align::Center;
+                               fill.background = Fill{colour};
+                               auto scope = inner.scope(fill);
+                               text(inner, caption,
+                                    {.color = Token::AccentFg, .weight = FontWeight::SemiBold});
+                               (void)scope;
+                           };
+                       };
+                       const CompareResult result =
+                           compare(ui, input, "catalog.compare", state.seam,
+                                   wash(Token::Graph3, "BEFORE"), wash(Token::Graph1, "AFTER"),
+                                   {.name = "Before and after",
+                                    .beforeLabel = "Before",
+                                    .afterLabel = "After",
+                                    .height = 150.0f,
+                                    .grow = 1.0f});
+                       if (result.changed) state.seam = result.position;
+                   }});
+
     out.push_back({"marquee", [](Ui& ui, const Interaction& input, State& state) {
                        // Zero delta stops it: held while the pointer is over
                        // it, the reader can read a name instead of chasing it.

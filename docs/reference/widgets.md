@@ -323,6 +323,42 @@ are the view's own — so the press, the drag and the paging are still handled b
 `scrollArea`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
+### Compare
+
+Two things in the same rectangle, with a handle that says how much of each — a
+before and an after. Both are drawn at the **full size of the box** and one is
+revealed over the other, which is what makes the comparison work: the reader is
+looking at the same pixels in the same place rather than remembering one while
+they look at the other.
+
+```cpp
+const CompareResult result = compare(ui, input, "shot", model.seam,
+                                     [&](Ui& ui) { image(ui, original); },
+                                     [&](Ui& ui) { image(ui, retouched); },
+                                     {.beforeLabel = "Original", .afterLabel = "Retouched"});
+if (result.changed) model.seam = result.position;
+```
+
+**The seam is clipped by a percentage, not by a measured width**, and that is
+the part worth knowing. A clip sized from last frame's geometry would be a frame
+late and would jump on every resize; a percentage resolves during layout, so it
+is right on the first frame. The content inside that clip is `100 / position`
+percent of *it*, which comes back out to the full width of the box — a layout
+identity rather than an arithmetic one. The handle is placed the same way, by
+two flexible spacers, which also keeps it wholly inside the box at either end.
+
+`slideOnHover` is off, because a comparison is something a reader sets and then
+looks at, and a seam that moves whenever the pointer crosses the picture cannot
+be left anywhere.
+
+**Accessibility.** It is a slider and genuinely one: a value from 0 to 1, the
+arrow keys at 2% and Page at 10% — finer than the colour picker's 5%, because a
+seam is aimed at an edge and a colour at a region — plus Home and End. The value
+is announced in words, `"60% Retouched"`, since "60 percent" alone says neither
+how much of what nor revealing what. Both sides are named and both stay in the
+tree whatever the handle is doing, because a reader who cannot see them is not
+comparing them by eye and hiding one would leave them with half of it.
+
 ### Marquee
 
 ```cpp

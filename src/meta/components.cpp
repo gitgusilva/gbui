@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(61);
+    out.reserve(62);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -487,6 +487,28 @@ std::vector<ComponentInfo> build() {
         true,
         false,
         "Ui::Scope box(Ui& ui, const BoxOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "compare",
+        "Containers",
+        "gbui/widgets/compare.hpp",
+        "Draws `before` under `after`, with `after` revealed from the leading edge up to `position`. Both callbacks are built at the **full size of the box** and both are built every frame — that is what makes the two comparable, and it is also why they should be cheap: this is a picture against a picture, not two dashboards.",
+        "Two things in the same rectangle, with a handle that says how much of each.",
+        "CompareOptions",
+        {
+            PropertyInfo{"orientation", PropertyKind::Enum, "CompareOrientation", "CompareOrientation::Horizontal", {"Horizontal", "Vertical"}, "Which way the seam travels. Horizontal for two pictures, vertical for two things read top to bottom — a chart against its own baseline.", false},
+            PropertyInfo{"slideOnHover", PropertyKind::Bool, "bool", "false", {}, "The handle follows the pointer without anything being pressed. Off, because a comparison is something a reader *sets* and then looks at, and a seam that moves whenever the pointer crosses the picture cannot be left anywhere. On for a gallery of thumbnails where the gesture is the whole interaction and there is nothing to leave it at.", false},
+            PropertyInfo{"handleWidth", PropertyKind::Number, "float", "3.0f", {}, "How wide the bar down the seam is. The grip on it is drawn from this.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What is being compared — \"Before and after retouching\".", false},
+            PropertyInfo{"beforeLabel", PropertyKind::Text, "std::string_view", "", {}, "What each side is. Announced with the value, because \"60 percent\" says nothing on its own: sixty percent of *what*, revealing *what*. A reader who cannot see either picture has only these two words to tell them which way the handle is moving them.", false},
+            PropertyInfo{"afterLabel", PropertyKind::Text, "std::string_view", "", {}, "As above, for the side the handle reveals — and the one the value is announced in terms of, since that is the one moving.", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "240.0f", {}, "", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "CompareResult compare(Ui& ui, const Interaction& input, std::string_view id, float position, const std::function<void(Ui&)>& before, const std::function<void(Ui&)>& after, const CompareOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "listRow",

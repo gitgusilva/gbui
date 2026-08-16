@@ -48,6 +48,7 @@ set(GBUI_SOURCES
     src/widgets/chart.cpp
     src/widgets/checkbox.cpp
     src/widgets/colorPicker.cpp
+    src/widgets/compare.cpp
     src/widgets/datePicker.cpp
     src/widgets/dateTimePicker.cpp
     src/widgets/field.cpp

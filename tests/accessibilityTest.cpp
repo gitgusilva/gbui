@@ -1109,3 +1109,44 @@ TEST("a toast never takes the keyboard, and only its controls are Tab stops") {
         CHECK(node.id == "toast.t.close" || node.id == "toast.t.action");
     }
 }
+
+TEST("a comparison is a slider, and says which side it is revealing") {
+    // PrimeVue reaches the same answer through a hidden range input. Here the
+    // role *is* the control, so there is nothing hidden to keep in step.
+    Screen screen;
+    screen.frame([](Ui& ui) {
+        Interaction none;
+        (void)compare(
+            ui, none, "cmp", 0.6f, [](Ui& inner) { inner.label("before"); },
+            [](Ui& inner) { inner.label("after"); },
+            {.name = "Before and after retouching",
+             .beforeLabel = "Original",
+             .afterLabel = "Retouched",
+             .height = 120.0f});
+    });
+
+    const Accessibility* info = screen.of("cmp");
+    CHECK(info != nullptr);
+    if (!info) return;
+    CHECK(info->role == Role::Slider);
+    CHECK(info->name == "Before and after retouching");
+    CHECK(info->value.present);
+    CHECK_NEAR(info->value.now, 0.6);
+    // "60 percent" alone says sixty percent of what, revealing what.
+    CHECK(info->value.text == "60% Retouched");
+
+    // Both sides are named and **both stay in the tree** whatever the handle is
+    // doing: a reader is not comparing them by eye, and hiding one would leave
+    // them with half the comparison.
+    bool sawBefore = false;
+    bool sawAfter = false;
+    for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+        const Accessibility* entry =
+            screen.arena.accessibility(NodeId{static_cast<std::uint32_t>(i)});
+        if (!entry) continue;
+        if (entry->name == "Original") sawBefore = true;
+        if (entry->name == "Retouched") sawAfter = true;
+    }
+    CHECK(sawBefore);
+    CHECK(sawAfter);
+}
