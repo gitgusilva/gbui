@@ -36,6 +36,21 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   down and re-open on the way up.
 - **`Interaction::pointerPressed()`** — true for the one frame the button went
   down, which is what the above needed and what `pointerDown()` is not.
+- **A scrollbar that gets out of the way**, which is SimpleBar's behaviour and
+  now `ScrollOptions::scrollbarVisibility = ScrollbarVisibility::WhileUsed`.
+  The bar is full while the view is being used — the pointer inside it, the bar
+  hovered or held, the keyboard on it, or a wheel notch aimed at it — and fades
+  back to `scrollbarRestOpacity` after `scrollbarFadeDelay`. The delay is on
+  the way out only: coming back has to be immediate or the bar arrives after
+  the reader has started looking for it.
+
+  **Off by default, and that is the argument worth keeping.** A bar is also a
+  *position indicator*, and a view that hides it has stopped saying where the
+  reader is or how much is left. A rest opacity around 0.2 is usually the
+  better setting than zero: it keeps that half and still gets out of the
+  content's way. Fully faded draws nothing at all rather than a transparent
+  track, because a bar nobody can see that pages the view when clicked is worse
+  than no bar.
 
 ## [0.3.2] — 2026-08-16
 

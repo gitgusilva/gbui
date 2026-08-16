@@ -15,12 +15,28 @@ void addContainerExamples(std::vector<Example>& out) {
                    }, 160});
 
     out.push_back({"scrollArea", [](Ui& ui, const Interaction& input, State& state) {
-                       auto view = scrollArea(ui, input, "catalog.scroll", state.scroll,
-                                              {.gap = 2.0f, .height = 140.0f});
+                       {
+                           auto view = scrollArea(ui, input, "catalog.scroll", state.scroll,
+                                                  {.gap = 2.0f, .height = 120.0f});
+                           for (int i = 1; i <= 30; ++i) {
+                               text(ui, "row " + std::to_string(i), {.color = Token::TextMuted});
+                           }
+                       }
+                       // The same view with a bar that gets out of the way —
+                       // faded to a quarter until the pointer is over it. Take
+                       // the pointer off this one and watch the bar go.
+                       text(ui, "and one whose bar fades",
+                            {.color = Token::TextMuted, .size = 11.0f});
+                       auto quiet = scrollArea(
+                           ui, input, "catalog.scroll.quiet", state.scrollQuiet,
+                           {.scrollbarVisibility = ScrollbarVisibility::WhileUsed,
+                            .scrollbarRestOpacity = 0.25f,
+                            .gap = 2.0f,
+                            .height = 120.0f});
                        for (int i = 1; i <= 30; ++i) {
                            text(ui, "row " + std::to_string(i), {.color = Token::TextMuted});
                        }
-                   }, 240});
+                   }, 400});
 
     out.push_back({"scrollbar", [](Ui& ui, const Interaction& input, State& state) {
                        // A bar drawn somewhere other than the view it drives.

@@ -6,9 +6,13 @@
 namespace gbui {
 
 void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state,
-               Rect box, ScrollAxis axis, float width, bool autoHide) {
+               Rect box, ScrollAxis axis, float width, bool autoHide, float opacity) {
     const bool vertical = axis != ScrollAxis::Horizontal;
     if (box.empty() || (!state.scrollable() && autoHide)) return;
+    // Fully faded is not drawn at all: a transparent track still answers the
+    // pointer, and a bar nobody can see that pages the view when clicked is
+    // worse than no bar.
+    if (opacity <= 0.001f) return;
 
     const std::string thumbId = std::string(id) + ".thumb";
     const std::string trackId = std::string(id) + ".track";
@@ -38,7 +42,7 @@ void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const Scro
     track.width = vertical ? width : box.width;
     track.height = vertical ? box.height : width;
     track.radius = 0.0f;
-    track.background = Fill{Token::Bg, 0.4f + 0.35f * wake};
+    track.background = Fill{Token::Bg, (0.4f + 0.35f * wake) * opacity};
     // The track is a target, not a decoration — clicking it pages, which is
     // what the arrow-less bars every desktop now ships do.
     track.cursorHint = Cursor::Default;
@@ -57,11 +61,51 @@ void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const Scro
     thumb.width = vertical ? thickness : thumbLength;
     thumb.height = vertical ? thumbLength : thickness;
     thumb.radius = thickness / 2.0f;
-    thumb.background = Fill{held || wake > 0.5f ? Token::TextMuted : Token::BorderStrong};
+    thumb.background =
+        Fill{held || wake > 0.5f ? Token::TextMuted : Token::BorderStrong, opacity};
     thumb.cursorHint = held ? Cursor::Grabbing : Cursor::Grab;
     ui.add(thumb);
     ui.tag(thumbId).cursor(thumb.cursorHint);
 }
+
+namespace {
+
+/**
+ * How visible the bar should be this frame, 0 to 1.
+ *
+ * `Always` is 1 and costs nothing. `WhileUsed` is the SimpleBar behaviour: full
+ * while the view is being used and faded back to `scrollbarRestOpacity` a
+ * moment after it stops.
+ *
+ * "Being used" is the pointer inside the viewport, the bar itself hovered or
+ * held, the keyboard on the view, or a wheel notch aimed at it. The pointer
+ * test is the viewport's *rectangle* rather than `isHovered`, which names one
+ * node: a view is hovered by way of whatever row the pointer is actually over,
+ * and asking about the view itself would say no every time there was content
+ * under the pointer — which is always.
+ *
+ * The delay is on the way out only. Coming back has to be immediate or the bar
+ * arrives after the reader has already started looking for it.
+ */
+float barOpacity(Ui& ui, const Interaction& input, std::string_view id, std::string_view thumbId,
+                 std::string_view trackId, const Rect& viewport, const ScrollOptions& options) {
+    if (options.scrollbarVisibility == ScrollbarVisibility::Always) return 1.0f;
+
+    const bool pointerInside = !viewport.empty() && viewport.contains(input.pointer());
+    const bool onBar = input.isHovered(trackId) || input.isHovered(thumbId) ||
+                       input.dragging() == thumbId;
+    const bool wheeling = input.wheel() != 0.0f && input.wheelTarget() == id;
+    const bool used = pointerInside || onBar || input.isFocusedWithin(id) || wheeling;
+
+    const float rest = std::clamp(options.scrollbarRestOpacity, 0.0f, 1.0f);
+    return ui.animate(id, "bar.shown", used ? 1.0f : rest,
+                      used ? Transition{.duration = 0.10f, .easing = Easing::EaseOut}
+                           : Transition{.duration = 0.30f,
+                                        .delay = std::max(0.0f, options.scrollbarFadeDelay),
+                                        .easing = Easing::EaseOut});
+}
+
+}  // namespace
 
 Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state,
                      const ScrollOptions& options) {
@@ -199,7 +243,8 @@ Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, Scro
     // rather than a frame of the whole pane sitting in the wrong place.
     if (scrolls && options.scrollbar && viewportFrame.width > 0.0f) {
         scrollbar(ui, input, id, state, Rect{0.0f, 0.0f, viewportFrame.width, viewportFrame.height},
-                  axis, options.scrollbarWidth, options.autoHideScrollbar);
+                  axis, options.scrollbarWidth, options.autoHideScrollbar,
+                  barOpacity(ui, input, id, thumbId, trackId, viewportFrame, options));
     }
 
     // ---- the content ------------------------------------------------------

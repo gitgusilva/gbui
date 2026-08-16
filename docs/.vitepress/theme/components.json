@@ -2482,7 +2482,37 @@
         "type": "bool",
         "default": "true",
         "choices": [],
-        "doc": "Hides the bar when the content fits, the way a desktop does.",
+        "doc": "Hides the bar when the content fits, the way a desktop does. This is about there being nothing to scroll \u2014 see `scrollbarVisibility` for the bar that fades while there is.",
+        "optional": false
+      },
+      {
+        "name": "scrollbarVisibility",
+        "kind": "Enum",
+        "type": "ScrollbarVisibility",
+        "default": "ScrollbarVisibility::Always",
+        "choices": [
+          "Always",
+          "WhileUsed"
+        ],
+        "doc": "Whether the bar is always there or only while the view is being used.",
+        "optional": false
+      },
+      {
+        "name": "scrollbarRestOpacity",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "What `WhileUsed` fades *to*, 0 to 1. Zero is SimpleBar's answer and takes the bar away entirely. A small number \u2014 0.2 or so \u2014 is usually the better one: it keeps the position indicator, which is half of what a bar is for, and still gets out of the way of the content.",
+        "optional": false
+      },
+      {
+        "name": "scrollbarFadeDelay",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.8f",
+        "choices": [],
+        "doc": "How long the bar stays after the pointer leaves, in seconds. Short enough not to linger, long enough that crossing the view on the way to something else does not leave a bar flashing behind.",
         "optional": false
       },
       {
@@ -2592,7 +2622,7 @@
     "header": "gbui/widgets/scroll.hpp",
     "summary": "A scroll container.",
     "signatures": [
-      "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true);"
+      "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true, float opacity = 1.0f);"
     ],
     "notes": [
       "Draws the bar for a scroll view that is not where the bar belongs. A bar normally lives inside the view it drives, and `scrollArea` puts it there. A table is the case that forced this one out: its rows scroll vertically *inside* a box that scrolls horizontally, so the row view's own right-hand edge is out at the end of the widest column, and the bar drawn against it is a bar the reader has to scroll sideways to find. A browser has no such problem, because both bars belong to the visible box; this is how a caller says the same thing here. `box` is in the current container's coordinates \u2014 where the bar should be, not where the content is. The ids are the view's own, so the press, the drag and the paging are still handled by `scrollArea`: this draws, it does not behave. Turn the view's own bar off with `ScrollOptions::scrollbar` when you use it, or there will be two."

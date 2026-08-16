@@ -63,7 +63,22 @@ enum class ScrollAxis { None, Vertical, Horizontal };
  */
 void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state,
                Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f,
-               bool autoHide = true);
+               bool autoHide = true, float opacity = 1.0f);
+
+/**
+ * When a bar is drawn.
+ *
+ * `Always` is the desktop answer and stays the default: a bar is also a
+ * *position indicator*, and a view that hides it has told the reader nothing
+ * about where they are or how much is left.
+ *
+ * `WhileUsed` is the other one — a bar that fades to
+ * `ScrollOptions::scrollbarRestOpacity` when the view is not being touched and
+ * comes back the moment it is. It is what SimpleBar does and what a
+ * touch-first design usually wants, and it is opt-in because the thing it
+ * trades away is real.
+ */
+enum class ScrollbarVisibility { Always, WhileUsed };
 
 struct ScrollOptions {
     Direction direction = Direction::Column;
@@ -75,8 +90,25 @@ struct ScrollOptions {
     /** Draws the bar. Turning it off leaves wheel and keyboard scrolling. */
     bool scrollbar = true;
     float scrollbarWidth = 10.0f;
-    /** Hides the bar when the content fits, the way a desktop does. */
+    /** Hides the bar when the content fits, the way a desktop does. This is
+     *  about there being nothing to scroll — see `scrollbarVisibility` for the
+     *  bar that fades while there is. */
     bool autoHideScrollbar = true;
+    /** Whether the bar is always there or only while the view is being used. */
+    ScrollbarVisibility scrollbarVisibility = ScrollbarVisibility::Always;
+    /**
+     * What `WhileUsed` fades *to*, 0 to 1.
+     *
+     * Zero is SimpleBar's answer and takes the bar away entirely. A small
+     * number — 0.2 or so — is usually the better one: it keeps the position
+     * indicator, which is half of what a bar is for, and still gets out of the
+     * way of the content.
+     */
+    float scrollbarRestOpacity = 0.0f;
+    /** How long the bar stays after the pointer leaves, in seconds. Short
+     *  enough not to linger, long enough that crossing the view on the way to
+     *  something else does not leave a bar flashing behind. */
+    float scrollbarFadeDelay = 0.8f;
     /** Whether Tab can land on the viewport. A pane the reader scrolls for
      *  itself wants that; a list inside a control that already holds the
      *  keyboard — a select — does not, or Tab walks into the popup. */

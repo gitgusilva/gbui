@@ -21,7 +21,8 @@ struct View {
     bool barDrawn = false;
 };
 
-View run(const ScrollOptions& options, float wheel = 0.0f, int rows = 20) {
+View run(const ScrollOptions& options, float wheel = 0.0f, int rows = 20,
+         Vec2 pointer = {50.0f, 50.0f}) {
     Theme theme = Theme::dark();
     Interaction input;
     View view;
@@ -43,7 +44,7 @@ View run(const ScrollOptions& options, float wheel = 0.0f, int rows = 20) {
         layout(arena, ui.root(), Rect{0, 0, 200, 400}, context);
 
         InputFrame frame;
-        frame.pointer = {50.0f, 50.0f};
+        frame.pointer = pointer;
         frame.wheel = pass == 1 ? wheel : 0.0f;
         input.update(arena, ui.root(), frame);
 
@@ -92,6 +93,50 @@ TEST("a minimum height keeps a short view from collapsing") {
     const View view = run({.axis = ScrollAxis::Vertical, .grow = 0.0f, .minHeight = 80.0f}, 0.0f, 1);
     CHECK_NEAR(view.viewport.height, 80.0f);
     CHECK(!view.state.scrollable());
+}
+
+/**
+ * A bar that fades needs an animator, and without one `Ui::animate` hands back
+ * the target unchanged — so these read the end state rather than the fade, and
+ * that is the honest thing to assert anyway: what the reader ends up with.
+ */
+TEST("a bar set to fade is gone when nothing is touching the view") {
+    // Bounded, so there is something to scroll and therefore a bar at all.
+    ScrollOptions options;
+    options.axis = ScrollAxis::Vertical;
+    options.grow = 0.0f;
+    options.maxHeight = 120.0f;
+    options.scrollbarVisibility = ScrollbarVisibility::WhileUsed;
+
+    // The harness parks the pointer inside the view, which is "being used".
+    const View used = run(options);
+    CHECK(used.barDrawn);
+
+    // And away from it, where a rest opacity of zero means not drawn at all: a
+    // transparent track still answers a click, and a bar nobody can see that
+    // pages the view is worse than no bar.
+    const View away = run(options, 0.0f, 20, Vec2{500.0f, 500.0f});
+    CHECK(!away.barDrawn);
+}
+
+TEST("a rest opacity keeps the bar as a position indicator") {
+    // Half of what a bar is for is saying where you are, which is the thing
+    // hiding it entirely throws away.
+    ScrollOptions options;
+    options.axis = ScrollAxis::Vertical;
+    options.grow = 0.0f;
+    options.maxHeight = 120.0f;
+    options.scrollbarVisibility = ScrollbarVisibility::WhileUsed;
+    options.scrollbarRestOpacity = 0.25f;
+
+    const View away = run(options, 0.0f, 20, Vec2{500.0f, 500.0f});
+    CHECK(away.barDrawn);
+}
+
+TEST("the default is a bar that stays") {
+    const View away = run({.axis = ScrollAxis::Vertical, .grow = 0.0f, .maxHeight = 120.0f}, 0.0f,
+                          20, Vec2{500.0f, 500.0f});
+    CHECK(away.barDrawn);
 }
 
 TEST("the axis a view does not scroll is pinned to it") {

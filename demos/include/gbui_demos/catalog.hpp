@@ -74,6 +74,8 @@ struct State {
 
     ScrollState scroll{};
     ScrollState scroll2{};
+    /** The second view in the `scrollArea` example, whose bar fades. */
+    ScrollState scrollQuiet{};
     ScrollState listScroll{};
     TableState table{};
     SelectState select{};

@@ -267,6 +267,32 @@ then scroll", which is the rule a dropdown needs. `None` still clips: a box that
 must not grow past a size but must not scroll either is a real thing. Both axes
 at once is not built, and is named rather than half-done.
 
+### A bar that gets out of the way
+
+```cpp
+scrollArea(ui, input, "log", state, {
+    .scrollbarVisibility = ScrollbarVisibility::WhileUsed,
+    .scrollbarRestOpacity = 0.2f,
+});
+```
+
+SimpleBar's behaviour, and off by default. The bar is full while the view is
+being used — the pointer inside it, the bar hovered or held, the keyboard on
+it, or a wheel notch aimed at it — and fades back to `scrollbarRestOpacity`
+after `scrollbarFadeDelay`. The delay is on the way out only; coming back is
+immediate, or the bar arrives after the reader has started looking for it.
+
+**Why it is off by default.** A bar is a *position indicator* as much as a
+control: it says where you are in the content and how much is left, and a view
+that hides it has stopped saying either. That is why `scrollbarRestOpacity` is
+worth a number like 0.2 rather than 0 — it keeps the indicator and still gets
+out of the content's way. At 0 the bar is not drawn at all rather than drawn
+transparent, because a track nobody can see that pages the view when clicked is
+worse than no track.
+
+`autoHideScrollbar` is a different question and stays on: that one is about
+there being *nothing to scroll*, and this one is about the bar while there is.
+
 Everything inside a scroll view costs a node, so 50 000 rows really do build
 50 000 nodes. When the rows are uniform, don't:
 

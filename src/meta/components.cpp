@@ -631,7 +631,10 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"step", PropertyKind::Number, "float", "48.0f", {}, "Pixels per wheel notch.", false},
             PropertyInfo{"scrollbar", PropertyKind::Bool, "bool", "true", {}, "Draws the bar. Turning it off leaves wheel and keyboard scrolling.", false},
             PropertyInfo{"scrollbarWidth", PropertyKind::Number, "float", "10.0f", {}, "", false},
-            PropertyInfo{"autoHideScrollbar", PropertyKind::Bool, "bool", "true", {}, "Hides the bar when the content fits, the way a desktop does.", false},
+            PropertyInfo{"autoHideScrollbar", PropertyKind::Bool, "bool", "true", {}, "Hides the bar when the content fits, the way a desktop does. This is about there being nothing to scroll — see `scrollbarVisibility` for the bar that fades while there is.", false},
+            PropertyInfo{"scrollbarVisibility", PropertyKind::Enum, "ScrollbarVisibility", "ScrollbarVisibility::Always", {"Always", "WhileUsed"}, "Whether the bar is always there or only while the view is being used.", false},
+            PropertyInfo{"scrollbarRestOpacity", PropertyKind::Number, "float", "0.0f", {}, "What `WhileUsed` fades *to*, 0 to 1. Zero is SimpleBar's answer and takes the bar away entirely. A small number — 0.2 or so — is usually the better one: it keeps the position indicator, which is half of what a bar is for, and still gets out of the way of the content.", false},
+            PropertyInfo{"scrollbarFadeDelay", PropertyKind::Number, "float", "0.8f", {}, "How long the bar stays after the pointer leaves, in seconds. Short enough not to linger, long enough that crossing the view on the way to something else does not leave a bar flashing behind.", false},
             PropertyInfo{"focusable", PropertyKind::Bool, "bool", "true", {}, "Whether Tab can land on the viewport. A pane the reader scrolls for itself wants that; a list inside a control that already holds the keyboard — a select — does not, or Tab walks into the popup.", false},
             PropertyInfo{"padding", PropertyKind::Edges, "Edges", "", {}, "", false},
             PropertyInfo{"gap", PropertyKind::Number, "float", "0.0f", {}, "", false},
@@ -658,7 +661,7 @@ std::vector<ComponentInfo> build() {
         {},
         false,
         true,
-        "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true);",
+        "void scrollbar(Ui& ui, const Interaction& input, std::string_view id, const ScrollState& state, Rect box, ScrollAxis axis = ScrollAxis::Vertical, float width = 10.0f, bool autoHide = true, float opacity = 1.0f);",
     });
     out.push_back(ComponentInfo{
         "splitPane",
