@@ -54,6 +54,9 @@ struct MarqueeOptions {
      */
     float grow = 1.0f;
     Edges padding{};
+    /** What the strip is showing — "Now playing", "Market". The content itself
+     *  reaches a reader through the tree; this says what the band is. */
+    std::string_view name{};
 };
 
 /**

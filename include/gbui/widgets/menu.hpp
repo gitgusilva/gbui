@@ -44,6 +44,17 @@ struct MenuItemOptions {
      *  select — turns this off, so Tab leaves the control instead of walking
      *  into an open popup and back out of the window's order. */
     bool focusable = true;
+    /**
+     * What a reader is told this row is.
+     *
+     * The same distinction `checkSide` draws visually, and it has to be said
+     * separately because a screen reader announces the two differently: a
+     * **menu** holds commands — "New branch, menu item" — and a **select** holds
+     * values, where the reader also wants "option, three of twelve". A command
+     * that toggles is `MenuItemCheckbox`, which is what makes `selected`
+     * announce "not checked" instead of saying nothing.
+     */
+    Role role = Role::MenuItem;
 };
 
 /** Returns true on the frame it was chosen. */

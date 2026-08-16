@@ -36,7 +36,11 @@ bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
     // visible long before it was due.
     strip.overflow = Overflow::Hidden;
     auto scope = ui.scope(strip);
-    ui.tag(id);
+    // A `Group`, so the tree keeps the strip as one thing — and it has to,
+    // because the content is drawn **twice**: that is how the seam is hidden,
+    // and a reader given both copies would be read the same sentence twice in
+    // a row. The second pass is marked presentational where it is built.
+    ui.tag(id).accessible({.role = Role::Group, .name = options.name});
 
     // Advanced, not derived. Wrapped at the stride so the number stays small
     // however long the application has been open — a float counting pixels
@@ -72,7 +76,15 @@ bool marquee(Ui& ui, const Interaction& input, std::string_view id, MarqueeState
         // Only the first is measured. The second is the same content and would
         // report the same width, and two nodes answering to one tag is a
         // question with two answers.
-        if (copy == 0) ui.tag(passId).ignoresPointer();
+        //
+        // It is also hidden from the accessibility tree, for the same reason
+        // pointed the other way: the second pass exists to hide a seam, and a
+        // reader handed both copies is read the same sentence twice.
+        if (copy == 0) {
+            ui.tag(passId).ignoresPointer();
+        } else {
+            ui.accessible({.hidden = true});
+        }
         content(ui);
         (void)laneScope;
     }

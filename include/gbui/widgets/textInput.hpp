@@ -69,6 +69,15 @@ struct TextInputOptions {
     /** What the box accepts. Everything below marked for one type is ignored by
      *  the others. */
     InputType type = InputType::Text;
+    /**
+     * What this is called, for a reader who cannot see the caption beside it.
+     *
+     * Unnecessary when a `label` or a `field` names it — those attach the
+     * relation, and a name given twice is a name read out twice. Necessary the
+     * rest of the time, and the placeholder is not a substitute: a box named by
+     * its placeholder loses its name the moment somebody types in it.
+     */
+    std::string_view name{};
     /** Shown while the text is empty. It steps aside once the box has the
      *  keyboard: a hint you are being asked to type over is noise the moment
      *  you start. */

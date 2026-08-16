@@ -15,6 +15,14 @@ bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checke
     const bool ring = input.isFocusVisible(id);
 
     auto row = controlRow(ui, id, options.disabled);
+    // On the row rather than on the box, because the row is what Tab lands on
+    // and what a click activates. Announcing the drawn square instead would
+    // name a node the keyboard can never reach.
+    ui.accessible({
+        .role = Role::Checkbox,
+        .name = options.label,
+        .state = {.checked = flag(checked), .disabled = flag(options.disabled)},
+    });
     {
         const float side = options.size > 0.0f ? options.size : ui.design().checkboxSize;
         Style box;

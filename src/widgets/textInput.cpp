@@ -263,6 +263,32 @@ TextInputResult textInput(Ui& ui, const Interaction& input, std::string_view id,
 
     auto scope = ui.scope(box);
     ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
+    // `SpinButton` for a number, `TextInput` for the other two: ARIA draws the
+    // line in the same place, and a reader on a spin button is told the arrows
+    // are there. The password form has no role of its own anywhere — a screen
+    // reader learns it is a password from the platform, which is stage 5's job
+    // and not something a role can say.
+    //
+    // The placeholder is the description and never the name. A box named by its
+    // placeholder is a box that loses its name the moment somebody types in it,
+    // which is the single most common way this is got wrong on the web.
+    ui.accessible({
+        .role = number ? Role::SpinButton : Role::TextInput,
+        .name = options.name,
+        .description = options.placeholder,
+        .state = {.disabled = flag(options.disabled),
+                  .readOnly = flag(options.readOnly),
+                  .invalid = flag(options.invalid)},
+        // A number carries its bounds; the other two have none, which
+        // `minimum == maximum` says. A password reports no value at all — the
+        // whole point of the bullets is that the string is not on offer, and a
+        // tree that carried it would hand back what the screen refuses to show.
+        .value = {.present = options.type != InputType::Password,
+                  .now = number ? result.value : 0.0,
+                  .minimum = number ? options.minimum : 0.0,
+                  .maximum = number ? options.maximum : 0.0,
+                  .text = state.text},
+    });
 
     if (options.leading) {
         icon(ui, *options.leading, {.color = Token::TextMuted, .size = 14.0f});

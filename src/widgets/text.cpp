@@ -79,7 +79,16 @@ NodeId sectionHeading(Ui& ui, std::string_view value) {
     options.color = Token::TextMuted;
     options.weight = FontWeight::SemiBold;
     options.size = 11.0f;
-    return text(ui, value, options);
+    const NodeId id = text(ui, value, options);
+    // The one run of text in this file that carries a role.
+    //
+    // A plain run does not, and that is deliberate: a `Node` already holds its
+    // string, so the accessibility tree reads the text straight off it and a
+    // record per run would double what a text-heavy screen costs to say nothing
+    // new. A heading is different — "UNSTAGED (1)" is a landmark a reader jumps
+    // between, and nothing about the node says so.
+    ui.accessible({.role = Role::Heading, .name = value});
+    return id;
 }
 
 }  // namespace gbui

@@ -190,10 +190,24 @@ NodeId buildButton(Ui& ui, const Interaction* input, std::string_view label,
     if (ripple) style.overflow = Overflow::Hidden;
 
     auto scope = ui.scope(style);
-    if (!options.id.empty()) ui.tag(options.id);
+    // **A button was never a Tab stop**, and had not been since focus was
+    // built. `activated` gives every control Space and Return once it has the
+    // keyboard, and nothing could ever give the keyboard to a button — so the
+    // most ordinary control in the set was reachable by pointer alone. Focus is
+    // by tag, so an untagged button still cannot be one; that is the contract
+    // `Node::focusable` states and not a second gap.
+    if (!options.id.empty()) ui.tag(options.id).focusable(!options.disabled);
     // On the button itself, not only on a tagged one: an unnamed button is
     // still a button under the pointer.
     ui.cursor(style.cursorHint);
+    // A button's name is its label, and an icon-only button has none — which is
+    // the one case where the caller has to say. Nothing is invented here: a
+    // name guessed from a glyph would be a guess a reader cannot check.
+    ui.accessible({
+        .role = Role::Button,
+        .name = options.name.empty() ? label : options.name,
+        .state = {.disabled = flag(options.disabled)},
+    });
 
     if (ripple) drawRipple(ui, *input, palette, style, options);
 

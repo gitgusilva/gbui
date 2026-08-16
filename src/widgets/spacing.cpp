@@ -24,7 +24,12 @@ NodeId divider(Ui& ui, Direction containerDirection) {
         style.height = kAuto;
     }
     style.radius = 0.0f;
-    return ui.add(style);
+    const NodeId id = ui.add(style);
+    // A rule is a boundary, and a boundary is the one purely visual thing a
+    // reader still needs told about — it is what says two lists are two lists.
+    // A `spacer` above says nothing, because empty space is not a boundary.
+    ui.role(Role::Separator);
+    return id;
 }
 
 }  // namespace gbui

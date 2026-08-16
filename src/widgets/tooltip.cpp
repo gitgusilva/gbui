@@ -75,7 +75,16 @@ void tooltip(Ui& ui, const Interaction& input, std::string_view anchorId, std::s
     surface.border = Border{kBorder, Fill{Token::BorderStrong}};
 
     auto scope = ui.scope(surface);
-    ui.tag(id).ignoresPointer();
+    // `describes` points it back at what it is about, so the anchor picks it up
+    // as its description — which is the only way a tooltip reaches a reader at
+    // all. Nothing hovers for them: the box only exists while a pointer is
+    // resting on the anchor, and the relation is what makes it something the
+    // anchor carries rather than a rectangle that appears out of nowhere.
+    ui.tag(id).ignoresPointer().accessible({
+        .role = Role::Tooltip,
+        .name = text,
+        .relations = {.describes = anchorId},
+    });
     gbui::text(ui, text,
                {.color = Token::TextStrong, .size = kFontSize,
                 .overflow = options.wrap ? TextOverflow::Wrap : TextOverflow::Ellipsis});

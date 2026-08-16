@@ -24,6 +24,20 @@ std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::str
 
     auto scope = ui.scope(box);
     ui.tag(id).cursor(box.cursorHint);
+    // `labels`, not `labelledBy`: the caption is built before the control it
+    // names and cannot reach into it, so it says which way round it goes and
+    // the accessibility tree turns it over. `<label for>` is the same shape.
+    //
+    // `required` rides the same edge, and for the same reason. The asterisk
+    // here means "the thing this names is required" — it is a statement about
+    // the control, drawn on the caption because that is where there is room for
+    // it, and it belongs on the control in the tree.
+    ui.accessible({
+        .role = Role::Label,
+        .name = text,
+        .state = {.required = options.required ? Flag::True : Flag::Unset},
+        .relations = {.labels = options.forId},
+    });
     gbui::text(ui, text, {.color = options.color, .size = options.size});
     if (options.required) {
         gbui::text(ui, "*", {.color = Token::Removed, .size = options.size});

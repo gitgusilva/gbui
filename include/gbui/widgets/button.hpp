@@ -27,6 +27,17 @@ struct ButtonOptions {
     float iconSize = 0.0f;
     std::string_view id{};
     /**
+     * What a reader who cannot see it is told this button is called.
+     *
+     * The label, unless it is given — which leaves exactly one case where the
+     * caller must say something: **an icon-only button, which has no label to
+     * borrow.** Nothing is guessed from the glyph; a name inferred from
+     * `Icon::Trash` would be a guess the reader has no way to check, and
+     * "button, button, button" across a toolbar is the failure this exists to
+     * stop.
+     */
+    std::string_view name{};
+    /**
      * A circle of ink that grows from where the pointer went down.
      *
      * Unset — the normal case — asks the active `Design`: Material throws ink,

@@ -125,6 +125,18 @@ DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_
     {
         auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
+        // A combo box for the reason `dateField` gives: it holds a value and
+        // opens a list of them, and `expanded` is the only thing that says the
+        // panel is up.
+        ui.accessible({
+            .role = Role::ComboBox,
+            .description = options.placeholder,
+            .state = {.expanded = flag(state.open), .disabled = flag(options.disabled)},
+            .value = {.present = true,
+                      .text = hasValue ? formatDateTime(selected, options.pattern,
+                                                        options.date.locale, options.time.locale)
+                                       : std::string{}},
+        });
         icon(ui, Icon::ClockFading, {.color = Token::TextMuted, .size = 14.0f});
         // Muted for the placeholder and not for the value: that contrast is the
         // whole of how a reader tells "nothing chosen" from "chosen".

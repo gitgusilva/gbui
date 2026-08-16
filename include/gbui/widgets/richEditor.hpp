@@ -145,6 +145,9 @@ struct RichEditorOptions {
     float minHeight = 220.0f;
     float height = kAuto;
     float grow = 0.0f;
+    /** What is being written — "Release notes", "Comment". An editor with no
+     *  name is the largest unlabelled thing on most screens. */
+    std::string_view name{};
 };
 
 struct RichEditorResult {

@@ -118,6 +118,15 @@
         "optional": false
       },
       {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What a reader who cannot see it is told this button is called. The label, unless it is given \u2014 which leaves exactly one case where the caller must say something: **an icon-only button, which has no label to borrow.** Nothing is guessed from the glyph; a name inferred from `Icon::Trash` would be a guess the reader has no way to check, and \"button, button, button\" across a toolbar is the failure this exists to stop.",
+        "optional": false
+      },
+      {
         "name": "ripple",
         "kind": "Bool",
         "type": "std::optional<bool>",
@@ -647,6 +656,15 @@
         "choices": [],
         "doc": "Phase for the indeterminate form, in turns. Feed it a clock.",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is progressing \u2014 \"Cloning\", \"Uploading\". A bar with no name is a percentage with nothing attached to it.",
+        "optional": false
       }
     ]
   },
@@ -709,6 +727,15 @@
     "container": false,
     "interactive": true,
     "properties": [
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What this is called, for a reader who cannot see the caption beside it. Unnecessary when a `label` or a `field` names it \u2014 those attach the relation, and a name given twice is a name read out twice. Necessary the rest of the time, and the placeholder is not a substitute: a box named by its placeholder loses its name the moment somebody types in it.",
+        "optional": false
+      },
       {
         "name": "placeholder",
         "kind": "Text",
@@ -881,6 +908,24 @@
         "default": "2",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What this slider is called, for a reader who cannot see the caption beside it. Unnecessary when a `label` or a `field` names it \u2014 those attach the relation instead.",
+        "optional": false
+      },
+      {
+        "name": "valueText",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What a reader hears instead of the number \u2014 \"70 percent\", \"3 of 8\". Empty falls back to the number, which is right for a bare fraction and wrong for everything with a unit. The toolkit cannot supply this: it has no locale to spell a unit in and no idea what the number counts.",
         "optional": false
       }
     ]
@@ -1179,6 +1224,15 @@
         "optional": false
       },
       {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What this is called, for a reader who cannot see the caption beside it. Unnecessary when a `label` or a `field` names it \u2014 those attach the relation, and a name given twice is a name read out twice. Necessary the rest of the time, and the placeholder is not a substitute: a box named by its placeholder loses its name the moment somebody types in it.",
+        "optional": false
+      },
+      {
         "name": "placeholder",
         "kind": "Text",
         "type": "std::string_view",
@@ -1352,6 +1406,15 @@
     "container": false,
     "interactive": true,
     "properties": [
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What this is called, for a reader who cannot see the caption beside it. Unnecessary when a `label` or a `field` names it \u2014 those attach the relation, and a name given twice is a name read out twice. Necessary the rest of the time, and the placeholder is not a substitute: a box named by its placeholder loses its name the moment somebody types in it.",
+        "optional": false
+      },
       {
         "name": "placeholder",
         "kind": "Text",
@@ -1727,6 +1790,24 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "role",
+        "kind": "Opaque",
+        "type": "Role",
+        "default": "Role::None",
+        "choices": [],
+        "doc": "What this container is to a reader who cannot see it. `None` by default, and that is the right default for the general container: most boxes are layout, and a tree full of anonymous groups is a tree a reader has to walk through rather than one they can navigate. Set it where the box *is* something \u2014 a `Form`, a `List`, a named `Group`, a `Figure` around a drawing.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What it is called. A `Group` with no name is not worth announcing, and the tree treats it as though the role were `None`.",
+        "optional": false
       }
     ]
   },
@@ -1859,6 +1940,15 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the strip is showing \u2014 \"Now playing\", \"Market\". The content itself reaches a reader through the tree; this says what the band is.",
         "optional": false
       }
     ]
@@ -2103,6 +2193,15 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the region is, for a reader who cannot see a scrollbar. Only used when `focusable`, since that is the only time the region is a place the keyboard can be.",
+        "optional": false
       }
     ]
   },
@@ -2234,6 +2333,15 @@
         "default": "kAuto",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the table is of \u2014 \"Commits by author\". A grid of numbers with no name is the hardest thing on a screen to make sense of by ear.",
         "optional": false
       }
     ]
@@ -2556,6 +2664,15 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the list is of \u2014 \"Commits\". Every row reports its position out of `count`, so a reader hears \"3 of 50 000\" and not \"3 of the fourteen that happen to be built\".",
+        "optional": false
       }
     ]
   },
@@ -2647,6 +2764,15 @@
         "default": "true",
         "choices": [],
         "doc": "Whether Tab can land on it. A list whose owner drives the highlight \u2014 a select \u2014 turns this off, so Tab leaves the control instead of walking into an open popup and back out of the window's order.",
+        "optional": false
+      },
+      {
+        "name": "role",
+        "kind": "Opaque",
+        "type": "Role",
+        "default": "Role::MenuItem",
+        "choices": [],
+        "doc": "What a reader is told this row is. The same distinction `checkSide` draws visually, and it has to be said separately because a screen reader announces the two differently: a **menu** holds commands \u2014 \"New branch, menu item\" \u2014 and a **select** holds values, where the reader also wants \"option, three of twelve\". A command that toggles is `MenuItemCheckbox`, which is what makes `selected` announce \"not checked\" instead of saying nothing.",
         "optional": false
       }
     ]
@@ -2862,6 +2988,24 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "role",
+        "kind": "Opaque",
+        "type": "Role",
+        "default": "Role::None",
+        "choices": [],
+        "doc": "What the surface is, to a reader who cannot see it float. `None` by default and on purpose: a popover is a *placement*, not a kind of thing, and the same box holds a menu, a list of values and a calendar. Whoever opened it knows which \u2014 `select` says `ListBox`, a context menu says `Menu` \u2014 and a default of \"menu\" would put that word in front of every date picker in the tree.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What it is called, when the role is worth announcing.",
+        "optional": false
       }
     ]
   },
@@ -3056,6 +3200,15 @@
         "default": "10.0f",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What colour this is *of* \u2014 \"Accent\", \"Series 3\". The value announces itself as a hex code; only the caller knows what it colours.",
         "optional": false
       }
     ]
@@ -3457,6 +3610,15 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is being written \u2014 \"Release notes\", \"Comment\". An editor with no name is the largest unlabelled thing on most screens.",
+        "optional": false
       }
     ]
   },
@@ -3760,6 +3922,15 @@
         "choices": [],
         "doc": "The key drawn under the chart, and the focus a click on it gives.",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
+        "optional": false
       }
     ]
   },
@@ -3940,6 +4111,15 @@
         "default": "nullptr",
         "choices": [],
         "doc": "Ties this chart's readout to the other charts sharing the same `ChartLink`, so pointing at a sample in one points at it in all of them. Null leaves the chart on its own.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
         "optional": false
       }
     ]
@@ -4195,6 +4375,15 @@
         "choices": [],
         "doc": "The readout beside the hovered wedge. A donut's legend already names every slice, so this one is about the *number* \u2014 which the legend has no room for once there are more than a handful.",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
+        "optional": false
       }
     ]
   },
@@ -4338,6 +4527,15 @@
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
+        "optional": false
       }
     ]
   },
@@ -4464,6 +4662,15 @@
         "default": "",
         "choices": [],
         "doc": "The key drawn under the chart, and the focus a click on it gives.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
         "optional": false
       }
     ]
@@ -4602,6 +4809,15 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
         "optional": false
       }
     ]
@@ -4772,6 +4988,15 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the chart is of \u2014 \"Revenue by month\". A chart is the one thing on a screen a reader gets nothing from: the shapes carry all of it, and the numbers behind them are the caller's. A name and a `Figure` role are the least that makes it navigable, and they are not the whole answer \u2014 see the note in `docs/reference/accessibility`.",
         "optional": false
       }
     ]

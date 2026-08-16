@@ -121,6 +121,9 @@ struct TableOptions {
     bool columnLines = false;
     float grow = 1.0f;
     float height = kAuto;
+    /** What the table is of — "Commits by author". A grid of numbers with no
+     *  name is the hardest thing on a screen to make sense of by ear. */
+    std::string_view name{};
 };
 
 struct TableResult {

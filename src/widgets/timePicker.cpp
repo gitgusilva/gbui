@@ -137,6 +137,10 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
         view.padding = Edges::all(4.0f);
         view.scrollbarWidth = 6.0f;
         auto scrollScope = scrollArea(ui, input, columnId, scroll, view);
+        // Each column is a list of values, and the part it sets is its name:
+        // three unlabelled columns of two-digit numbers are three columns a
+        // reader cannot tell apart.
+        ui.accessible({.role = Role::ListBox, .name = part});
 
         for (std::size_t i = 0; i < values.size(); ++i) {
             const int value = values[i];
@@ -160,6 +164,13 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
 
             auto cellScope = ui.scope(cell);
             ui.tag(rowId).cursor(cell.cursorHint);
+            ui.accessible({
+                .role = Role::Option,
+                .name = labelFor(value),
+                .state = {.selected = flag(chosen), .disabled = flag(!enabled)},
+                .positionInSet = i + 1,
+                .setSize = values.size(),
+            });
             text(ui, labelFor(value),
                  {.color = chosen ? Token::AccentFg : Token::Text,
                   .weight = chosen ? FontWeight::SemiBold : FontWeight::Regular,
@@ -245,6 +256,13 @@ TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view i
             cell.cursorHint = Cursor::Pointer;
             auto cellScope = ui.scope(cell);
             ui.tag(sideId).cursor(Cursor::Pointer);
+            // Two mutually exclusive halves of the day: a radio pair, not two
+            // buttons. `checked` is what tells a reader which one is in force.
+            ui.accessible({
+                .role = Role::Radio,
+                .name = afternoon ? options.locale.pm : options.locale.am,
+                .state = {.checked = flag(chosen)},
+            });
             text(ui, afternoon ? options.locale.pm : options.locale.am,
                  {.color = chosen ? Token::AccentFg : Token::Text,
                   .weight = FontWeight::SemiBold, .size = 11.0f});

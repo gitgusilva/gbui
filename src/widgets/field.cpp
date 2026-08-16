@@ -49,10 +49,16 @@ FieldResult field(Ui& ui, const Interaction& input, std::string_view id,
              {.color = invalid ? Token::Removed : Token::TextMuted,
               .size = 11.5f,
               .overflow = TextOverflow::Wrap});
-        // Tagged so the accessibility work can point the control's
-        // `describedBy` at it: a message nothing refers to is a message a
-        // screen reader never reaches.
-        ui.tag(std::string(id) + (invalid ? ".error" : ".help")).ignoresPointer();
+        // Tagged, and pointed at the control it is about: a message nothing
+        // refers to is a message a screen reader never reaches. `describes`
+        // rather than the control's own `describedBy`, because the message is
+        // built after the control and a component never reaches into another
+        // component's node — the same edge, stated from the end that knows it.
+        ui.tag(std::string(id) + (invalid ? ".error" : ".help")).ignoresPointer().accessible({
+            .role = invalid ? Role::Alert : Role::Label,
+            .name = message,
+            .relations = {.describes = options.forId},
+        });
     }
 
     (void)scope;

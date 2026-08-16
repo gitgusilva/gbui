@@ -22,6 +22,15 @@ bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on,
                                     {.duration = 0.18f, .easing = Easing::EaseOut});
 
     auto row = controlRow(ui, id, options.disabled);
+    // `Switch`, not `Checkbox`. The difference is the one the header argues
+    // for — "on now" against "will apply" — and it is exactly the difference a
+    // screen reader announces, so a switch that claimed to be a checkbox would
+    // undo the distinction this component exists for.
+    ui.accessible({
+        .role = Role::Switch,
+        .name = options.label,
+        .state = {.checked = flag(on), .disabled = flag(options.disabled)},
+    });
     {
         const Design& design = ui.design();
         // The caller can still pin a size; unset, the design decides — which is

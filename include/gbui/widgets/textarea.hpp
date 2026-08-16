@@ -30,6 +30,15 @@ struct TextareaState {
 };
 
 struct TextareaOptions {
+    /**
+     * What this is called, for a reader who cannot see the caption beside it.
+     *
+     * Unnecessary when a `label` or a `field` names it — those attach the
+     * relation, and a name given twice is a name read out twice. Necessary the
+     * rest of the time, and the placeholder is not a substitute: a box named by
+     * its placeholder loses its name the moment somebody types in it.
+     */
+    std::string_view name{};
     std::string_view placeholder{};
     bool disabled = false;
     bool readOnly = false;

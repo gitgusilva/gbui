@@ -31,6 +31,24 @@ bool menuItem(Ui& ui, const Interaction& input, std::string_view id, std::string
 
     auto scope = ui.scope(row);
     ui.tag(id).focusable(options.focusable && !options.disabled).cursor(row.cursorHint);
+    // A plain command says nothing about being checked unless it *is*, because
+    // "not checked" on every row of a menu is nine words of nothing. A row that
+    // is a checkbox says so either way, which is the whole difference between
+    // `MenuItem` and `MenuItemCheckbox`.
+    const bool listOption = options.role == Role::Option;
+    const bool toggles = options.role == Role::MenuItemCheckbox ||
+                         options.role == Role::MenuItemRadio;
+    ui.accessible({
+        .role = options.role,
+        .name = label,
+        .description = options.shortcut,
+        .state = {.checked = listOption           ? Flag::Unset
+                             : toggles            ? flag(options.selected)
+                             : options.selected   ? Flag::True
+                                                  : Flag::Unset,
+                  .selected = listOption ? flag(options.selected) : Flag::Unset,
+                  .disabled = flag(options.disabled)},
+    });
 
     const bool tickLeading =
         options.selected && options.checkSide == CheckSide::Leading && !options.leading;
@@ -79,6 +97,10 @@ void menuSeparator(Ui& ui) {
     rule.radius = 0.0f;
     rule.background = Fill{Token::Border};
     ui.add(rule);
+    // A rule between groups is a boundary a reader should hear about: it is the
+    // only thing saying that "Delete branch" is not in the same group as the
+    // three items above it.
+    ui.role(Role::Separator);
 }
 
 }  // namespace gbui

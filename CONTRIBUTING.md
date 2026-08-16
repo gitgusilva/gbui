@@ -49,6 +49,19 @@ be asked to remove it whatever else it does.
 6. **Name what is missing.** A gap admitted in a header comment is a feature. A
    half-built one that silently misbehaves is a liability, and this codebase
    would rather ship the honest sentence.
+7. **Every component carries working accessibility, in the commit that touches
+   it.** A new component ships with one; a component being changed that has none
+   gets one then, and not in a follow-up nobody writes. "Working" means the real
+   thing through `ui.accessible(...)` — a `Role`, a name, whatever state and
+   value apply, and the relations that attach it to its label and its message —
+   with a case in `tests/accessibilityTest.cpp` asserting it. A role with no
+   name, or a state that never updates, is not accessibility; it is a control
+   that lies about having some.
+
+   This is the one rule that cannot be caught up on later. A toolkit is only as
+   reachable as its least reachable control, and the gap re-opens one component
+   at a time. See [the accessibility reference](docs/reference/accessibility.md)
+   for what each role expects.
 
 [Guide → Writing a component](docs/guide/writing-a-component.md) walks through
 a real one, with the checklist to run before calling it done.

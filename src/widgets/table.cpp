@@ -200,7 +200,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
     outer.radius = 6.0f;
     outer.overflow = Overflow::Hidden;
     auto scope = ui.scope(outer);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Table, .name = options.name});
 
     // Everything below scrolls sideways together. The header has to be inside
     // this and outside the *vertical* one: it must follow the columns left and
@@ -224,7 +224,7 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
         header.shrink = 0.0f;
         header.background = Fill{Token::BgElevated};
         auto headerScope = ui.scope(header);
-        ui.tag(headerId);
+        ui.tag(headerId).role(Role::Row);
 
         for (std::size_t i = 0; i < columns.size(); ++i) {
             const Column& column = columns[i];
@@ -255,6 +255,18 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                 head.cursorHint = column.sortable ? Cursor::Pointer : Cursor::Default;
                 auto headScope = ui.scope(head);
                 ui.tag(cellId).cursor(head.cursorHint);
+                // `None` on a sortable column that is not the one in force is
+                // the whole point of `Sort` having four values: it says "you can
+                // press this", which is what the permanent arrow says visually.
+                // A column that cannot be sorted says nothing at all.
+                ui.accessible({
+                    .role = Role::ColumnHeader,
+                    .name = column.title,
+                    .state = {.sorted = !column.sortable ? Sort::Unset
+                                        : !sorted        ? Sort::None
+                                        : state.ascending ? Sort::Ascending
+                                                          : Sort::Descending},
+                });
 
                 text(ui, column.title,
                      {.color = sorted ? Token::TextStrong : Token::TextMuted,
@@ -368,7 +380,10 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
             line.background = Fill{Token::BgElevated, 0.45f};
         line.cursorHint = Cursor::Pointer;
         auto lineScope = rowUi.scope(line);
-        rowUi.tag(rowId).cursor(Cursor::Pointer);
+        rowUi.tag(rowId).cursor(Cursor::Pointer).accessible({
+            .role = Role::Row,
+            .state = {.selected = flag(chosen)},
+        });
 
         for (std::size_t i = 0; i < columns.size(); ++i) {
             Style box;
@@ -382,6 +397,10 @@ TableResult table(Ui& ui, const Interaction& input, std::string_view id,
                           : columns[i].align == TextAlign::Center ? Justify::Center
                                                                   : Justify::Start;
             auto boxScope = rowUi.scope(box);
+            // The wrapper is the cell, not whatever the callback builds inside
+            // it: a caller may draw a badge, a button or nothing at all, and the
+            // grid position belongs to the box either way.
+            rowUi.role(Role::Cell);
             cell(rowUi, row, i);
             (void)boxScope;
         }

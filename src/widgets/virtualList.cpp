@@ -34,7 +34,11 @@ VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id,
     // Opening the scroll view first is what resolves the wheel, the drag and
     // the keys into `state.offset`, so the slice below is chosen from where the
     // list has just been moved to rather than from where it was.
+    scroll.name = options.name;
     auto content = scrollArea(ui, input, id, state, scroll);
+    // The list is the scroll view's content, not the viewport: the viewport is
+    // the window onto it, and a reader asking "how many" means the list.
+    ui.accessible({.role = Role::List, .name = options.name});
 
     VirtualSlice slice;
     slice.total = options.count;
@@ -78,6 +82,18 @@ VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id,
         slot.height = options.rowHeight;
         slot.shrink = 0.0f;
         auto scope = ui.scope(slot);
+        // **The slot is the item, and it is the only node that can be.**
+        //
+        // Fifty thousand commits are fourteen nodes, so a reader told "row 3 of
+        // 14" would be told the size of the *window* rather than the size of the
+        // list — and then told it again for the rest of the list. Only the
+        // caller has the real count; the slot is where it can be attached,
+        // because whatever the row callback builds is this item's content.
+        ui.accessible({
+            .role = Role::ListItem,
+            .positionInSet = index + 1,
+            .setSize = options.count,
+        });
         row(ui, index);
         (void)scope;
     }

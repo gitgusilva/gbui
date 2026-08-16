@@ -1,6 +1,8 @@
 // A progress bar, determinate or not.
 #pragma once
 
+#include <string_view>
+
 #include "gbui/scene/ui.hpp"
 
 namespace gbui {
@@ -14,6 +16,9 @@ struct ProgressOptions {
     Token color = Token::Accent;
     /** Phase for the indeterminate form, in turns. Feed it a clock. */
     float phase = 0.0f;
+    /** What is progressing — "Cloning", "Uploading". A bar with no name is a
+     *  percentage with nothing attached to it. */
+    std::string_view name{};
 };
 
 /** Not an input, but it belongs with them: the same track, the same tokens. */

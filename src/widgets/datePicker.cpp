@@ -216,6 +216,12 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
     auto scope = ui.scope(panel);
     ui.tag(id);
 
+    // Drawn once in the header and said once to the grid: the month a reader
+    // has arrowed into is the grid's name, and it changes under them.
+    const std::string monthLabel =
+        std::string(options.locale.months[static_cast<std::size_t>(state.visible.month - 1)]) +
+        " " + std::to_string(state.visible.year);
+
     // ---- the header --------------------------------------------------------
     {
         Style header;
@@ -228,7 +234,10 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
         // takes its height for its width and never shrinks — which is the half
         // of this that was right all along. What was missing is something for
         // the row to give *instead*, and that is the month below.
-        button(ui, "", {.leading = Icon::ChevronLeft, .height = 26.0f, .id = previousId});
+        button(ui, "", {.leading = Icon::ChevronLeft,
+                        .height = 26.0f,
+                        .id = previousId,
+                        .name = "Previous month"});
         if (input.clicked(previousId)) state.visible = monthShifted(state.visible, -1);
 
         {
@@ -249,11 +258,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             title.overflow = Overflow::Hidden;
             title.justify = Justify::Center;
             auto titleScope = ui.scope(title);
-            const std::string label =
-                std::string(
-                    options.locale.months[static_cast<std::size_t>(state.visible.month - 1)]) +
-                " " + std::to_string(state.visible.year);
-            text(ui, label,
+            text(ui, monthLabel,
                  {.color = Token::TextStrong,
                   .weight = FontWeight::SemiBold,
                   .size = 13.0f,
@@ -262,7 +267,10 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             (void)titleScope;
         }
 
-        button(ui, "", {.leading = Icon::ChevronRight, .height = 26.0f, .id = nextId});
+        button(ui, "", {.leading = Icon::ChevronRight,
+                        .height = 26.0f,
+                        .id = nextId,
+                        .name = "Next month"});
         if (input.clicked(nextId)) state.visible = monthShifted(state.visible, 1);
         (void)headerScope;
     }
@@ -273,6 +281,20 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
     grid.gap = options.gap;
     auto gridScope = ui.scope(grid);
     ui.tag(gridId).focusable();
+    // The grid is the single keyboard stop — the arrows move a focused day
+    // inside it, exactly as the tab strip works — so it is the node that has to
+    // report which day that is. `Table` rather than a grid role of its own: a
+    // calendar is rows of cells with headers, and inventing a fourth word for
+    // that would be a word nothing else in this file uses.
+    ui.accessible({
+        .role = Role::Table,
+        .name = monthLabel,
+        .relations = {.activeDescendant =
+                          state.focusedDay.valid()
+                              ? std::string_view(std::string(id) + "." +
+                                                 std::to_string(state.focusedDay.serial()))
+                              : std::string_view{}},
+    });
 
     const auto weekRow = [&] {
         Style row;
@@ -293,6 +315,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
 
     {
         auto row = weekRow();
+        ui.role(Role::Row);
         for (int i = 0; i < 7; ++i) {
             const int weekday = (options.locale.firstDayOfWeek + i) % 7;
             Style cell;
@@ -308,6 +331,13 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
             cell.justify = Justify::Center;
             cell.align = Align::Center;
             auto cellScope = ui.scope(cell);
+            // The full name, not the initial that is drawn. "M" is a column a
+            // reader can see at a glance and cannot hear at all — and two of the
+            // seven are the same letter.
+            ui.accessible({
+                .role = Role::ColumnHeader,
+                .name = options.locale.weekdayNames[static_cast<std::size_t>(weekday)],
+            });
             text(ui, options.locale.weekdays[static_cast<std::size_t>(weekday)],
                  {.color = Token::TextMuted, .weight = FontWeight::SemiBold, .size = 11.0f});
             (void)cellScope;
@@ -324,6 +354,7 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
 
     for (int week = 0; week < 6; ++week) {
         auto row = weekRow();
+        ui.role(Role::Row);
         for (int column = 0; column < 7; ++column) {
             const Date day = Date::fromSerial(start + week * 7 + column);
             const bool outside = day.month != state.visible.month;
@@ -351,6 +382,15 @@ DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view i
 
             auto cellScope = ui.scope(cell);
             ui.tag(dayId).cursor(cell.cursorHint);
+            // The whole date, not the number drawn in the cell. "12" tells a
+            // reader nothing they can act on; "Wed 12 Aug 2026" is the answer to
+            // the question they are actually asking, and the grid gives them no
+            // other way to work out the column.
+            ui.accessible({
+                .role = Role::Cell,
+                .name = formatDate(day, "EEE d MMM yyyy", options.locale),
+                .state = {.selected = flag(isSelected), .disabled = flag(!enabled)},
+            });
             const Token colour = isSelected ? Token::AccentFg
                                  : outside  ? Token::TextMuted
                                             : Token::Text;
@@ -425,6 +465,17 @@ DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id,
     {
         auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
+        // A field that opens a calendar is a combo box: it holds a value and
+        // reveals a list of them. `expanded` is what tells a reader the
+        // calendar is open, and nothing else on screen would.
+        ui.accessible({
+            .role = Role::ComboBox,
+            .description = options.placeholder,
+            .state = {.expanded = flag(state.open), .disabled = flag(options.disabled)},
+            .value = {.present = true,
+                      .text = hasValue ? formatDate(selected, options.pattern, options.locale)
+                                       : std::string{}},
+        });
         icon(ui, Icon::ClockFading, {.color = Token::TextMuted, .size = 14.0f});
         // The placeholder is muted and the value is not, which is the whole of
         // how a reader tells "nothing chosen" from "chosen".

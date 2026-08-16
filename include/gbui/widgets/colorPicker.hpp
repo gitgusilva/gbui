@@ -51,6 +51,9 @@ struct ColorPickerOptions {
     float squareHeight = 150.0f;
     float railHeight = 14.0f;
     float gap = 10.0f;
+    /** What colour this is *of* — "Accent", "Series 3". The value announces
+     *  itself as a hex code; only the caller knows what it colours. */
+    std::string_view name{};
 };
 
 struct ColorPickerResult {

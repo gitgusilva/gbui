@@ -55,6 +55,19 @@ struct BoxOptions {
     // identity
     std::string_view id{};
     bool focusable = false;
+    /**
+     * What this container is to a reader who cannot see it.
+     *
+     * `None` by default, and that is the right default for the general
+     * container: most boxes are layout, and a tree full of anonymous groups is
+     * a tree a reader has to walk through rather than one they can navigate.
+     * Set it where the box *is* something — a `Form`, a `List`, a named
+     * `Group`, a `Figure` around a drawing.
+     */
+    Role role = Role::None;
+    /** What it is called. A `Group` with no name is not worth announcing, and
+     *  the tree treats it as though the role were `None`. */
+    std::string_view name{};
 };
 
 /** Opens a container. Everything until the returned scope dies is inside it. */

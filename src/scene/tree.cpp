@@ -50,11 +50,21 @@ std::uint32_t Arena::addShapes(std::vector<Shape> shapes) {
     return first;
 }
 
+Accessibility& Arena::accessibilityFor(NodeId id) {
+    Node& node = nodes_[id.index()];
+    if (node.accessibility == Node::kNoAccessibility) {
+        node.accessibility = static_cast<std::uint32_t>(accessibility_.size());
+        accessibility_.emplace_back();
+    }
+    return accessibility_[node.accessibility];
+}
+
 void Arena::reset() {
     // clear() keeps capacity: the next frame writes over the same pages instead
     // of asking the allocator for them again.
     nodes_.clear();
     shapes_.clear();
+    accessibility_.clear();
     if (stringBlocks_.size() > 1) {
         // Keep one block hot and release the rest, so a single huge frame does
         // not pin its memory for the life of the process.
@@ -65,6 +75,7 @@ void Arena::reset() {
 
 std::size_t Arena::bytesUsed() const {
     std::size_t total = nodes_.capacity() * sizeof(Node);
+    total += accessibility_.capacity() * sizeof(Accessibility);
     for (const auto& block : stringBlocks_) total += block.capacity();
     return total;
 }

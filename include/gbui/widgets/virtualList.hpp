@@ -49,6 +49,10 @@ struct VirtualListOptions {
     float grow = 1.0f;
     float width = kAuto;
     float height = kAuto;
+    /** What the list is of — "Commits". Every row reports its position out of
+     *  `count`, so a reader hears "3 of 50 000" and not "3 of the fourteen that
+     *  happen to be built". */
+    std::string_view name{};
 
     /** The row shape, for `revealRow` and for the arithmetic below. */
     RowMetrics rows() const { return {rowHeight, gap, padding.top}; }

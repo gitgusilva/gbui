@@ -89,6 +89,17 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
 
     auto scope = ui.scope(strip);
     ui.tag(id).focusable();
+    // The strip is one keyboard stop for the whole set — the ARIA roving
+    // tabindex pattern, which this already implements — so it is also the node
+    // that has to say which tab the arrows are on. Without
+    // `activeDescendant` a reader hears "tab list" and never learns which tab.
+    ui.accessible({
+        .role = Role::TabList,
+        .relations = {.activeDescendant = selected < items.size()
+                                              ? std::string_view(std::string(id) + "." +
+                                                                 std::to_string(selected))
+                                              : std::string_view{}},
+    });
 
     const Rect stripFrame = input.frameOf(id);
     Rect activeFrame{};
@@ -144,6 +155,13 @@ std::optional<std::size_t> tabs(Ui& ui, const Interaction& input, std::string_vi
 
         auto tabScope = ui.scope(tab);
         ui.tag(tabId).cursor(tab.cursorHint);
+        // Not focusable, and that is the pattern rather than an omission: the
+        // strip holds the one Tab stop and the arrows move between these.
+        ui.accessible({
+            .role = Role::Tab,
+            .name = item.label,
+            .state = {.selected = flag(active), .disabled = flag(item.disabled)},
+        });
 
         const Token label = item.disabled ? Token::TextMuted
                             : active      ? Token::TextStrong

@@ -10,8 +10,11 @@ void addOverlayExamples(std::vector<Example>& out) {
     out.push_back({"select", [](Ui& ui, const Interaction& input, State& state) {
                        static const std::vector<std::string> branches = {"main", "feat/nord-tuning",
                                                                          "fix/ci-headless"};
-                       if (const SelectResult result = select(ui, input, "catalog.select", branches,
-                                                              state.choice, state.select);
+                       SelectOptions options;
+                       options.name = "Branch";
+                       if (const SelectResult result =
+                               select(ui, input, "catalog.select", branches, state.choice,
+                                      state.select, options);
                            result.chosen) {
                            state.choice = *result.chosen;
                        }

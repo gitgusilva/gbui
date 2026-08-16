@@ -36,6 +36,9 @@ Ui::Scope box(Ui& ui, const BoxOptions& options) {
     if (!options.id.empty()) ui.tag(options.id);
     if (options.focusable) ui.focusable();
     if (options.cursor != Cursor::Default) ui.cursor(options.cursor);
+    if (options.role != Role::None || !options.name.empty()) {
+        ui.accessible({.role = options.role, .name = options.name});
+    }
     return scope;
 }
 

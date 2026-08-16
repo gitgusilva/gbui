@@ -87,7 +87,7 @@ statusPill(ui, FileStatus::Modified);
 text(ui, "themes/nord/theme.json", {.grow = 1.0f});
 ```
 
-## The four rules that example is demonstrating
+## The five rules that example is demonstrating
 
 1. **An options struct, not six parameters.** Call sites stay readable, and
    adding an option later does not break any of them.
@@ -97,6 +97,10 @@ text(ui, "themes/nord/theme.json", {.grow = 1.0f});
    button, an icon. Without it, a crowded row elides it into nothing.
 4. **Containers return the `Scope`; leaves return the `NodeId`.** The caller can
    then tag it, or find it in a test.
+5. **It says what it is.** `ui.accessible({.role = …, .name = …})` on the node
+   the keyboard lands on, beside the `tag` and the `focusable` that already go
+   there. A component that draws itself and never says what it is is a
+   rectangle.
 
 ## A scope closes where it dies
 
@@ -166,6 +170,12 @@ the tree can be thrown away and rebuilt without losing anything.
 
 ## Checklist before it is done
 
+- **Does it say what it is?** Every component carries a `Role`, a name, whatever
+  state and value apply, and the relations that attach it to its label — set
+  with `ui.accessible(...)`, in this commit and not a later one. See
+  [a11y](/reference/accessibility). This is the one item on the list that cannot
+  be caught up on afterwards, and `tests/accessibilityTest.cpp` fails the build
+  for any Tab stop with nothing to announce.
 - Does it re-theme? Load a light theme and look.
 - Does it survive a narrow window? Put it in a row with something that grows.
 - Does it have a header and a source file of its own, both named after it, and

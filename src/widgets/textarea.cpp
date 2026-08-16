@@ -174,6 +174,17 @@ TextEditResult textarea(Ui& ui, const Interaction& input, std::string_view id,
 
     auto scope = ui.scope(box);
     ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
+    // The same role a single line has. ARIA distinguishes the two with
+    // `aria-multiline` rather than with a role, and so does everything
+    // downstream of it; the placeholder is the description for the reason
+    // `textInput` gives.
+    ui.accessible({
+        .role = Role::TextInput,
+        .name = options.name,
+        .description = options.placeholder,
+        .state = {.disabled = flag(options.disabled), .readOnly = flag(options.readOnly)},
+        .value = {.present = true, .text = edit.text},
+    });
 
     {
         ScrollOptions view;

@@ -94,6 +94,11 @@ struct ScrollOptions {
     float minHeight = kAuto;
     float maxHeight = kAuto;
 
+    /** What the region is, for a reader who cannot see a scrollbar. Only used
+     *  when `focusable`, since that is the only time the region is a place the
+     *  keyboard can be. */
+    std::string_view name{};
+
     /** The axis this actually scrolls along, resolved from `axis` and
      *  `direction`. */
     ScrollAxis resolvedAxis() const {

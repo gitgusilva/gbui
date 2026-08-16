@@ -80,6 +80,17 @@ Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_v
 
     auto body = ui.scope(dialog);
     ui.tag(id);
+    // `AlertDialog` when it is the dangerous kind: the difference is whether the
+    // reader was interrupted or asked for this, and it is the one thing a
+    // confirmation has to get across before its buttons are read out.
+    //
+    // **Focus is still not trapped in here**, and a role does not fix that —
+    // Tab walks straight out of the back of the dialog into the page behind it.
+    // That is stage 7, and it is named rather than papered over.
+    ui.accessible({
+        .role = options.danger ? Role::AlertDialog : Role::Dialog,
+        .name = title,
+    });
 
     {
         Style header;
@@ -112,6 +123,10 @@ Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_v
         {
             auto closeScope = ui.scope(close);
             ui.tag(closeId).focusable();
+            // An X has no name to borrow, so it is given one. This is the case
+            // `ButtonOptions::name` exists for, in the one place in the library
+            // that hits it.
+            ui.accessible({.role = Role::Button, .name = "Close"});
             icon(ui, Icon::X, {.color = Token::TextMuted, .size = 14.0f});
             (void)closeScope;
         }

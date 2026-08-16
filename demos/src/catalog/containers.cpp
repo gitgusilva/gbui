@@ -53,7 +53,10 @@ void addContainerExamples(std::vector<Example>& out) {
                        // ever built — which is the difference between this and
                        // the scroll view above.
                        virtualList(ui, input, "catalog.virtual", state.listScroll,
-                                   {.count = 50000, .rowHeight = 26.0f, .height = 140.0f},
+                                   {.count = 50000,
+                                    .rowHeight = 26.0f,
+                                    .height = 140.0f,
+                                    .name = "Commits"},
                                    [](Ui& rowUi, std::size_t index) {
                                        auto row = listRow(rowUi, {.height = 26.0f});
                                        text(rowUi, "commit " + std::to_string(index),
@@ -91,7 +94,8 @@ void addContainerExamples(std::vector<Example>& out) {
                                     {.color = Token::Text, .role = FontRole::Mono, .size = 11.0f});
                                (void)chipScope;
                            }
-                       });
+                       },
+                       {.name = "Market"});
                        (void)scope;
                    }});
 
@@ -155,7 +159,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                 {.role = FontRole::Mono, .align = TextAlign::End, .grow = 1.0f});
                        }
                    },
-                   {.height = 160.0f});
+                   {.height = 160.0f, .name = "Recent commits"});
          }});
 }
 

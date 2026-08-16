@@ -34,6 +34,13 @@ NodeId image(Ui& ui, const Bitmap& source, const ImageOptions& options) {
         // were drawn outside their own clip and painted over the neighbours.
         // One level down they are cut by it.
         auto scope = ui.scope(style);
+        // An empty `alt` is not a missing name, it is a *decorative* picture —
+        // exactly what an empty `alt=""` means in HTML — so it says nothing and
+        // the tree collapses it away. Announcing "image" over a gradient behind
+        // a card is noise a reader has to step through.
+        if (!options.alt.empty()) {
+            ui.accessible({.role = Role::Image, .name = options.alt});
+        }
         Style inner;
         inner.position = Position::Absolute;
         inner.left = 0.0f;

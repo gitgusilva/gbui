@@ -26,6 +26,15 @@ bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::strin
 
     auto scope = ui.scope(row);
     ui.tag(id).focusable(!options.disabled).cursor(row.cursorHint);
+    // The href is the description rather than the name: a reader wants to hear
+    // "Open on GitHub, link" and to be able to ask where it goes, not to have
+    // a URL read out in place of the words on screen.
+    ui.accessible({
+        .role = Role::Link,
+        .name = label,
+        .description = options.href,
+        .state = {.disabled = flag(options.disabled)},
+    });
 
     {
         // The rule is a sibling under the text rather than a text decoration,

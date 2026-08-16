@@ -16,6 +16,19 @@ NodeId progressBar(Ui& ui, const ProgressOptions& options) {
     track.align = Align::Center;
 
     auto scope = ui.scope(track);
+    // An indeterminate bar reports `busy` and no value at all, which is exactly
+    // what it means: something is happening and nobody knows how much of it is
+    // left. Reporting zero instead would announce "0 percent" forever.
+    const bool determinate = options.value >= 0.0;
+    ui.accessible({
+        .role = Role::ProgressBar,
+        .name = options.name,
+        .state = {.busy = flag(!determinate)},
+        .value = {.present = determinate,
+                  .now = std::clamp(options.value, 0.0, 1.0),
+                  .minimum = 0.0,
+                  .maximum = 1.0},
+    });
 
     Style fill;
     fill.height = options.height;

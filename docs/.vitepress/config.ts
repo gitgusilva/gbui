@@ -86,6 +86,7 @@ export default defineConfig({
             { text: 'scene', link: '/reference/scene' },
             { text: 'layout', link: '/reference/layout' },
             { text: 'input', link: '/reference/input' },
+            { text: 'a11y', link: '/reference/accessibility' },
             { text: 'anim', link: '/reference/anim' },
             { text: 'overlay', link: '/reference/overlay' },
             { text: 'paint', link: '/reference/paint' },

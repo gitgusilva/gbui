@@ -181,6 +181,13 @@ Ui::Scope scrollArea(Ui& ui, const Interaction& input, std::string_view id, Scro
     }
     auto scope = ui.scope(viewport);
     ui.tag(id).focusable(options.focusable);
+    // Only when it is a keyboard stop of its own. A viewport nothing can land
+    // on is a clip, and a tree full of anonymous scroll regions is a tree a
+    // reader has to walk through rather than one they can navigate — the same
+    // rule `box` follows for `Group`.
+    if (options.focusable) {
+        ui.accessible({.role = Role::ScrollView, .name = options.name});
+    }
 
     // ---- the bar ----------------------------------------------------------
     // Drawn before the content so the content's own scope can be returned to

@@ -66,6 +66,18 @@ struct PopoverOptions : FloatingOptions {
     bool matchAnchorWidth = false;
     Edges padding = Edges::all(6.0f);
     float gapBetweenItems = 2.0f;
+    /**
+     * What the surface is, to a reader who cannot see it float.
+     *
+     * `None` by default and on purpose: a popover is a *placement*, not a kind
+     * of thing, and the same box holds a menu, a list of values and a calendar.
+     * Whoever opened it knows which — `select` says `ListBox`, a context menu
+     * says `Menu` — and a default of "menu" would put that word in front of
+     * every date picker in the tree.
+     */
+    Role role = Role::None;
+    /** What it is called, when the role is worth announcing. */
+    std::string_view name{};
 };
 
 /** Returns a scope, so its contents are written inside the braces like any

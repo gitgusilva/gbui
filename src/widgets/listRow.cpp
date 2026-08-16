@@ -21,7 +21,15 @@ Ui::Scope listRow(Ui& ui, const ListRowOptions& options) {
     if (!options.id.empty()) style.cursorHint = Cursor::Pointer;
 
     auto scope = ui.scope(style);
-    if (!options.id.empty()) ui.tag(options.id).cursor(Cursor::Pointer);
+    if (!options.id.empty()) {
+        // The same line the cursor is drawn on: a row with an id is a row
+        // something can happen to, and one without is layout. Only the first is
+        // a `ListItem`, and only the first has a selection worth announcing.
+        ui.tag(options.id).cursor(Cursor::Pointer).accessible({
+            .role = Role::ListItem,
+            .state = {.selected = flag(options.selected)},
+        });
+    }
     return scope;
 }
 

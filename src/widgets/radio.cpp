@@ -14,6 +14,13 @@ bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected,
     const bool focusRing = input.isFocusVisible(id);
 
     auto row = controlRow(ui, id, options.disabled);
+    // `checked`, not `selected`: ARIA's radio carries the first, and a screen
+    // reader announces "selected" from it. `selected` belongs to rows and tabs.
+    ui.accessible({
+        .role = Role::Radio,
+        .name = options.label,
+        .state = {.checked = flag(selected), .disabled = flag(options.disabled)},
+    });
     {
         const float side = options.size > 0.0f ? options.size : ui.design().radioSize;
         Style ring;

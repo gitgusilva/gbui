@@ -326,7 +326,16 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
     frame.radius = 6.0f;
     frame.overflow = Overflow::Hidden;
     auto scope = ui.scope(frame);
-    ui.tag(id);
+    // The same role a plain text box has, for the reason `textarea` gives:
+    // ARIA has no separate role for a rich one, and everything downstream
+    // learns about the marks from the content rather than from the role.
+    //
+    // **What it does not yet report is the marks under the caret** — bold, the
+    // heading level, which list a block is in. That is a live property of a
+    // *position* rather than of the node, and there is nowhere on this record
+    // to put it; it wants the accessibility tree of stage 4 and a text-range
+    // interface after that. Named here so it is not mistaken for done.
+    ui.tag(id).accessible({.role = Role::TextInput, .name = options.name});
 
     // ---- the toolbar -------------------------------------------------------
     if (options.showToolbar) {
@@ -369,9 +378,16 @@ RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view i
                     labels.emplace_back(choices[c].label);
                     if (choices[c].type == active.type) current = c;
                 }
+                // Written out rather than braced: `SelectOptions` derives from
+                // `FloatingOptions`, so it is not an aggregate a designated
+                // initialiser can reach into, and the positional form silently
+                // means something different the day a field is added in front.
+                SelectOptions blockStyle;
+                blockStyle.name = "Block style";
+                blockStyle.placeholder = "Block style";
+                blockStyle.width = 124.0f;
                 const SelectResult picked =
-                    select(ui, input, itemId, labels, current, state.blockStyle,
-                           {{}, "Block style", false, 124.0f});
+                    select(ui, input, itemId, labels, current, state.blockStyle, blockStyle);
                 if (picked.chosen && *picked.chosen < choices.size()) {
                     setType(choices[*picked.chosen].type);
                 }

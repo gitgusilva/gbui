@@ -151,6 +151,20 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         square.cursorHint = Cursor::Crosshair;
         auto squareScope = ui.scope(square);
         ui.tag(squareId).cursor(Cursor::Crosshair);
+        // Two dimensions in one control, and no role for that anywhere — ARIA
+        // has `slider` and nothing two-dimensional. So it says what it *is*
+        // rather than pretending to be one axis of itself, and the value it
+        // reports is the colour, which is the answer either way.
+        //
+        // **This is not enough, and the gap is named rather than dressed up:**
+        // the square has no keyboard at all, here or in the drag handling
+        // above. A pointer is currently the only way to reach it. That is
+        // stage 6 — the widget-by-widget keyboard audit — and it is on the list.
+        ui.accessible({
+            .role = Role::Group,
+            .name = "Saturation and brightness",
+            .value = {.present = true, .text = current.hex()},
+        });
 
         // White across, black down. Two gradients over the hue make the ramp
         // two-dimensional without the painter needing a shader.
@@ -185,6 +199,14 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         track.cursorHint = Cursor::Pointer;
         auto trackScope = ui.scope(track);
         ui.tag(railId).cursor(Cursor::Pointer);
+        // A rail is a slider in everything but its drawing, so it says so and
+        // reports where it is on its own scale — 0 to 360 for the hue, 0 to 1
+        // for the alpha, which is what `position` already carries.
+        ui.accessible({
+            .role = Role::Slider,
+            .name = chequered ? "Opacity" : "Hue",
+            .value = {.present = true, .now = position, .minimum = 0.0, .maximum = 1.0},
+        });
         if (chequered && !frame.empty()) chequer(ui, frame.width, frame.height);
         {
             Style fill;
@@ -274,6 +296,14 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
             swatch.cursorHint = Cursor::Pointer;
             ui.add(swatch);
             ui.tag(swatchId).cursor(Cursor::Pointer);
+            // The hex is the name here rather than the value: a swatch is a
+            // button that sets a colour, and there is nothing else to call it.
+            ui.accessible({
+                .role = Role::Button,
+                .name = options.swatches[i].hex(),
+                .positionInSet = i + 1,
+                .setSize = options.swatches.size(),
+            });
             if (input.clicked(swatchId)) {
                 // A swatch sets the hue too, which a round trip through RGB
                 // would lose for a grey — so it is taken from the swatch and
@@ -323,6 +353,17 @@ ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view 
     {
         auto scope = ui.scope(trigger);
         ui.tag(triggerId).focusable(!options.disabled).cursor(trigger.cursorHint);
+        // The hex is the value, and it is the value whether or not
+        // `showHexOnTrigger` draws it: a swatch is a colour a reader cannot
+        // have, and `#3b82f6` is the only form of it that survives being read
+        // out. The name is the caller's, because a colour picker in a form is
+        // "Accent" and one in a chart editor is "Series 3".
+        ui.accessible({
+            .role = Role::ComboBox,
+            .name = options.name,
+            .state = {.expanded = flag(state.open), .disabled = flag(options.disabled)},
+            .value = {.present = true, .text = current.hex()},
+        });
 
         {
             // Its own block: a Scope closes when it *leaves scope*, so anything

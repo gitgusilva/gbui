@@ -94,6 +94,65 @@ Ui& Ui::focusable(bool value) {
     return *this;
 }
 
+Ui& Ui::accessible(const Accessibility& info) { return accessible(last_, info); }
+
+Ui& Ui::accessible(NodeId node, const Accessibility& info) {
+    if (!node.valid()) return *this;
+    Accessibility& target = arena_.accessibilityFor(node);
+
+    // Merged, not assigned. Two calls compose — a component sets its role and a
+    // wrapper adds the relation that names it — and an unset field means "I had
+    // nothing to say about this", never "set it back to the default". Assigning
+    // the whole record instead would make the second call silently erase the
+    // first, which is the kind of bug that shows up as a control that used to
+    // announce itself and quietly stopped.
+    if (info.role != Role::None) target.role = info.role;
+    if (info.hidden) target.hidden = true;
+    if (!info.name.empty()) target.name = arena_.intern(info.name);
+    if (!info.description.empty()) target.description = arena_.intern(info.description);
+
+    const auto mergeFlag = [](Flag& into, Flag from) {
+        if (from != Flag::Unset) into = from;
+    };
+    mergeFlag(target.state.checked, info.state.checked);
+    mergeFlag(target.state.expanded, info.state.expanded);
+    mergeFlag(target.state.selected, info.state.selected);
+    mergeFlag(target.state.pressed, info.state.pressed);
+    mergeFlag(target.state.disabled, info.state.disabled);
+    mergeFlag(target.state.readOnly, info.state.readOnly);
+    mergeFlag(target.state.invalid, info.state.invalid);
+    mergeFlag(target.state.busy, info.state.busy);
+    mergeFlag(target.state.required, info.state.required);
+    if (info.state.sorted != Sort::Unset) target.state.sorted = info.state.sorted;
+
+    if (info.value.present) {
+        target.value = info.value;
+        target.value.text = arena_.intern(info.value.text);
+    }
+
+    const auto mergeTag = [&](std::string_view& into, std::string_view from) {
+        if (!from.empty()) into = arena_.intern(from);
+    };
+    mergeTag(target.relations.labelledBy, info.relations.labelledBy);
+    mergeTag(target.relations.describedBy, info.relations.describedBy);
+    mergeTag(target.relations.controls, info.relations.controls);
+    mergeTag(target.relations.owns, info.relations.owns);
+    mergeTag(target.relations.activeDescendant, info.relations.activeDescendant);
+    mergeTag(target.relations.labels, info.relations.labels);
+    mergeTag(target.relations.describes, info.relations.describes);
+
+    if (info.setSize != 0) {
+        target.positionInSet = info.positionInSet;
+        target.setSize = info.setSize;
+    }
+
+    return *this;
+}
+
+Ui& Ui::role(Role value) { return accessible({.role = value}); }
+
+Ui& Ui::name(std::string_view value) { return accessible({.name = value}); }
+
 Ui& Ui::ignoresPointer(bool value) {
     if (last_.valid()) arena_[last_].ignoresPointer = value;
     return *this;

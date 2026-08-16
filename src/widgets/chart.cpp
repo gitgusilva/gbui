@@ -276,7 +276,18 @@ int drawLegend(Ui& ui, const Interaction& input, std::string_view id,
             key.opacity = focused < 0 || picked ? 1.0f : 0.55f;
         }
         auto keyScope = ui.scope(key);
-        if (legend.focused) ui.tag(entryId).cursor(Cursor::Pointer);
+        // A key that can be clicked is a control and says so; one that cannot
+        // is a caption, and `Label` is what carries the series name into the
+        // tree beside a swatch a reader has no other access to.
+        if (legend.focused) {
+            ui.tag(entryId).cursor(Cursor::Pointer).accessible({
+                .role = Role::Button,
+                .name = entries[i].name,
+                .state = {.pressed = flag(picked)},
+            });
+        } else {
+            ui.accessible({.role = Role::Label, .name = entries[i].name});
+        }
 
         Style swatch;
         swatch.width = 9.0f;
@@ -663,7 +674,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
         column.height = options.height + options.legend.height;
         column.gap = 2.0f;
         outer.emplace(ui.scope(column));
-        ui.tag(id);
+        ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
     }
 
     Style frame;
@@ -676,7 +687,7 @@ ChartResult drawLineChart(Ui& ui, const Interaction& input, std::string_view id,
         frame.height = options.height;
     }
     auto scope = ui.scope(frame);
-    if (!showLegend) ui.tag(id);
+    if (!showLegend) ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     // ---- the axis ----------------------------------------------------------
     const std::vector<double> ticks = scale.ticks(tickCount);
@@ -1018,6 +1029,7 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
     row.gap = 2.0f;
     row.shrink = 0.0f;
     auto scope = ui.scope(row);
+    ui.accessible({.role = Role::Toolbar, .name = "Chart view"});
 
     // Zooming about the *middle*, where the wheel zooms about the pointer.
     // There is no pointer in a button press — the reader is looking at the
@@ -1041,7 +1053,8 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
                 .disabled = view.span() <= options.minSpan,
                 .height = options.height,
                 .iconSize = options.iconSize,
-                .id = base + ".in"});
+                .id = base + ".in",
+                .name = "Zoom in"});
         if (input.clicked(base + ".in")) scale(1.0 - step);
     }
     if (options.zoomOut) {
@@ -1051,7 +1064,8 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
                 .disabled = view.whole(),
                 .height = options.height,
                 .iconSize = options.iconSize,
-                .id = base + ".out"});
+                .id = base + ".out",
+                .name = "Zoom out"});
         if (input.clicked(base + ".out")) scale(1.0 / (1.0 - step));
     }
     if (options.reset) {
@@ -1061,7 +1075,8 @@ bool chartToolbar(Ui& ui, const Interaction& input, std::string_view id, ChartVi
                 .disabled = view.whole(),
                 .height = options.height,
                 .iconSize = options.iconSize,
-                .id = base + ".reset"});
+                .id = base + ".reset",
+                .name = "Show all"});
         if (input.clicked(base + ".reset")) {
             view.reset();
             changed = true;
@@ -1125,7 +1140,11 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
     row.shrink = 0.0f;
     row.gap = 6.0f;
     auto rowScope = ui.scope(row);
-    ui.tag(id);
+    // A range over the series, with a handle at each end — which is two values
+    // and one control, and ARIA has no role for that either. `Group` with both
+    // ends in the value text is the honest form; the handles below carry a
+    // slider each, which is what a reader can actually operate.
+    ui.tag(id).accessible({.role = Role::Group, .name = "Range"});
 
     if (options.axisWidth > 0.0f) {
         Style spacer;
@@ -1230,7 +1249,11 @@ bool chartBrush(Ui& ui, const Interaction& input, std::string_view id,
             grip.cursorHint = Cursor::ResizeHorizontal;
             grip.justify = Justify::Center;
             auto gripScope = ui.scope(grip);
-            ui.tag(tag).cursor(Cursor::ResizeHorizontal);
+            ui.tag(tag).cursor(Cursor::ResizeHorizontal).accessible({
+                .role = Role::Slider,
+                .name = at == view.from ? "Range start" : "Range end",
+                .value = {.present = true, .now = at, .minimum = 0.0, .maximum = 1.0},
+            });
             Style bar;
             bar.width = input.isHovered(tag) || input.dragging() == tag ? 4.0f : 2.5f;
             bar.height = Length::percent(56);
@@ -1350,7 +1373,7 @@ ChartResult drawBarChart(Ui& ui, const Interaction& input, std::string_view id,
     outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
     auto outerScope = ui.scope(outer);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     {
         Style top;
@@ -1775,7 +1798,7 @@ ChartResult drawCandlestickChart(Ui& ui, const Interaction& input, std::string_v
     outer.height = options.height;
     outer.gap = 4.0f;
     auto outerScope = ui.scope(outer);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     {
         Style top;
@@ -2082,7 +2105,7 @@ ScatterResult scatterChart(Ui& ui, const Interaction& input, std::string_view id
     outer.height = options.height + (showLegend ? options.legend.height : 0.0f);
     outer.gap = 4.0f;
     auto outerScope = ui.scope(outer);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     {
         Style top;
@@ -2355,7 +2378,7 @@ HeatmapResult heatmap(Ui& ui, const Interaction& input, std::string_view id,
     outer.direction = Direction::Column;
     outer.gap = 4.0f;
     auto outerScope = ui.scope(outer);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     const float cell = options.cellSize > 0.0f
                            ? options.cellSize
@@ -2585,7 +2608,7 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
     row.align = Align::Center;
     row.gap = 16.0f;
     auto scope = ui.scope(row);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = Role::Figure, .name = options.name});
 
     std::vector<Shape> shapes;
     if (!plotFrame.empty() && total > 0.0) {
@@ -2733,7 +2756,11 @@ DonutResult donutChart(Ui& ui, const Interaction& input, std::string_view id,
             entry.opacity = state.focused < 0 || picked ? 1.0f : 0.5f;
             entry.cursorHint = Cursor::Pointer;
             auto entryScope = ui.scope(entry);
-            ui.tag(entryId).cursor(Cursor::Pointer);
+            ui.tag(entryId).cursor(Cursor::Pointer).accessible({
+                .role = Role::Button,
+                .name = slices[i].name,
+                .state = {.pressed = flag(picked)},
+            });
             if (input.clicked(entryId)) {
                 state.focused = picked ? -1 : static_cast<int>(i);
                 result.focusChanged = true;

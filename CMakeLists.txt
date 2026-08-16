@@ -23,6 +23,7 @@ option(GBUI_PLATFORM_SDL2 "Build the SDL2 window backend when SDL2 is present" O
 # dependency beyond the standard library; `platform` is where the machine
 # starts to matter.
 set(GBUI_SOURCES
+    src/a11y/role.cpp
     src/anim/animator.cpp
     src/anim/easing.cpp
     src/core/color.cpp

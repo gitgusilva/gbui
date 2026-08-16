@@ -69,6 +69,19 @@ SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, doubl
 
     auto scope = ui.scope(row);
     ui.tag(id).focusable(!options.disabled);
+    // The value is the point of a slider, and a bare number is not the value:
+    // "70" says nothing, "70 percent" says everything. Only the caller knows
+    // which of the two this is, which is why `valueText` exists.
+    ui.accessible({
+        .role = Role::Slider,
+        .name = options.name,
+        .state = {.disabled = flag(options.disabled)},
+        .value = {.present = true,
+                  .now = value,
+                  .minimum = options.minimum,
+                  .maximum = options.maximum,
+                  .text = options.valueText},
+    });
 
     {
         Style track;

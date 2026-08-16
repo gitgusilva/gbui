@@ -200,6 +200,42 @@ public:
     /** Marks the most recently added node as a place Tab can land. */
     Ui& focusable(bool value = true);
 
+    /**
+     * Says what the most recently added node *is*, for a reader who cannot see
+     * it.
+     *
+     *     ui.tag(id).focusable(!options.disabled).accessible({
+     *         .role = Role::Button,
+     *         .name = options.label,
+     *         .state = {.disabled = flag(options.disabled)},
+     *     });
+     *
+     * Merged into whatever the node already said rather than replacing it, so
+     * two calls compose — a component can set its role and let a wrapper add
+     * the relation that names it. Only fields that were actually given are
+     * copied: a second call carrying just a name does not quietly reset the
+     * role to `None`.
+     *
+     * Every string is interned, so a temporary — `std::string(id) + ".error"`,
+     * which is how half the relations are spelled — is safe to pass.
+     */
+    Ui& accessible(const Accessibility& info);
+
+    /**
+     * The same, on a node named rather than on the last one built.
+     *
+     * For the component that only learns something after its own subtree is
+     * closed — a select does not know which row the arrow keys landed on until
+     * it has read the keyboard, and by then the box that has to announce it is
+     * several nodes back. Merging is what makes this safe: the second call adds
+     * to the first rather than replacing it.
+     */
+    Ui& accessible(NodeId node, const Accessibility& info);
+
+    /** The two shorthands, for the nodes that need nothing else. */
+    Ui& role(Role value);
+    Ui& name(std::string_view value);
+
     /** Says the most recent tag names geometry, not a control: `frameOf` still
      *  finds it, and hit testing walks past it to the tagged ancestor. */
     Ui& ignoresPointer(bool value = true);

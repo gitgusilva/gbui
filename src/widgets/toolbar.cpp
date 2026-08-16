@@ -20,7 +20,12 @@ Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options) {
         // its rule as a sibling. Callers get the border by adding
         // divider(ui, Direction::Column) after the toolbar.
     }
-    return ui.scope(style);
+    auto scope = ui.scope(style);
+    // A toolbar is one of the few containers worth naming as itself: a reader
+    // jumping by landmark uses it to skip the chrome, which is exactly what it
+    // is there for.
+    ui.role(Role::Toolbar);
+    return scope;
 }
 
 }  // namespace gbui

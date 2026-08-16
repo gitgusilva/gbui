@@ -60,11 +60,27 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     box.opacity = opacityFor(options.disabled);
     box.cursorHint = options.disabled ? Cursor::NotAllowed : Cursor::Pointer;
 
+    const std::string listId = std::string(id) + ".list";
+    // Which node has to announce the highlight, kept because the box is closed
+    // and several nodes behind by the time the keyboard has been read.
+    NodeId boxNode;
+
     {
         auto scope = ui.scope(box);
+        boxNode = scope.id();
         ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
 
         const bool hasValue = selected && *selected < count;
+        ui.accessible({
+            .role = Role::ComboBox,
+            .name = options.name,
+            .description = options.placeholder,
+            .state = {.expanded = flag(wasOpen), .disabled = flag(options.disabled)},
+            .value = {.present = true,
+                      .text = hasValue ? std::string_view(items[*selected])
+                                       : std::string_view{}},
+            .relations = {.controls = listId},
+        });
         text(ui, hasValue ? std::string_view(items[*selected]) : options.placeholder,
              {.color = options.disabled ? Token::TextMuted
                        : hasValue        ? Token::Text
@@ -152,7 +168,24 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     }
 
     // ---- the list ---------------------------------------------------------
-    const std::string listId = std::string(id) + ".list";
+    //
+    // Said now rather than when the box was built, because the arrow keys above
+    // are what moved the highlight. Announcing the value it had before the key
+    // would tell a reader about the row they have just left.
+    //
+    // `activeDescendant` is what makes an open list usable at all: focus stays
+    // on the box — deliberately, so Tab cannot fall into the popup — and this
+    // is the only way to say which row the keys are on. It is the separation
+    // `SelectState::highlighted` exists for, said to the reader rather than to
+    // the painter.
+    ui.accessible(boxNode, {.state = {.expanded = Flag::True},
+                            .relations = {.activeDescendant =
+                                              state.highlighted
+                                                  ? std::string_view(
+                                                        listId + "." +
+                                                        std::to_string(*state.highlighted))
+                                                  : std::string_view{}}});
+
     PopoverOptions popoverOptions;
     popoverOptions.placement = options.placement;
     popoverOptions.gap = options.gap;
@@ -164,6 +197,9 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     popoverOptions.padding = Edges::all(kListPadding);
     popoverOptions.gapBetweenItems = kRowGap;
     popoverOptions.scroll = options.listScroll;
+    // A list of values, which is what makes its rows options rather than
+    // commands and what a reader is told before the first of them.
+    popoverOptions.role = Role::ListBox;
 
     // Keeping the highlight on screen. Done before the view is built, so the
     // offset the rows are laid out against is the one this frame decided.
@@ -198,6 +234,8 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
             row.checkSide = CheckSide::Trailing;
             row.highlighted = state.highlighted == i;
             row.focusable = false;
+            // Values, not commands — see `MenuItemOptions::role`.
+            row.role = Role::Option;
             const bool chosen = menuItem(ui, input, itemId, items[i], row);
             if (chosen) {
                 result.chosen = i;

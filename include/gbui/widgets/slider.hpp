@@ -29,6 +29,18 @@ struct SliderOptions {
     /** Shows the value at the right of the track. */
     bool showValue = false;
     int decimals = 2;
+    /** What this slider is called, for a reader who cannot see the caption
+     *  beside it. Unnecessary when a `label` or a `field` names it — those
+     *  attach the relation instead. */
+    std::string_view name{};
+    /**
+     * What a reader hears instead of the number — "70 percent", "3 of 8".
+     *
+     * Empty falls back to the number, which is right for a bare fraction and
+     * wrong for everything with a unit. The toolkit cannot supply this: it has
+     * no locale to spell a unit in and no idea what the number counts.
+     */
+    std::string_view valueText{};
 };
 
 struct SliderResult {

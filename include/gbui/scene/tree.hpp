@@ -30,6 +30,7 @@
 #include <string_view>
 #include <vector>
 
+#include "gbui/a11y/accessibility.hpp"
 #include "gbui/core/cursor.hpp"
 #include "gbui/core/image.hpp"
 #include "gbui/core/path.hpp"
@@ -133,6 +134,17 @@ struct Node {
     std::uint32_t firstShape = 0;
     std::uint32_t shapeCount = 0;
 
+    /**
+     * Where this node's `Accessibility` record lives, or `kNoAccessibility`.
+     *
+     * An index for the same reason the shapes are one: most nodes have nothing
+     * to say to a screen reader — a row that spaces two things out is not a
+     * thing — so they pay four bytes rather than the whole record, and the node
+     * stays trivial to clear.
+     */
+    static constexpr std::uint32_t kNoAccessibility = static_cast<std::uint32_t>(-1);
+    std::uint32_t accessibility = kNoAccessibility;
+
     NodeId parent{};
     NodeId firstChild{};
     NodeId lastChild{};
@@ -180,6 +192,21 @@ public:
     const Shape& shape(std::uint32_t index) const { return shapes_[index]; }
     std::size_t shapeCount() const { return shapes_.size(); }
 
+    /** The node's accessibility record, creating an empty one the first time.
+     *  `Ui` is what calls this; a component goes through `ui.accessible`. */
+    Accessibility& accessibilityFor(NodeId id);
+
+    /** What this node says about itself, or nothing. */
+    const Accessibility* accessibility(NodeId id) const {
+        const std::uint32_t at = nodes_[id.index()].accessibility;
+        return at == Node::kNoAccessibility ? nullptr : &accessibility_[at];
+    }
+
+    /** How many nodes in this tree have anything to say. Zero is the honest
+     *  answer for a tree nobody has annotated, and a test can assert it is
+     *  not. */
+    std::size_t accessibleCount() const { return accessibility_.size(); }
+
     /** Drops every node and every interned string, keeping the capacity so the
      *  next frame reuses the same memory. */
     void reset();
@@ -196,6 +223,7 @@ public:
 
 private:
     std::vector<Shape> shapes_;
+    std::vector<Accessibility> accessibility_;
 
     static constexpr std::size_t kStringBlockSize = 4096;
 

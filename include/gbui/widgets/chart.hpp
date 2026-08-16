@@ -206,6 +206,15 @@ struct ChartOptions {
     ChartLink* link = nullptr;
     /** The key drawn under the chart, and the focus a click on it gives. */
     ChartLegend legend{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 /**
@@ -501,6 +510,15 @@ struct BarChartOptions {
     ChartLink* link = nullptr;
     /** The key drawn under the chart, and the focus a click on it gives. */
     ChartLegend legend{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 /**
@@ -577,6 +595,15 @@ struct ScatterOptions {
     float hitRadius = 14.0f;
     ChartTooltip tooltip{};
     ChartLegend legend{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 struct ScatterResult {
@@ -637,6 +664,15 @@ struct HeatmapOptions {
     bool hover = true;
     std::string_view valueFormat = "%.0f";
     ChartTooltip tooltip{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 struct HeatmapResult {
@@ -727,6 +763,15 @@ struct CandlestickOptions {
      *  `ChartLink`, so pointing at a sample in one points at it in all of
      *  them. Null leaves the chart on its own. */
     ChartLink* link = nullptr;
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 /**
@@ -791,6 +836,15 @@ struct DonutOptions {
      *  every slice, so this one is about the *number* — which the legend has
      *  no room for once there are more than a handful. */
     ChartTooltip tooltip{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 struct DonutResult {
@@ -875,6 +929,15 @@ struct RadarOptions {
     std::string_view valueFormat = "%.0f";
     ChartTooltip tooltip{};
     ChartLegend legend{};
+    /**
+     * What the chart is of — "Revenue by month".
+     *
+     * A chart is the one thing on a screen a reader gets nothing from: the
+     * shapes carry all of it, and the numbers behind them are the caller's. A
+     * name and a `Figure` role are the least that makes it navigable, and they
+     * are not the whole answer — see the note in `docs/reference/accessibility`.
+     */
+    std::string_view name{};
 };
 
 /**

@@ -39,8 +39,9 @@ void addControlExamples(std::vector<Example>& out) {
          }});
 
     out.push_back({"slider", [](Ui& ui, const Interaction& input, State& state) {
-                       if (const SliderResult result = slider(ui, input, "catalog.slider",
-                                                              state.fraction, {.showValue = true});
+                       if (const SliderResult result =
+                               slider(ui, input, "catalog.slider", state.fraction,
+                                      {.showValue = true, .name = "Contrast"});
                            result.changed) {
                            state.fraction = result.value;
                        }
@@ -52,9 +53,12 @@ void addControlExamples(std::vector<Example>& out) {
                        // with one of them refusing anything that is not a
                        // number and growing two buttons for the range.
                        textInput(ui, input, "catalog.field", state.text,
-                                 {.placeholder = "Repository name", .leading = Icon::Search});
+                                 {.name = "Repository",
+                                  .placeholder = "Repository name",
+                                  .leading = Icon::Search});
                        textInput(ui, input, "catalog.number", state.minutes,
                                  {.type = InputType::Number,
+                                  .name = "Auto-fetch interval",
                                   .minimum = 0.0,
                                   .maximum = 100.0,
                                   .step = 1.0,
@@ -66,7 +70,8 @@ void addControlExamples(std::vector<Example>& out) {
                        // writing goes on, which is what a commit message box
                        // does. Return takes a newline here; Ctrl+Return sends.
                        textarea(ui, input, "catalog.textarea", state.note,
-                                {.placeholder = "Describe the change\u2026",
+                                {.name = "Commit message",
+                                 .placeholder = "Describe the change\u2026",
                                  .rows = 2,
                                  .maxRows = 4});
                    }});
@@ -92,10 +97,10 @@ void addControlExamples(std::vector<Example>& out) {
                    }});
 
     out.push_back({"progressBar", [](Ui& ui, const Interaction&, State& state) {
-                       progressBar(ui, {.value = state.fraction});
+                       progressBar(ui, {.value = state.fraction, .name = "Cloning"});
                        // Below zero is the indeterminate form, which needs a
                        // clock the application supplies.
-                       progressBar(ui, {.value = -1.0, .phase = state.clock});
+                       progressBar(ui, {.value = -1.0, .phase = state.clock, .name = "Fetching"});
                    }});
 
     out.push_back({"label", [](Ui& ui, const Interaction& input, State& state) {
@@ -115,12 +120,14 @@ void addControlExamples(std::vector<Example>& out) {
          }});
 
     out.push_back({"colorPicker", [](Ui& ui, const Interaction& input, State& state) {
-                       colorPicker(ui, input, "catalog.colorPicker", state.colour);
+                       colorPicker(ui, input, "catalog.colorPicker", state.colour,
+                                   {.name = "Accent"});
                    }});
 
     out.push_back({"colorField", [](Ui& ui, const Interaction& input, State& state) {
                        // The same picker behind a swatch, for a form.
-                       colorField(ui, input, "catalog.colorField", state.colour);
+                       colorField(ui, input, "catalog.colorField", state.colour,
+                                  {{.name = "Accent"}});
                    }});
 
     out.push_back({"datePicker", [](Ui& ui, const Interaction& input, State& state) {

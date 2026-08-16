@@ -14,8 +14,64 @@ named here and the reason for it is in the commit.
 Work towards 0.3 lives on `main` and gets a number when it ships, not commit by
 commit.
 
+### Added
+
+- **An accessibility layer: every control now says what it is.** Until this,
+  a `Node` carried a style, a tag and a frame and nothing that said what it
+  *was* — a screen reader was handed one blank rectangle where an application
+  should have been. `gbui/a11y/role.hpp` and `accessibility.hpp` are stages 1 to
+  3 of the plan: a `Role` and a name on every control, the state and value that
+  go with it, and the relations that tie a caption to its field and an error to
+  its input. Set with `ui.accessible({…})` beside the `tag` and the `focusable`
+  that were already there; `ui.role(…)` and `ui.name(…)` are the shorthands.
+
+  The names are ARIA's, which are also AccessKit's, so the platform bridge in
+  stage 5 is a lookup table rather than a translation with opinions in it. Three
+  deviate and each says why in the header. There is no role for anything this
+  toolkit cannot build.
+
+  **`Unset` is not `False`.** A checkbox that is not checked is announced as "not
+  checked"; a button, which has no checked state, is announced as a button — so
+  every state is a four-valued `Flag` and a state nobody set stays unsaid. The
+  value carries `text` as well as a number, because a slider that announces "70"
+  is a slider nobody can use and only the caller knows it means "70 percent".
+  `positionInSet`/`setSize` exist for one reason: a virtualised list builds only
+  the rows on screen, and without them a reader walking fifty thousand commits is
+  told "row 3 of 14" for the rest of their life.
+
+  **The record is not on the `Node`.** Most nodes have nothing to say, so it
+  lives in a side table the arena owns and a node names by index — four bytes
+  each, the full record only where there is one — exactly as vector art already
+  does.
+
+  Two relations point the *other* way, `labels` and `describes`, because the end
+  that knows is not the end that carries it: a caption is built before the input
+  it names and a `field`'s error after it, and no component reaches into
+  another's node. `<label for>` is the same shape.
+
+  New options where a component could not otherwise be named:
+  `ButtonOptions::name` (for the icon-only button, the classic failure),
+  `TextInputOptions::name`, `TextareaOptions::name`, `SelectOptions::name`,
+  `SliderOptions::name` and `valueText`, `ProgressOptions::name`,
+  `TableOptions::name`, `VirtualListOptions::name`, `ScrollOptions::name`,
+  `MarqueeOptions::name`, `RichEditorOptions::name`, `ColorPickerOptions::name`,
+  the chart options' `name`, `MenuItemOptions::role`, `PopoverOptions::role` and
+  `name`, and `BoxOptions::role` and `name`.
+
+  **This is a data model with tests, not something a screen reader can read
+  yet.** Stage 4 prunes it into a tree and diffs it; stage 5 pushes that through
+  AccessKit. Neither exists, and [the reference
+  page](docs/reference/accessibility.md) lists the rest of what is missing —
+  including that `modal` still does not trap focus and the colour picker's
+  square has no keyboard at all.
+
 ### Changed
 
+- **Accessibility is now a rule, not a milestone.** Rule 7 in `CONTRIBUTING`:
+  every component that is added or changed carries working accessibility in the
+  same commit, with a case in `tests/accessibilityTest.cpp`. The last case in
+  that file is the gate — it walks a form and fails on any Tab stop with no role
+  or nothing to announce — and it found three the first time it ran.
 - **One `textInput` with an `InputType`, where there were `textField` and
   `numberField`.** The HTML shape: `Text`, `Password` and `Number` are one box
   that draws its content differently and refuses different things, and the two
@@ -116,6 +172,12 @@ commit.
 
 ### Fixed
 
+- **A button was never a Tab stop.** It had not been since focus was built:
+  `activated` gives every control Space and Return once it has the keyboard, and
+  nothing could ever give the keyboard to a button — so the most ordinary control
+  in the set was reachable by pointer alone. A tagged, enabled button is now
+  focusable. An untagged one still is not, which is the contract
+  `Node::focusable` states and not a second gap.
 - **A press focused whatever node it landed on, rather than the control.** A
   control is rarely one node — a textarea is a box around a scroll view around a
   column of runs — and a click on the text resolved to a tag the scroll view

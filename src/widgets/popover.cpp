@@ -65,7 +65,7 @@ Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
     auto scope = floating(ui, Rect{placed.rect.x, placed.rect.y, width, 0.0f}, Layer::Overlay,
                           scrolls ? Edges{} : options.padding,
                           scrolls ? 0.0f : options.gapBetweenItems, Direction::Column, ceiling);
-    ui.tag(id);
+    ui.tag(id).accessible({.role = options.role, .name = options.name});
     if (!scrolls) return scope;
 
     ScrollOptions inner;

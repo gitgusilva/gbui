@@ -310,7 +310,10 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
         {
             auto fieldScope = field(ui, "Repository");
             textInput(ui, input, "controls.name", model.name,
-                      {.placeholder = "name", .leading = Icon::Folder, .grow = 1.0f});
+                      {.name = "Repository",
+                       .placeholder = "name",
+                       .leading = Icon::Folder,
+                       .grow = 1.0f});
             (void)fieldScope;
         }
         {
@@ -319,6 +322,7 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
             const TextInputResult result =
                 textInput(ui, input, "controls.token", model.token,
                           {.type = InputType::Password,
+                           .name = "Access token",
                            .placeholder = "paste a token",
                            .revealed = model.tokenRevealed,
                            .grow = 1.0f});
@@ -336,14 +340,18 @@ void textTab(Ui& ui, const Interaction& input, Model& model) {
         {
             auto fieldScope = field(ui, "Read-only");
             TextEditState readOnly{"origin/main", 0, 0};
-            textInput(ui, input, "controls.readonly", readOnly, {.readOnly = true, .grow = 1.0f});
+            textInput(ui, input, "controls.readonly", readOnly,
+                      {.name = "Remote", .readOnly = true, .grow = 1.0f});
             (void)fieldScope;
         }
         {
             auto fieldScope = field(ui, "Disabled");
             TextEditState off{"", 0, 0};
             textInput(ui, input, "controls.disabledfield", off,
-                      {.placeholder = "not editable", .disabled = true, .grow = 1.0f});
+                      {.name = "Upstream",
+                       .placeholder = "not editable",
+                       .disabled = true,
+                       .grow = 1.0f});
             (void)fieldScope;
         }
         (void)panelScope;
@@ -410,6 +418,7 @@ void numbersTab(Ui& ui, const Interaction& input, Model& model) {
             auto fieldScope = field(ui, "Auto-fetch");
             const auto result = textInput(ui, input, "controls.minutes", model.fetchMinutesText,
                                           {.type = InputType::Number,
+                                           .name = "Auto-fetch",
                                            .minimum = 0,
                                            .maximum = 60,
                                            .step = 1,
@@ -1528,6 +1537,7 @@ NodeId buildScreen(Ui& ui, const Interaction& input, Model& model) {
             auto stepperScope = ui.scope(stepper);
             const auto result = textInput(ui, input, "controls.uisize", model.fontSizeText,
                                           {.type = InputType::Number,
+                                           .name = "Interface size",
                                            .minimum = 9,
                                            .maximum = 22,
                                            .step = 1,
