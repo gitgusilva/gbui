@@ -32,7 +32,13 @@ TEST("every component belongs to a known group") {
     // The groups are the umbrella headers a developer already includes, so a
     // component in "Other" is one no umbrella gathers — which is a fact about
     // the headers worth failing on rather than a category.
-    const std::set<std::string_view> known = {"Components", "Containers", "Controls", "Overlays",
+    //
+    // "Controls" is not among them and that is the point: it was one word over
+    // two different kinds of thing, and it is now `elements.hpp` for the
+    // primitives and `components.hpp` for the composed ones. `controls.hpp`
+    // still exists and still compiles, but it includes those two rather than
+    // gathering anything itself, so it contributes no group here.
+    const std::set<std::string_view> known = {"Elements", "Components", "Containers", "Overlays",
                                               "Charts"};
     for (const meta::ComponentInfo& entry : meta::components()) {
         CHECK(known.count(entry.group) == 1);

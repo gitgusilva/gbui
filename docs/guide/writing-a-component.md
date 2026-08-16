@@ -170,9 +170,11 @@ the tree can be thrown away and rebuilt without losing anything.
 - Does it survive a narrow window? Put it in a row with something that grows.
 - Does it have a header and a source file of its own, both named after it, and
   is the source listed in `CMakeLists.txt`?
-- Is it in the umbrella for its group — `components.hpp`, `controls.hpp`,
-  `containers.hpp` or `overlays.hpp`? A component nothing includes is not
-  supported, it is an accident.
+- Is it in the umbrella for its group — `elements.hpp` if it is a primitive,
+  `components.hpp` if it is composed, or `containers.hpp` / `overlays.hpp`? A
+  component nothing includes is not supported, it is an accident — and the
+  umbrella is also what puts it in a group in the documentation and the
+  metadata, so the answer is never "none of them".
 - Is anything it shares with a sibling component in `src/widgets/detail.hpp`
   rather than copied? A helper used by exactly one component stays with it.
 - Does it have a test? Layout is pure, so a test is ten lines — see

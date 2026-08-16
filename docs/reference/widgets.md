@@ -9,10 +9,35 @@ uses. Four umbrellas gather the groups for callers who want all of it:
 
 | Umbrella | What it pulls in |
 | --- | --- |
-| `gbui/widgets/components.hpp` | badge, button, chart, icon, list row, panel, spacing, text, toolbar |
-| `gbui/widgets/controls.hpp` | checkbox, radio, switch, text field, number field, slider, progress, label, link, rich editor, and the date, time and colour pickers |
-| `gbui/widgets/containers.hpp` | box and its presets, scroll view, virtualised list, table, tabs |
-| `gbui/widgets/overlays.hpp` | tooltip, popover, menu, select, modal |
+| `gbui/widgets/elements.hpp` | text, link, label, icon, image, badge, progress, spacing — and the input set: button, checkbox, radio, switch, select, slider, text field, number field |
+| `gbui/widgets/containers.hpp` | box, panel, list row, toolbar, scroll view, table, tabs, virtualised list, marquee |
+| `gbui/widgets/overlays.hpp` | tooltip, popover, menu, modal |
+| `gbui/widgets/components.hpp` | the composed editors — colour, date, time and rich text — and the charts |
+
+**Which group does a thing belong to?** Four questions, asked in this order.
+The order is the taxonomy; asking them in any other one produces two axes and no
+answer for the things that sit on both.
+
+1. **Is its job the content inside it?** → a **container**. This is why `panel`
+   and `toolbar` are containers rather than the composed components they plainly
+   are: what they are *for* is arranging their children.
+2. **Does it leave the flow and float?** → an **overlay**.
+3. **Is it a leaf with a counterpart in HTML?** → an **element**. It draws
+   itself and decides nothing beyond the theme it takes its colours from. This
+   is why `select` is an element: it opens a popover, but so does a native
+   `<select>`, and the question is asked of the control, not of its menu.
+4. **Otherwise it is composed and has opinions** → a **component**. `datePicker`
+   decided what a month looks like; `colorPicker` decided where the hue rail
+   goes.
+
+All four are the same kind of function to the compiler. The groups are for
+readers, and for the umbrella a translation unit includes.
+
+::: tip `controls.hpp`
+The old fifth umbrella still exists and still compiles — it now includes
+`elements.hpp` and `components.hpp`. Prefer the one you mean in new code: it is
+shorter, and it says which half you are reaching for.
+:::
 
 Interactive components take an [`Interaction`](/reference/input) and an **id**,
 report what the user did, and hold no state: the value is yours.
@@ -444,7 +469,14 @@ entirely, which is cheaper and means `frameOf` finds nothing inside it.
 **Not built:** an overflow menu for when the tabs do not fit (they shrink and
 elide), a close affordance, and reordering by drag.
 
-## Controls
+## Elements: the input set
+
+`#include "gbui/widgets/elements.hpp"`
+
+The primitives a form is made of. Each holds no state, takes the value in and
+reports what the user did with it. `select` is one of these — it opens a
+popover, but so does a native `<select>`, and where a control draws its list is
+not what decides whether the control is a primitive.
 
 | Component | Signature | Reports |
 | --- | --- | --- |

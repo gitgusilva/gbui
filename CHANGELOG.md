@@ -35,6 +35,19 @@ commit.
 
 ### Changed
 
+- **The component set is grouped by four questions instead of one word.**
+  "Controls" held a checkbox and a date picker as if they were peers. The groups
+  are now **Elements** (21 — leaves with a counterpart in HTML, deciding nothing
+  beyond the theme), **Containers** (11 — anything whose job is the content
+  inside it), **Overlays** (6 — anything that leaves the flow and floats),
+  **Components** (8 — the composed editors) and **Charts** (9). The questions are
+  asked in that order and the order *is* the taxonomy: it is why `panel` and
+  `toolbar` are containers rather than the composed things they plainly are, and
+  why `select` is an element even though its list is a popover — the question is
+  asked of the control, not of its menu. `elements.hpp` is the new umbrella;
+  `controls.hpp` still compiles and now includes the two that replaced it, so no
+  existing include breaks. **`components.hpp` no longer pulls in `text`,
+  `button`, `icon`, `image` or `spacing`** — include `elements.hpp` for those.
 - **`switchToggle` is `toggle`**, and `SwitchOptions` is `ToggleOptions`, in
   `gbui/widgets/toggle.hpp`. The component is a switch and the documentation
   still calls it one; `switch` is a C++ keyword and cannot be a function name,

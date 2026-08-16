@@ -12,7 +12,7 @@ Sixty lines, start to finish. Create `main.cpp`:
 #include "gbui/scene/ui.hpp"
 #include "gbui/style/theme.hpp"
 #include "gbui/widgets/components.hpp"
-#include "gbui/widgets/controls.hpp"
+#include "gbui/widgets/elements.hpp"
 
 using namespace gbui;
 

@@ -16,7 +16,8 @@
 #include "gbui/paint/paint.hpp"
 #include "gbui/scene/ui.hpp"
 #include "gbui/style/theme.hpp"
-#include "gbui/widgets/components.hpp"
+#include "gbui/widgets/containers.hpp"
+#include "gbui/widgets/elements.hpp"
 
 namespace gbui::examples {
 

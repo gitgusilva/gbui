@@ -1,7 +1,7 @@
 [
   {
     "name": "badge",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/badge.hpp",
     "summary": "A pill \u2014 a branch name, a counter, a status chip.",
     "signatures": [
@@ -34,7 +34,7 @@
   },
   {
     "name": "button",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/button.hpp",
     "summary": "A button, in the four variants the design system has.",
     "signatures": [
@@ -129,8 +129,132 @@
     ]
   },
   {
+    "name": "checkbox",
+    "group": "Elements",
+    "header": "gbui/widgets/checkbox.hpp",
+    "summary": "A checkbox.",
+    "signatures": [
+      "[[nodiscard]] bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checked, const CheckboxOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame the user toggled it."
+    ],
+    "optionsType": "CheckboxOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn to the right of the box; empty draws the box alone.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's box size and corner.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "hyperlink",
+    "group": "Elements",
+    "header": "gbui/widgets/hyperlink.hpp",
+    "summary": "A hyperlink.",
+    "signatures": [
+      "[[nodiscard]] bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const HyperlinkOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame it was followed \u2014 by click, or by Return while focused. `hyperlink` rather than `link`, because `link` in a C++ codebase already means the linker, a linked list, or the act of linking; this is the one thing it does not usually mean."
+    ],
+    "optionsType": "HyperlinkOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "href",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Where it points. Following it hands this to `openUrl`. Empty follows nothing and only reports the click, which is what a link that scrolls somewhere inside the application wants.",
+        "optional": false
+      },
+      {
+        "name": "chord",
+        "kind": "Opaque",
+        "type": "Modifiers",
+        "default": "",
+        "choices": [],
+        "doc": "Modifiers that must be held for a click to count. All false \u2014 the default \u2014 means a plain click follows it, which is what a link is. Requiring a chord is for a link inside editable text, where a plain click has to place the caret instead; that is the bargain every editor makes, and it is a decision about the surrounding document rather than about the link, so it is the caller's.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "trailing",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "Drawn after the label \u2014 an arrow for \"this leaves the application\".",
+        "optional": true
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "underlineOnHover",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Underlines always, or only under the pointer. Always is the accessible default: colour alone is not a cue for anyone who cannot see it.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "icon",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/icon.hpp",
     "summary": "One icon from the built-in Lucide set.",
     "signatures": [
@@ -172,7 +296,7 @@
   },
   {
     "name": "image",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/image.hpp",
     "summary": "A picture in a box \u2014 HTML's `<img>`, with the parts of it that are a toolkit's business.",
     "signatures": [
@@ -278,22 +402,31 @@
     ]
   },
   {
-    "name": "listRow",
-    "group": "Components",
-    "header": "gbui/widgets/listRow.hpp",
-    "summary": "A row of a list: the sidebar's branches, the commit list, the changed files.",
+    "name": "label",
+    "group": "Elements",
+    "header": "gbui/widgets/label.hpp",
+    "summary": "A caption for a control.",
     "signatures": [
-      "Ui::Scope listRow(Ui& ui, const ListRowOptions& options = {});"
+      "std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::string_view id, std::string_view text, const LabelOptions& options = {});"
     ],
     "notes": [
-      "Opens a row. Returns a Scope, so its contents are written inside the braces. `selected` washes the row in the accent at 18%, `hovered` uses `surfaceHover`, and both are passed in \u2014 components hold no state."
+      "Returns the id to focus when the label was clicked, or nothing. The caller hands it to `Interaction::focus`, which keeps the toolkit from mutating interaction state behind a component's back: if (const auto target = label(ui, input, \"f.name\", \"Repository\", {.forId = \"name\"})) interaction.focus(*target);"
     ],
-    "optionsType": "ListRowOptions",
-    "container": true,
-    "interactive": false,
+    "optionsType": "LabelOptions",
+    "container": false,
+    "interactive": true,
     "properties": [
       {
-        "name": "selected",
+        "name": "forId",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The control this names. Clicking the label focuses it, exactly as `<label for>` does, unless that control is disabled or read-only.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
         "kind": "Bool",
         "type": "bool",
         "default": "false",
@@ -302,11 +435,140 @@
         "optional": false
       },
       {
-        "name": "hovered",
+        "name": "readOnly",
         "kind": "Bool",
         "type": "bool",
         "default": "false",
         "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::TextMuted",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "required",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Marks the field as required, with the usual asterisk.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "numberField",
+    "group": "Elements",
+    "header": "gbui/widgets/numberField.hpp",
+    "summary": "A number, with step buttons and the wheel.",
+    "signatures": [
+      "[[nodiscard]] NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view id, double value, const NumberFieldOptions& options = {});"
+    ],
+    "notes": [
+      "The value is clamped and rounded before it is returned, so a caller never sees one outside the range."
+    ],
+    "optionsType": "NumberFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Number",
+        "type": "double",
+        "default": "-1e18",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Number",
+        "type": "double",
+        "default": "1e18",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "1.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "decimals",
+        "kind": "Number",
+        "type": "int",
+        "default": "0",
+        "choices": [],
+        "doc": "Digits after the point, for both display and rounding.",
+        "optional": false
+      },
+      {
+        "name": "suffix",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "\"px\", \"%\", \" ms\"",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "steppers",
+        "kind": "Enum",
+        "type": "StepperPlacement",
+        "default": "StepperPlacement::Sides",
+        "choices": [
+          "Sides",
+          "Stacked",
+          "None"
+        ],
         "doc": "",
         "optional": false
       },
@@ -314,22 +576,57 @@
         "name": "height",
         "kind": "Number",
         "type": "float",
-        "default": "28.0f",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "120.0f",
         "choices": [],
         "doc": "",
         "optional": false
       },
       {
-        "name": "padding",
-        "kind": "Edges",
-        "type": "Edges",
-        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "name": "stackedBelow",
+        "kind": "Number",
+        "type": "float",
+        "default": "110.0f",
         "choices": [],
-        "doc": "",
+        "doc": "Below this the steppers are dropped to `Stacked` automatically, so a field in a narrow column shows its value rather than two buttons.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "progressBar",
+    "group": "Elements",
+    "header": "gbui/widgets/progress.hpp",
+    "summary": "A progress bar, determinate or not.",
+    "signatures": [
+      "NodeId progressBar(Ui& ui, const ProgressOptions& options = {});"
+    ],
+    "notes": [
+      "Not an input, but it belongs with them: the same track, the same tokens."
+    ],
+    "optionsType": "ProgressOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "value",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "Below zero draws the indeterminate form.",
         "optional": false
       },
       {
-        "name": "gap",
+        "name": "height",
         "kind": "Number",
         "type": "float",
         "default": "6.0f",
@@ -338,76 +635,122 @@
         "optional": false
       },
       {
-        "name": "id",
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Phase for the indeterminate form, in turns. Feed it a clock.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "radio",
+    "group": "Elements",
+    "header": "gbui/widgets/radio.hpp",
+    "summary": "One option of a group.",
+    "signatures": [
+      "bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected, const RadioOptions& options = {});"
+    ],
+    "notes": [
+      "Returns true on the frame it was chosen; a radio that is already selected reports nothing, because choosing it again is not a change."
+    ],
+    "optionsType": "RadioOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
         "kind": "Text",
         "type": "std::string_view",
         "default": "",
         "choices": [],
         "doc": "",
         "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's size.",
+        "optional": false
       }
     ]
   },
   {
-    "name": "panel",
-    "group": "Components",
-    "header": "gbui/widgets/panel.hpp",
-    "summary": "A surface with a border and a radius \u2014 a card, a dialog body, a docked pane.",
+    "name": "select",
+    "group": "Elements",
+    "header": "gbui/widgets/select.hpp",
+    "summary": "A closed box that opens a list.",
     "signatures": [
-      "Ui::Scope panel(Ui& ui, const PanelOptions& options = {});"
+      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});"
     ],
-    "notes": [],
-    "optionsType": "PanelOptions",
-    "container": true,
-    "interactive": false,
+    "notes": [
+      "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box \u2014 not the rows \u2014 keeps the keyboard, so Tab leaves the control rather than walking into the popup."
+    ],
+    "optionsType": "SelectOptions",
+    "container": false,
+    "interactive": true,
     "properties": [
       {
-        "name": "background",
-        "kind": "Token",
-        "type": "Token",
-        "default": "Token::BgElevated",
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select\u2026\"",
         "choices": [],
         "doc": "",
         "optional": false
       },
       {
-        "name": "border",
+        "name": "disabled",
         "kind": "Bool",
         "type": "bool",
-        "default": "true",
+        "default": "false",
         "choices": [],
         "doc": "",
         "optional": false
       },
       {
-        "name": "padding",
-        "kind": "Edges",
-        "type": "Edges",
-        "default": "Edges::all(12.0f)",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "gap",
-        "kind": "Number",
-        "type": "float",
-        "default": "8.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "direction",
-        "kind": "Opaque",
-        "type": "Direction",
-        "default": "Direction::Column",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "radius",
+        "name": "width",
         "kind": "Number",
         "type": "float",
         "default": "kAuto",
@@ -421,14 +764,152 @@
         "type": "float",
         "default": "0.0f",
         "choices": [],
-        "doc": "Takes the space left on the main axis, the way a pane holding a list has to. It starts from nothing, as `text` and the scroll view do, so it cannot push its siblings out of the column.",
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height, so a select lines up with every other control on its row without anyone matching numbers.",
+        "optional": false
+      },
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "12",
+        "choices": [],
+        "doc": "How many rows fit before the list scrolls. The rest are reachable by scrolling or by walking to them with the arrow keys.",
+        "optional": false
+      },
+      {
+        "name": "maxListHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "A hard ceiling in pixels, which wins over `maxVisible` when both would apply \u2014 a row count cannot know how tall the window is. `kAuto` leaves the row count in charge.",
+        "optional": false
+      },
+      {
+        "name": "listScroll",
+        "kind": "Enum",
+        "type": "ScrollAxis",
+        "default": "ScrollAxis::Vertical",
+        "choices": [
+          "None",
+          "Vertical",
+          "Horizontal"
+        ],
+        "doc": "Whether the open list scrolls at all. `None` clips it instead, for a caller that would rather constrain the list than let it move.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "slider",
+    "group": "Elements",
+    "header": "gbui/widgets/slider.hpp",
+    "summary": "A single-value slider.",
+    "signatures": [
+      "[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, double value, const SliderOptions& options = {});"
+    ],
+    "notes": [
+      "Follows the pointer while it is held, even when it wanders off the track \u2014 which is what `Interaction::dragging` is for."
+    ],
+    "optionsType": "SliderOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Number",
+        "type": "double",
+        "default": "1.0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "kind": "Number",
+        "type": "double",
+        "default": "0.0",
+        "choices": [],
+        "doc": "0 is continuous; anything else snaps to a multiple of it.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "Takes the free space on the parent's main axis, which is what a slider in a row wants and the only thing `grow` can mean. In a *column* the main axis is vertical, so this used to make a slider eat the leftover height and sit alone at the bottom of its card. It no longer can: the control is clamped to `height` whichever way it is pointed, so growing is free horizontally and impossible vertically.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "20.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "showValue",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Shows the value at the right of the track.",
+        "optional": false
+      },
+      {
+        "name": "decimals",
+        "kind": "Number",
+        "type": "int",
+        "default": "2",
+        "choices": [],
+        "doc": "",
         "optional": false
       }
     ]
   },
   {
     "name": "divider",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/spacing.hpp",
     "summary": "The two nodes that exist to take up room, or to refuse to.",
     "signatures": [
@@ -444,7 +925,7 @@
   },
   {
     "name": "spacer",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/spacing.hpp",
     "summary": "The two nodes that exist to take up room, or to refuse to.",
     "signatures": [
@@ -460,7 +941,7 @@
   },
   {
     "name": "emphasis",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/text.hpp",
     "summary": "Runs of text, and the two semantic shorthands over them.",
     "signatures": [
@@ -474,7 +955,7 @@
   },
   {
     "name": "richText",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/text.hpp",
     "summary": "Runs of text, and the two semantic shorthands over them.",
     "signatures": [
@@ -527,7 +1008,7 @@
   },
   {
     "name": "sectionHeading",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/text.hpp",
     "summary": "Runs of text, and the two semantic shorthands over them.",
     "signatures": [
@@ -543,7 +1024,7 @@
   },
   {
     "name": "strong",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/text.hpp",
     "summary": "Runs of text, and the two semantic shorthands over them.",
     "signatures": [
@@ -559,7 +1040,7 @@
   },
   {
     "name": "text",
-    "group": "Components",
+    "group": "Elements",
     "header": "gbui/widgets/text.hpp",
     "summary": "Runs of text, and the two semantic shorthands over them.",
     "signatures": [
@@ -692,59 +1173,157 @@
     ]
   },
   {
-    "name": "toolbar",
-    "group": "Components",
-    "header": "gbui/widgets/toolbar.hpp",
-    "summary": "A horizontal bar of actions.",
+    "name": "textField",
+    "group": "Elements",
+    "header": "gbui/widgets/textField.hpp",
+    "summary": "A single-line text field.",
     "signatures": [
-      "Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options = {});"
+      "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});"
     ],
     "notes": [],
-    "optionsType": "ToolbarOptions",
-    "container": true,
-    "interactive": false,
+    "optionsType": "TextFieldOptions",
+    "container": false,
+    "interactive": true,
     "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "password",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Draws bullets instead of the text. The state still holds the real string \u2014 this hides it, it does not protect it.",
+        "optional": false
+      },
+      {
+        "name": "revealToggle",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The eye at the trailing edge that shows the password while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against. Ignored unless `password` is set.",
+        "optional": false
+      },
+      {
+        "name": "revealed",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Whether the text is currently shown. The caller owns it, like every other piece of state here, and flips it when the result says so.",
+        "optional": false
+      },
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": true
+      },
       {
         "name": "height",
         "kind": "Number",
         "type": "float",
-        "default": "40.0f",
+        "default": "32.0f",
         "choices": [],
         "doc": "",
         "optional": false
       },
       {
-        "name": "gap",
+        "name": "width",
         "kind": "Number",
         "type": "float",
-        "default": "8.0f",
+        "default": "kAuto",
         "choices": [],
         "doc": "",
         "optional": false
       },
       {
-        "name": "padding",
-        "kind": "Edges",
-        "type": "Edges",
-        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
         "choices": [],
         "doc": "",
         "optional": false
-      },
+      }
+    ]
+  },
+  {
+    "name": "toggle",
+    "group": "Elements",
+    "header": "gbui/widgets/toggle.hpp",
+    "summary": "A switch.",
+    "signatures": [
+      "[[nodiscard]] bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const ToggleOptions& options = {});"
+    ],
+    "notes": [
+      "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\"."
+    ],
+    "optionsType": "ToggleOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
       {
-        "name": "background",
-        "kind": "Token",
-        "type": "Token",
-        "default": "Token::BgElevated",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "bottomBorder",
+        "name": "disabled",
         "kind": "Bool",
         "type": "bool",
-        "default": "true",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's track and thumb.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
         "choices": [],
         "doc": "",
         "optional": false
@@ -1003,6 +1582,77 @@
     ]
   },
   {
+    "name": "listRow",
+    "group": "Containers",
+    "header": "gbui/widgets/listRow.hpp",
+    "summary": "A row of a list: the sidebar's branches, the commit list, the changed files.",
+    "signatures": [
+      "Ui::Scope listRow(Ui& ui, const ListRowOptions& options = {});"
+    ],
+    "notes": [
+      "Opens a row. Returns a Scope, so its contents are written inside the braces. `selected` washes the row in the accent at 18%, `hovered` uses `surfaceHover`, and both are passed in \u2014 components hold no state."
+    ],
+    "optionsType": "ListRowOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "selected",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "hovered",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "6.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "marquee",
     "group": "Containers",
     "header": "gbui/widgets/marquee.hpp",
@@ -1060,6 +1710,84 @@
         "default": "",
         "choices": [],
         "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "panel",
+    "group": "Containers",
+    "header": "gbui/widgets/panel.hpp",
+    "summary": "A surface with a border and a radius \u2014 a card, a dialog body, a docked pane.",
+    "signatures": [
+      "Ui::Scope panel(Ui& ui, const PanelOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "PanelOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "background",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::BgElevated",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "border",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::all(12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "direction",
+        "kind": "Opaque",
+        "type": "Direction",
+        "default": "Direction::Column",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Takes the space left on the main axis, the way a pane holding a list has to. It starts from nothing, as `text` and the scroll view do, so it cannot push its siblings out of the column.",
         "optional": false
       }
     ]
@@ -1489,6 +2217,66 @@
     ]
   },
   {
+    "name": "toolbar",
+    "group": "Containers",
+    "header": "gbui/widgets/toolbar.hpp",
+    "summary": "A horizontal bar of actions.",
+    "signatures": [
+      "Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options = {});"
+    ],
+    "notes": [],
+    "optionsType": "ToolbarOptions",
+    "container": true,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "40.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "8.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "padding",
+        "kind": "Edges",
+        "type": "Edges",
+        "default": "Edges::symmetric(0.0f, 12.0f)",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "background",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::BgElevated",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "bottomBorder",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "virtualList",
     "group": "Containers",
     "header": "gbui/widgets/virtualList.hpp",
@@ -1616,1359 +2404,6 @@
         "kind": "Number",
         "type": "float",
         "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "checkbox",
-    "group": "Controls",
-    "header": "gbui/widgets/checkbox.hpp",
-    "summary": "A checkbox.",
-    "signatures": [
-      "[[nodiscard]] bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checked, const CheckboxOptions& options = {});"
-    ],
-    "notes": [
-      "Returns true on the frame the user toggled it."
-    ],
-    "optionsType": "CheckboxOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "Drawn to the right of the box; empty draws the box alone.",
-        "optional": false
-      },
-      {
-        "name": "size",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's box size and corner.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "colorField",
-    "group": "Controls",
-    "header": "gbui/widgets/colorPicker.hpp",
-    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
-    "signatures": [
-      "ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorFieldOptions& options = {});"
-    ],
-    "notes": [
-      "The same picker behind a swatch, opened in a popover. Two entry points rather than a flag, because they are two different components in every way that matters: the inline one is always open and owns its space, and this one is a control in a form that borrows space when asked. They share the state and the drawing, which is the part worth sharing. **The application owns whether it is open**, as it does for every other overlay here \u2014 `state.open` is a plain bool it can set, restore or ignore."
-    ],
-    "optionsType": "ColorFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "28.0f",
-        "choices": [],
-        "doc": "The trigger's own size. The popover takes `width` from the picker options above, as everything else does.",
-        "optional": false
-      },
-      {
-        "name": "showHexOnTrigger",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "dismissOnOutsideClick",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "A press anywhere else closes it. On, because a popup that outlives the attention that opened it is a popup the reader has to dismiss on purpose. Off keeps it open until the application says otherwise \u2014 which is what a picker being dragged from inside a dialog wants, where the click outside belongs to the dialog.",
-        "optional": false
-      },
-      {
-        "name": "dismissOnEscape",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "Escape closes it. Separate from the above: a caller may want the key without the click, and a modal that owns Escape may want neither.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "colorPicker",
-    "group": "Controls",
-    "header": "gbui/widgets/colorPicker.hpp",
-    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
-    "signatures": [
-      "ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorPickerOptions& options = {});"
-    ],
-    "notes": [
-      "Draws the picker and edits `state` in place. The square is built the way every picker on the web is: the pure hue behind, a white-to-transparent gradient across it and a transparent-to-black gradient down it. Two gradients over a fill is a two-dimensional ramp, and it costs three nodes rather than a per-pixel shader the painter does not have."
-    ],
-    "optionsType": "ColorPickerOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "alpha",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "The alpha rail and the alpha in the readout. Off for a picker choosing a theme token, where a translucent colour is not a valid answer.",
-        "optional": false
-      },
-      {
-        "name": "hue",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "The hue rail. Off leaves a picker that only shades one hue, which is what a \"tint of the accent\" control wants.",
-        "optional": false
-      },
-      {
-        "name": "showHex",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "The `#rrggbb` readout under the rails.",
-        "optional": false
-      },
-      {
-        "name": "swatches",
-        "kind": "Opaque",
-        "type": "std::vector<Color>",
-        "default": "",
-        "choices": [],
-        "doc": "A row of fixed swatches under everything else. Empty draws none.",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "240.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "squareHeight",
-        "kind": "Number",
-        "type": "float",
-        "default": "150.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "railHeight",
-        "kind": "Number",
-        "type": "float",
-        "default": "14.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "gap",
-        "kind": "Number",
-        "type": "float",
-        "default": "10.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "dateField",
-    "group": "Controls",
-    "header": "gbui/widgets/datePicker.hpp",
-    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
-    "signatures": [
-      "DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DateFieldOptions& options = {});"
-    ],
-    "notes": [
-      "A calendar behind a field, opened in a popover. The counterpart to `colorField`, and the same split: the inline calendar owns its space, this one borrows it. They share the state and the grid."
-    ],
-    "optionsType": "DateFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "placeholder",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"Select a date\u2026\"",
-        "choices": [],
-        "doc": "Shown when nothing is chosen. A field with no value has to say so. Falling back to today would be a lie \u2014 \"no date\" and \"today\" are different answers, and a form that silently fills one in gets the other submitted.",
-        "optional": false
-      },
-      {
-        "name": "pattern",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"dd/MM/yyyy\"",
-        "choices": [],
-        "doc": "How the chosen date is written on the trigger. The same grammar `formatDate` takes, so the field reads the way the rest of the application writes dates.",
-        "optional": false
-      },
-      {
-        "name": "clearable",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "An x on the trigger that puts it back to nothing.",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "200.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "32.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "dismissOnOutsideClick",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "dismissOnEscape",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "datePicker",
-    "group": "Controls",
-    "header": "gbui/widgets/datePicker.hpp",
-    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
-    "signatures": [
-      "DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DatePickerOptions& options = {});"
-    ],
-    "notes": [
-      "Draws a month and reports the day chosen, if any. Stateless like everything else: `selected` comes in, the state carries only what is *being looked at*. The arrow keys move by a day and Page Up and Page Down by a month, both skipping nothing \u2014 a day outside the bounds is drawn and dimmed rather than hidden, because a calendar with holes in it is harder to read than one with unavailable days in it."
-    ],
-    "optionsType": "DatePickerOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "minimum",
-        "kind": "Opaque",
-        "type": "Date",
-        "default": "",
-        "choices": [],
-        "doc": "Nothing before this, or after that, can be chosen. An invalid date means no bound.",
-        "optional": false
-      },
-      {
-        "name": "maximum",
-        "kind": "Opaque",
-        "type": "Date",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "today",
-        "kind": "Opaque",
-        "type": "Date",
-        "default": "Date::today()",
-        "choices": [],
-        "doc": "Drawn with a dot under it. Invalid draws none.",
-        "optional": false
-      },
-      {
-        "name": "locale",
-        "kind": "Opaque",
-        "type": "CalendarLocale",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "showToday",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "cellSize",
-        "kind": "Number",
-        "type": "float",
-        "default": "30.0f",
-        "choices": [],
-        "doc": "How big a day cell would like to be. A preference, not a promise: seven of these plus six gaps is a wide grid, and a calendar in a narrow column or a popover against the edge of a small window gets less than that. The cells shrink to fit rather than running out of the box, down to `minimumCellSize` and no further.",
-        "optional": false
-      },
-      {
-        "name": "minimumCellSize",
-        "kind": "Number",
-        "type": "float",
-        "default": "22.0f",
-        "choices": [],
-        "doc": "The floor the cells shrink to. Below about this a two-digit day stops being readable, and a grid that has to scroll sideways is worse than one that is merely tight.",
-        "optional": false
-      },
-      {
-        "name": "gap",
-        "kind": "Number",
-        "type": "float",
-        "default": "2.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "dateTimeField",
-    "group": "Controls",
-    "header": "gbui/widgets/dateTimePicker.hpp",
-    "summary": "A calendar and a clock, chosen together.",
-    "signatures": [
-      "DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimeFieldState& state, const DateTimeFieldOptions& options = {});"
-    ],
-    "notes": [
-      "A calendar and a clock behind one input. The pair belongs behind a single field far more often than beside each other on a page \u2014 a due date, a scheduled run, a deadline are one value, and asking for it in two controls invites half of it being filled in."
-    ],
-    "optionsType": "DateTimeFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "placeholder",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"Select a date and time\u2026\"",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "pattern",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"dd/MM/yyyy HH:mm\"",
-        "choices": [],
-        "doc": "How the value is written on the trigger. One pattern for both halves, in the grammar `formatDate` and `formatTime` share \u2014 the date tokens are read by one and the clock tokens by the other, so `dd/MM/yyyy HH:mm` needs no separate spelling of where the date ends and the time begins.",
-        "optional": false
-      },
-      {
-        "name": "clearable",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "240.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the design's control height.",
-        "optional": false
-      },
-      {
-        "name": "dismissOnOutsideClick",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "dismissOnEscape",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "dateTimePicker",
-    "group": "Controls",
-    "header": "gbui/widgets/dateTimePicker.hpp",
-    "summary": "A calendar and a clock, chosen together.",
-    "signatures": [
-      "DateTimePickerResult dateTimePicker(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimePickerState& state, const DateTimePickerOptions& options = {});"
-    ],
-    "notes": [
-      "The two pickers, sharing one value."
-    ],
-    "optionsType": "DateTimePickerOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "date",
-        "kind": "Opaque",
-        "type": "DatePickerOptions",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "time",
-        "kind": "Opaque",
-        "type": "TimePickerOptions",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "sideBySide",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "The clock beside the calendar, or under it. Beside is the default because a calendar is wider than it is tall and the pair balances.",
-        "optional": false
-      },
-      {
-        "name": "gap",
-        "kind": "Number",
-        "type": "float",
-        "default": "16.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "hyperlink",
-    "group": "Controls",
-    "header": "gbui/widgets/hyperlink.hpp",
-    "summary": "A hyperlink.",
-    "signatures": [
-      "[[nodiscard]] bool hyperlink(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const HyperlinkOptions& options = {});"
-    ],
-    "notes": [
-      "Returns true on the frame it was followed \u2014 by click, or by Return while focused. `hyperlink` rather than `link`, because `link` in a C++ codebase already means the linker, a linked list, or the act of linking; this is the one thing it does not usually mean."
-    ],
-    "optionsType": "HyperlinkOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "href",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "Where it points. Following it hands this to `openUrl`. Empty follows nothing and only reports the click, which is what a link that scrolls somewhere inside the application wants.",
-        "optional": false
-      },
-      {
-        "name": "chord",
-        "kind": "Opaque",
-        "type": "Modifiers",
-        "default": "",
-        "choices": [],
-        "doc": "Modifiers that must be held for a click to count. All false \u2014 the default \u2014 means a plain click follows it, which is what a link is. Requiring a chord is for a link inside editable text, where a plain click has to place the caret instead; that is the bargain every editor makes, and it is a decision about the surrounding document rather than about the link, so it is the caller's.",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "trailing",
-        "kind": "Icon",
-        "type": "std::optional<Icon>",
-        "default": "",
-        "choices": [],
-        "doc": "Drawn after the label \u2014 an arrow for \"this leaves the application\".",
-        "optional": true
-      },
-      {
-        "name": "color",
-        "kind": "Token",
-        "type": "Token",
-        "default": "Token::Accent",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "size",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "underlineOnHover",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "Underlines always, or only under the pointer. Always is the accessible default: colour alone is not a cue for anyone who cannot see it.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "label",
-    "group": "Controls",
-    "header": "gbui/widgets/label.hpp",
-    "summary": "A caption for a control.",
-    "signatures": [
-      "std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::string_view id, std::string_view text, const LabelOptions& options = {});"
-    ],
-    "notes": [
-      "Returns the id to focus when the label was clicked, or nothing. The caller hands it to `Interaction::focus`, which keeps the toolkit from mutating interaction state behind a component's back: if (const auto target = label(ui, input, \"f.name\", \"Repository\", {.forId = \"name\"})) interaction.focus(*target);"
-    ],
-    "optionsType": "LabelOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "forId",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "The control this names. Clicking the label focuses it, exactly as `<label for>` does, unless that control is disabled or read-only.",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "readOnly",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "color",
-        "kind": "Token",
-        "type": "Token",
-        "default": "Token::TextMuted",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "size",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "required",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "Marks the field as required, with the usual asterisk.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "numberField",
-    "group": "Controls",
-    "header": "gbui/widgets/numberField.hpp",
-    "summary": "A number, with step buttons and the wheel.",
-    "signatures": [
-      "[[nodiscard]] NumberFieldResult numberField(Ui& ui, const Interaction& input, std::string_view id, double value, const NumberFieldOptions& options = {});"
-    ],
-    "notes": [
-      "The value is clamped and rounded before it is returned, so a caller never sees one outside the range."
-    ],
-    "optionsType": "NumberFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "minimum",
-        "kind": "Number",
-        "type": "double",
-        "default": "-1e18",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "maximum",
-        "kind": "Number",
-        "type": "double",
-        "default": "1e18",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "step",
-        "kind": "Number",
-        "type": "double",
-        "default": "1.0",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "decimals",
-        "kind": "Number",
-        "type": "int",
-        "default": "0",
-        "choices": [],
-        "doc": "Digits after the point, for both display and rounding.",
-        "optional": false
-      },
-      {
-        "name": "suffix",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "\"px\", \"%\", \" ms\"",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "readOnly",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "steppers",
-        "kind": "Enum",
-        "type": "StepperPlacement",
-        "default": "StepperPlacement::Sides",
-        "choices": [
-          "Sides",
-          "Stacked",
-          "None"
-        ],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's control height.",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "120.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "stackedBelow",
-        "kind": "Number",
-        "type": "float",
-        "default": "110.0f",
-        "choices": [],
-        "doc": "Below this the steppers are dropped to `Stacked` automatically, so a field in a narrow column shows its value rather than two buttons.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "progressBar",
-    "group": "Controls",
-    "header": "gbui/widgets/progress.hpp",
-    "summary": "A progress bar, determinate or not.",
-    "signatures": [
-      "NodeId progressBar(Ui& ui, const ProgressOptions& options = {});"
-    ],
-    "notes": [
-      "Not an input, but it belongs with them: the same track, the same tokens."
-    ],
-    "optionsType": "ProgressOptions",
-    "container": false,
-    "interactive": false,
-    "properties": [
-      {
-        "name": "value",
-        "kind": "Number",
-        "type": "double",
-        "default": "0.0",
-        "choices": [],
-        "doc": "Below zero draws the indeterminate form.",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "6.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "grow",
-        "kind": "Number",
-        "type": "float",
-        "default": "1.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "color",
-        "kind": "Token",
-        "type": "Token",
-        "default": "Token::Accent",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "phase",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Phase for the indeterminate form, in turns. Feed it a clock.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "radio",
-    "group": "Controls",
-    "header": "gbui/widgets/radio.hpp",
-    "summary": "One option of a group.",
-    "signatures": [
-      "bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected, const RadioOptions& options = {});"
-    ],
-    "notes": [
-      "Returns true on the frame it was chosen; a radio that is already selected reports nothing, because choosing it again is not a change."
-    ],
-    "optionsType": "RadioOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "size",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's size.",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "richEditor",
-    "group": "Controls",
-    "header": "gbui/widgets/richEditor.hpp",
-    "summary": "A rich text editor: blocks of text, marks over ranges, and a toolbar.",
-    "signatures": [
-      "RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view id, RichDocument& document, RichEditorState& state, const RichEditorOptions& options = {});"
-    ],
-    "notes": [
-      "Draws the editor and edits `document` in place. **What this is and is not.** It is a block editor: paragraphs, headings, lists, quotes and code blocks, with bold, italic, underline, strikethrough, inline code and links over ranges within a block. Typing, splitting a block with Return and merging with Backspace all work, and the toolbar is the caller's to compose. It is **not** finished, and the gaps are worth naming rather than discovering: no images \u2014 the painter cannot decode one yet; no undo; the caret moves by character and by block, not by *visual line*, so a block that wraps is edited by a caret that does not know where the lines are; and there is no nesting of lists. Each of those is a piece of work of its own, and three of them want engine features that do not exist."
-    ],
-    "optionsType": "RichEditorOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "toolbar",
-        "kind": "Opaque",
-        "type": "std::vector<ToolbarItem>",
-        "default": "",
-        "choices": [],
-        "doc": "Empty takes `defaultToolbar()`. Anything else is exactly what is drawn, in that order \u2014 which is how a caller adds its own buttons, drops the ones it does not want, or reorders the rest.",
-        "optional": false
-      },
-      {
-        "name": "blockChoices",
-        "kind": "Opaque",
-        "type": "std::vector<BlockChoice>",
-        "default": "",
-        "choices": [],
-        "doc": "What the `BlockStyle` dropdown lists. Empty takes `defaultBlockChoices()`.",
-        "optional": false
-      },
-      {
-        "name": "showToolbar",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "placeholder",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"Write something\u2026\"",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "minHeight",
-        "kind": "Number",
-        "type": "float",
-        "default": "220.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "grow",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "slider",
-    "group": "Controls",
-    "header": "gbui/widgets/slider.hpp",
-    "summary": "A single-value slider.",
-    "signatures": [
-      "[[nodiscard]] SliderResult slider(Ui& ui, const Interaction& input, std::string_view id, double value, const SliderOptions& options = {});"
-    ],
-    "notes": [
-      "Follows the pointer while it is held, even when it wanders off the track \u2014 which is what `Interaction::dragging` is for."
-    ],
-    "optionsType": "SliderOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "minimum",
-        "kind": "Number",
-        "type": "double",
-        "default": "0.0",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "maximum",
-        "kind": "Number",
-        "type": "double",
-        "default": "1.0",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "step",
-        "kind": "Number",
-        "type": "double",
-        "default": "0.0",
-        "choices": [],
-        "doc": "0 is continuous; anything else snaps to a multiple of it.",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "grow",
-        "kind": "Number",
-        "type": "float",
-        "default": "1.0f",
-        "choices": [],
-        "doc": "Takes the free space on the parent's main axis, which is what a slider in a row wants and the only thing `grow` can mean. In a *column* the main axis is vertical, so this used to make a slider eat the leftover height and sit alone at the bottom of its card. It no longer can: the control is clamped to `height` whichever way it is pointed, so growing is free horizontally and impossible vertically.",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "20.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "showValue",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "Shows the value at the right of the track.",
-        "optional": false
-      },
-      {
-        "name": "decimals",
-        "kind": "Number",
-        "type": "int",
-        "default": "2",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "textField",
-    "group": "Controls",
-    "header": "gbui/widgets/textField.hpp",
-    "summary": "A single-line text field.",
-    "signatures": [
-      "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});"
-    ],
-    "notes": [],
-    "optionsType": "TextFieldOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "placeholder",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "readOnly",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "password",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "Draws bullets instead of the text. The state still holds the real string \u2014 this hides it, it does not protect it.",
-        "optional": false
-      },
-      {
-        "name": "revealToggle",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "The eye at the trailing edge that shows the password while it is held. On by default, because a field you cannot read back is a field people mistype into; turn it off where a shoulder-surfer is the threat being designed against. Ignored unless `password` is set.",
-        "optional": false
-      },
-      {
-        "name": "revealed",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "Whether the text is currently shown. The caller owns it, like every other piece of state here, and flips it when the result says so.",
-        "optional": false
-      },
-      {
-        "name": "leading",
-        "kind": "Icon",
-        "type": "std::optional<Icon>",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": true
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "32.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "grow",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "timePicker",
-    "group": "Controls",
-    "header": "gbui/widgets/timePicker.hpp",
-    "summary": "A time of day, chosen from columns of hours and minutes.",
-    "signatures": [
-      "TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view id, const Time& selected, TimePickerState& state, const TimePickerOptions& options = {});"
-    ],
-    "notes": [
-      "Columns of hours, minutes and \u2014 when asked for \u2014 seconds, each scrolled to its own value. Columns rather than steppers because a time is picked far more often than it is nudged: \"quarter past two\" is two glances, and two number fields make it two edits. Each column keeps its selection in view, so opening the picker on 23:45 does not show midnight."
-    ],
-    "optionsType": "TimePickerOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "use24Hour",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "true",
-        "choices": [],
-        "doc": "Twelve-hour display with an AM/PM column. The *value* is always 0\u201323.",
-        "optional": false
-      },
-      {
-        "name": "showSeconds",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "minuteStep",
-        "kind": "Number",
-        "type": "int",
-        "default": "1",
-        "choices": [],
-        "doc": "Coarser columns: 5 or 15 for a picker nobody needs to the minute.",
-        "optional": false
-      },
-      {
-        "name": "secondStep",
-        "kind": "Number",
-        "type": "int",
-        "default": "1",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "minimum",
-        "kind": "Opaque",
-        "type": "Time",
-        "default": "0, 0, 0",
-        "choices": [],
-        "doc": "Times outside these cannot be chosen. Leave both at midnight for none \u2014 a range of nothing is not a range anybody wants.",
-        "optional": false
-      },
-      {
-        "name": "maximum",
-        "kind": "Opaque",
-        "type": "Time",
-        "default": "0, 0, 0",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "locale",
-        "kind": "Opaque",
-        "type": "ClockLocale",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "176.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "columnWidth",
-        "kind": "Number",
-        "type": "float",
-        "default": "58.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "rowHeight",
-        "kind": "Number",
-        "type": "float",
-        "default": "28.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "toggle",
-    "group": "Controls",
-    "header": "gbui/widgets/toggle.hpp",
-    "summary": "A switch.",
-    "signatures": [
-      "[[nodiscard]] bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const ToggleOptions& options = {});"
-    ],
-    "notes": [
-      "Same contract as the checkbox; the difference is only that a switch reads as \"on now\" and a checkbox as \"will apply\"."
-    ],
-    "optionsType": "ToggleOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's track and thumb.",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
         "choices": [],
         "doc": "",
         "optional": false
@@ -3282,99 +2717,6 @@
     ]
   },
   {
-    "name": "select",
-    "group": "Overlays",
-    "header": "gbui/widgets/select.hpp",
-    "summary": "A closed box that opens a list.",
-    "signatures": [
-      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});"
-    ],
-    "notes": [
-      "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box \u2014 not the rows \u2014 keeps the keyboard, so Tab leaves the control rather than walking into the popup."
-    ],
-    "optionsType": "SelectOptions",
-    "container": false,
-    "interactive": true,
-    "properties": [
-      {
-        "name": "placeholder",
-        "kind": "Text",
-        "type": "std::string_view",
-        "default": "\"Select\u2026\"",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "disabled",
-        "kind": "Bool",
-        "type": "bool",
-        "default": "false",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "grow",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "kind": "Number",
-        "type": "float",
-        "default": "0.0f",
-        "choices": [],
-        "doc": "Zero takes the active design's control height, so a select lines up with every other control on its row without anyone matching numbers.",
-        "optional": false
-      },
-      {
-        "name": "maxVisible",
-        "kind": "Number",
-        "type": "std::size_t",
-        "default": "12",
-        "choices": [],
-        "doc": "How many rows fit before the list scrolls. The rest are reachable by scrolling or by walking to them with the arrow keys.",
-        "optional": false
-      },
-      {
-        "name": "maxListHeight",
-        "kind": "Number",
-        "type": "float",
-        "default": "kAuto",
-        "choices": [],
-        "doc": "A hard ceiling in pixels, which wins over `maxVisible` when both would apply \u2014 a row count cannot know how tall the window is. `kAuto` leaves the row count in charge.",
-        "optional": false
-      },
-      {
-        "name": "listScroll",
-        "kind": "Enum",
-        "type": "ScrollAxis",
-        "default": "ScrollAxis::Vertical",
-        "choices": [
-          "None",
-          "Vertical",
-          "Horizontal"
-        ],
-        "doc": "Whether the open list scrolls at all. `None` clips it instead, for a caller that would rather constrain the list than let it move.",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "tooltip",
     "group": "Overlays",
     "header": "gbui/widgets/tooltip.hpp",
@@ -3414,6 +2756,664 @@
         "default": "true",
         "choices": [],
         "doc": "A long tooltip wraps rather than eliding \u2014 a description cut off at an ellipsis is worse than no description.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "colorField",
+    "group": "Components",
+    "header": "gbui/widgets/colorPicker.hpp",
+    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
+    "signatures": [
+      "ColorPickerResult colorField(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorFieldOptions& options = {});"
+    ],
+    "notes": [
+      "The same picker behind a swatch, opened in a popover. Two entry points rather than a flag, because they are two different components in every way that matters: the inline one is always open and owns its space, and this one is a control in a form that borrows space when asked. They share the state and the drawing, which is the part worth sharing. **The application owns whether it is open**, as it does for every other overlay here \u2014 `state.open` is a plain bool it can set, restore or ignore."
+    ],
+    "optionsType": "ColorFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "The trigger's own size. The popover takes `width` from the picker options above, as everything else does.",
+        "optional": false
+      },
+      {
+        "name": "showHexOnTrigger",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A press anywhere else closes it. On, because a popup that outlives the attention that opened it is a popup the reader has to dismiss on purpose. Off keeps it open until the application says otherwise \u2014 which is what a picker being dragged from inside a dialog wants, where the click outside belongs to the dialog.",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Escape closes it. Separate from the above: a caller may want the key without the click, and a modal that owns Escape may want neither.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "colorPicker",
+    "group": "Components",
+    "header": "gbui/widgets/colorPicker.hpp",
+    "summary": "A colour picker: a saturation/value square, a hue rail and an alpha rail.",
+    "signatures": [
+      "ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view id, ColorPickerState& state, const ColorPickerOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the picker and edits `state` in place. The square is built the way every picker on the web is: the pure hue behind, a white-to-transparent gradient across it and a transparent-to-black gradient down it. Two gradients over a fill is a two-dimensional ramp, and it costs three nodes rather than a per-pixel shader the painter does not have."
+    ],
+    "optionsType": "ColorPickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "alpha",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The alpha rail and the alpha in the readout. Off for a picker choosing a theme token, where a translucent colour is not a valid answer.",
+        "optional": false
+      },
+      {
+        "name": "hue",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The hue rail. Off leaves a picker that only shades one hue, which is what a \"tint of the accent\" control wants.",
+        "optional": false
+      },
+      {
+        "name": "showHex",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The `#rrggbb` readout under the rails.",
+        "optional": false
+      },
+      {
+        "name": "swatches",
+        "kind": "Opaque",
+        "type": "std::vector<Color>",
+        "default": "",
+        "choices": [],
+        "doc": "A row of fixed swatches under everything else. Empty draws none.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "squareHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "150.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "railHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "14.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "10.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateField",
+    "group": "Components",
+    "header": "gbui/widgets/datePicker.hpp",
+    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
+    "signatures": [
+      "DateFieldResult dateField(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DateFieldOptions& options = {});"
+    ],
+    "notes": [
+      "A calendar behind a field, opened in a popover. The counterpart to `colorField`, and the same split: the inline calendar owns its space, this one borrows it. They share the state and the grid."
+    ],
+    "optionsType": "DateFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select a date\u2026\"",
+        "choices": [],
+        "doc": "Shown when nothing is chosen. A field with no value has to say so. Falling back to today would be a lie \u2014 \"no date\" and \"today\" are different answers, and a form that silently fills one in gets the other submitted.",
+        "optional": false
+      },
+      {
+        "name": "pattern",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"dd/MM/yyyy\"",
+        "choices": [],
+        "doc": "How the chosen date is written on the trigger. The same grammar `formatDate` takes, so the field reads the way the rest of the application writes dates.",
+        "optional": false
+      },
+      {
+        "name": "clearable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "An x on the trigger that puts it back to nothing.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "200.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "32.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "datePicker",
+    "group": "Components",
+    "header": "gbui/widgets/datePicker.hpp",
+    "summary": "A calendar: a month of days, walked with the pointer or the keyboard.",
+    "signatures": [
+      "DatePickerResult datePicker(Ui& ui, const Interaction& input, std::string_view id, const Date& selected, DatePickerState& state, const DatePickerOptions& options = {});"
+    ],
+    "notes": [
+      "Draws a month and reports the day chosen, if any. Stateless like everything else: `selected` comes in, the state carries only what is *being looked at*. The arrow keys move by a day and Page Up and Page Down by a month, both skipping nothing \u2014 a day outside the bounds is drawn and dimmed rather than hidden, because a calendar with holes in it is harder to read than one with unavailable days in it."
+    ],
+    "optionsType": "DatePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "minimum",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "",
+        "choices": [],
+        "doc": "Nothing before this, or after that, can be chosen. An invalid date means no bound.",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "today",
+        "kind": "Opaque",
+        "type": "Date",
+        "default": "Date::today()",
+        "choices": [],
+        "doc": "Drawn with a dot under it. Invalid draws none.",
+        "optional": false
+      },
+      {
+        "name": "locale",
+        "kind": "Opaque",
+        "type": "CalendarLocale",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "showToday",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "cellSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "30.0f",
+        "choices": [],
+        "doc": "How big a day cell would like to be. A preference, not a promise: seven of these plus six gaps is a wide grid, and a calendar in a narrow column or a popover against the edge of a small window gets less than that. The cells shrink to fit rather than running out of the box, down to `minimumCellSize` and no further.",
+        "optional": false
+      },
+      {
+        "name": "minimumCellSize",
+        "kind": "Number",
+        "type": "float",
+        "default": "22.0f",
+        "choices": [],
+        "doc": "The floor the cells shrink to. Below about this a two-digit day stops being readable, and a grid that has to scroll sideways is worse than one that is merely tight.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "2.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateTimeField",
+    "group": "Components",
+    "header": "gbui/widgets/dateTimePicker.hpp",
+    "summary": "A calendar and a clock, chosen together.",
+    "signatures": [
+      "DateTimeFieldResult dateTimeField(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimeFieldState& state, const DateTimeFieldOptions& options = {});"
+    ],
+    "notes": [
+      "A calendar and a clock behind one input. The pair belongs behind a single field far more often than beside each other on a page \u2014 a due date, a scheduled run, a deadline are one value, and asking for it in two controls invites half of it being filled in."
+    ],
+    "optionsType": "DateTimeFieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Select a date and time\u2026\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "pattern",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"dd/MM/yyyy HH:mm\"",
+        "choices": [],
+        "doc": "How the value is written on the trigger. One pattern for both halves, in the grammar `formatDate` and `formatTime` share \u2014 the date tokens are read by one and the clock tokens by the other, so `dd/MM/yyyy HH:mm` needs no separate spelling of where the date ends and the time begins.",
+        "optional": false
+      },
+      {
+        "name": "clearable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "240.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the design's control height.",
+        "optional": false
+      },
+      {
+        "name": "dismissOnOutsideClick",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "dismissOnEscape",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "dateTimePicker",
+    "group": "Components",
+    "header": "gbui/widgets/dateTimePicker.hpp",
+    "summary": "A calendar and a clock, chosen together.",
+    "signatures": [
+      "DateTimePickerResult dateTimePicker(Ui& ui, const Interaction& input, std::string_view id, const DateTime& selected, DateTimePickerState& state, const DateTimePickerOptions& options = {});"
+    ],
+    "notes": [
+      "The two pickers, sharing one value."
+    ],
+    "optionsType": "DateTimePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "date",
+        "kind": "Opaque",
+        "type": "DatePickerOptions",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "time",
+        "kind": "Opaque",
+        "type": "TimePickerOptions",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "sideBySide",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "The clock beside the calendar, or under it. Beside is the default because a calendar is wider than it is tall and the pair balances.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "richEditor",
+    "group": "Components",
+    "header": "gbui/widgets/richEditor.hpp",
+    "summary": "A rich text editor: blocks of text, marks over ranges, and a toolbar.",
+    "signatures": [
+      "RichEditorResult richEditor(Ui& ui, const Interaction& input, std::string_view id, RichDocument& document, RichEditorState& state, const RichEditorOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the editor and edits `document` in place. **What this is and is not.** It is a block editor: paragraphs, headings, lists, quotes and code blocks, with bold, italic, underline, strikethrough, inline code and links over ranges within a block. Typing, splitting a block with Return and merging with Backspace all work, and the toolbar is the caller's to compose. It is **not** finished, and the gaps are worth naming rather than discovering: no images \u2014 the painter cannot decode one yet; no undo; the caret moves by character and by block, not by *visual line*, so a block that wraps is edited by a caret that does not know where the lines are; and there is no nesting of lists. Each of those is a piece of work of its own, and three of them want engine features that do not exist."
+    ],
+    "optionsType": "RichEditorOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "toolbar",
+        "kind": "Opaque",
+        "type": "std::vector<ToolbarItem>",
+        "default": "",
+        "choices": [],
+        "doc": "Empty takes `defaultToolbar()`. Anything else is exactly what is drawn, in that order \u2014 which is how a caller adds its own buttons, drops the ones it does not want, or reorders the rest.",
+        "optional": false
+      },
+      {
+        "name": "blockChoices",
+        "kind": "Opaque",
+        "type": "std::vector<BlockChoice>",
+        "default": "",
+        "choices": [],
+        "doc": "What the `BlockStyle` dropdown lists. Empty takes `defaultBlockChoices()`.",
+        "optional": false
+      },
+      {
+        "name": "showToolbar",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Write something\u2026\"",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "220.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "timePicker",
+    "group": "Components",
+    "header": "gbui/widgets/timePicker.hpp",
+    "summary": "A time of day, chosen from columns of hours and minutes.",
+    "signatures": [
+      "TimePickerResult timePicker(Ui& ui, const Interaction& input, std::string_view id, const Time& selected, TimePickerState& state, const TimePickerOptions& options = {});"
+    ],
+    "notes": [
+      "Columns of hours, minutes and \u2014 when asked for \u2014 seconds, each scrolled to its own value. Columns rather than steppers because a time is picked far more often than it is nudged: \"quarter past two\" is two glances, and two number fields make it two edits. Each column keeps its selection in view, so opening the picker on 23:45 does not show midnight."
+    ],
+    "optionsType": "TimePickerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "use24Hour",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Twelve-hour display with an AM/PM column. The *value* is always 0\u201323.",
+        "optional": false
+      },
+      {
+        "name": "showSeconds",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minuteStep",
+        "kind": "Number",
+        "type": "int",
+        "default": "1",
+        "choices": [],
+        "doc": "Coarser columns: 5 or 15 for a picker nobody needs to the minute.",
+        "optional": false
+      },
+      {
+        "name": "secondStep",
+        "kind": "Number",
+        "type": "int",
+        "default": "1",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "minimum",
+        "kind": "Opaque",
+        "type": "Time",
+        "default": "0, 0, 0",
+        "choices": [],
+        "doc": "Times outside these cannot be chosen. Leave both at midnight for none \u2014 a range of nothing is not a range anybody wants.",
+        "optional": false
+      },
+      {
+        "name": "maximum",
+        "kind": "Opaque",
+        "type": "Time",
+        "default": "0, 0, 0",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "locale",
+        "kind": "Opaque",
+        "type": "ClockLocale",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "176.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "columnWidth",
+        "kind": "Number",
+        "type": "float",
+        "default": "58.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "rowHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "",
         "optional": false
       }
     ]

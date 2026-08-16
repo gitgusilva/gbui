@@ -40,16 +40,29 @@ JSON_OUT = ROOT / "docs" / ".vitepress" / "theme" / "components.json"
 
 # The umbrella headers decide the groups, so the grouping in the documentation
 # and the grouping a developer already sees in the includes are the same one.
+#
+# `controls.hpp` is deliberately absent. It still exists and still compiles, but
+# it now includes the two umbrellas that replaced it, and listing it here would
+# make it claim every file they hold — first umbrella wins below — putting the
+# whole set back under one word. A compatibility header contributes no group.
 UMBRELLAS = {
+    "elements.hpp": "Elements",
     "components.hpp": "Components",
-    "controls.hpp": "Controls",
     "containers.hpp": "Containers",
     "overlays.hpp": "Overlays",
 }
-# `chart.hpp` has no umbrella of its own and is a group by any reader's
-# reckoning, so it is named here rather than falling into "Other".
-EXPLICIT_GROUPS = {"chart.hpp": "Charts", "icons.hpp": "Components"}
-GROUP_ORDER = ["Components", "Containers", "Controls", "Overlays", "Charts", "Other"]
+# Two headers an umbrella does not decide for.
+#
+# `chart.hpp` comes in through `components.hpp` for the convenience of a caller
+# who wants everything, but nine unrelated charts are a group by any reader's
+# reckoning. `icons.hpp` is generated and has no umbrella at all.
+EXPLICIT_GROUPS = {"chart.hpp": "Charts", "icons.hpp": "Elements"}
+# The reading order, which is also the order the four questions at the top of
+# `elements.hpp` are asked in: the leaves first, then the things that hold them,
+# then the things that float over them, then the composed editors. "Other" is
+# last and should stay empty — a component nothing gathers is a missing include
+# in an umbrella, not a category.
+GROUP_ORDER = ["Elements", "Containers", "Overlays", "Components", "Charts", "Other"]
 
 # ---- the shapes this understands -------------------------------------------
 
