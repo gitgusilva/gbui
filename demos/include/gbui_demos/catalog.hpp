@@ -116,6 +116,8 @@ struct State {
     std::vector<std::vector<std::uint8_t>> plates{};
     int plateSide = 0;
     GalleryState gallery{};
+    /** What is open in the file tree, and what is chosen in it. */
+    TreeState tree{};
     /**
      * Where an example wants the keyboard.
      *

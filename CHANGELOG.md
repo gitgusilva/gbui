@@ -16,6 +16,32 @@ commit.
 
 ### Added
 
+- **`treeView`** — the expandable hierarchy the component inventory calls the
+  single biggest gap for a git client. Expansion, keyboard walking and
+  virtualisation, which are each easy and never all three.
+
+  **The data is a flat vector in pre-order with a depth on each row.** Flat is
+  what makes virtualisation possible at all — a slice of a tree is only a slice
+  if the tree is already a sequence — and it is what a caller usually has from a
+  `git ls-tree` walk or a directory listing. Which rows are *visible* is worked
+  out here in one pass with a watermark, so a caller that collapses a node
+  passes exactly the same vector as before.
+
+  Right opens a closed node and steps into an open one; Left closes an open one
+  and steps out of a closed one. That pair is the whole of why a tree feels like
+  a tree. The twisty opens without choosing and the row chooses, because "show
+  me what is in here" and "I want this one" are two gestures.
+
+  Each row reports its `level` and its position among its **siblings** — new
+  `Accessibility::level`, ARIA's `aria-level` — since "item 2 of 5" in a
+  hierarchy means whose five and "row 340 of 900" is the size of the repository
+  rather than of the directory. Computed in two linear passes with a counter per
+  depth, because the obvious version is quadratic on a directory with a thousand
+  files in it, which is a directory people have.
+
+  `VirtualListOptions::itemRole` is new with it: `Role::None` hands the slot's
+  semantics to the row callback, so a tree's rows can be counted among their
+  siblings rather than among the nine hundred the list holds.
 - **`select` filters, which is the `combobox` the inventory called the gap that
   bites first** — a branch picker past about thirty branches is unusable without
   type-to-filter. An option rather than a component of its own, for the reason

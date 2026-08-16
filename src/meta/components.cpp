@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(64);
+    out.reserve(65);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -740,6 +740,27 @@ std::vector<ComponentInfo> build() {
         "Ui::Scope toolbar(Ui& ui, const ToolbarOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "treeView",
+        "Containers",
+        "gbui/widgets/treeView.hpp",
+        "Draws the visible rows of `items` and walks them. `items` is the **whole** hierarchy, flattened in pre-order. Which of it is on screen is worked out here from `state.expanded`, so a caller that collapses a node passes exactly the same vector as before.",
+        "An expandable hierarchy: a branch sidebar, a file tree, an outline.",
+        "TreeViewOptions",
+        {
+            PropertyInfo{"rowHeight", PropertyKind::Number, "float", "26.0f", {}, "", false},
+            PropertyInfo{"indent", PropertyKind::Number, "float", "15.0f", {}, "How far one level steps in.", false},
+            PropertyInfo{"guides", PropertyKind::Bool, "bool", "true", {}, "A hairline down each open level, joining a parent to its children. On, because indentation alone stops being readable at about four levels — the eye cannot hold which column belongs to which parent — and a file tree is routinely deeper than that.", false},
+            PropertyInfo{"virtualise", PropertyKind::Bool, "bool", "true", {}, "Builds only the rows on screen. Off draws them all, which is right for an outline of twenty and wrong for a repository.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the hierarchy is of — \"Branches\", \"Files\".", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "1.0f", {}, "", false},
+        },
+        false,
+        true,
+        "TreeResult treeView(Ui& ui, const Interaction& input, std::string_view id, const std::vector<TreeItem>& items, TreeState& state, const TreeViewOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "virtualList",
         "Containers",
         "gbui/widgets/virtualList.hpp",
@@ -761,6 +782,7 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
             PropertyInfo{"height", PropertyKind::Number, "float", "kAuto", {}, "", false},
             PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the list is of — \"Commits\". Every row reports its position out of `count`, so a reader hears \"3 of 50 000\" and not \"3 of the fourteen that happen to be built\".", false},
+            PropertyInfo{"itemRole", PropertyKind::Opaque, "Role", "Role::ListItem", {}, "What one slot is, to a reader. `ListItem` and its \"n of count\" is right for a list. **`None` hands the whole question to the row callback**, which is what a hierarchy needs: a tree's rows are `TreeItem`s counted among their *siblings*, not among the fifty thousand the list happens to hold, and a slot that announced both would be a row inside a row saying two different numbers.", false},
         },
         false,
         true,

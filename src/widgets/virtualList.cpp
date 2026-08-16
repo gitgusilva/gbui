@@ -89,11 +89,13 @@ VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id,
         // list — and then told it again for the rest of the list. Only the
         // caller has the real count; the slot is where it can be attached,
         // because whatever the row callback builds is this item's content.
-        ui.accessible({
-            .role = Role::ListItem,
-            .positionInSet = index + 1,
-            .setSize = options.count,
-        });
+        if (options.itemRole != Role::None) {
+            ui.accessible({
+                .role = options.itemRole,
+                .positionInSet = index + 1,
+                .setSize = options.count,
+            });
+        }
         row(ui, index);
         (void)scope;
     }

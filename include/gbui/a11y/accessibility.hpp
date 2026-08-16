@@ -191,6 +191,15 @@ struct Accessibility {
      */
     std::size_t positionInSet = 0;
     std::size_t setSize = 0;
+    /**
+     * How deep in a hierarchy, one-based. Zero is "not in one".
+     *
+     * ARIA's `aria-level`, and a tree is the first thing here to need it: "item
+     * 2 of 5" is half an answer in a hierarchy, because the other half is
+     * *whose* five. Without it a reader walking a branch list hears the same
+     * sentence at every depth.
+     */
+    std::size_t level = 0;
 };
 
 }  // namespace gbui

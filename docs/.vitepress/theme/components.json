@@ -2915,6 +2915,95 @@
     ]
   },
   {
+    "name": "treeView",
+    "group": "Containers",
+    "header": "gbui/widgets/treeView.hpp",
+    "summary": "An expandable hierarchy: a branch sidebar, a file tree, an outline.",
+    "signatures": [
+      "TreeResult treeView(Ui& ui, const Interaction& input, std::string_view id, const std::vector<TreeItem>& items, TreeState& state, const TreeViewOptions& options = {});"
+    ],
+    "notes": [
+      "Draws the visible rows of `items` and walks them. `items` is the **whole** hierarchy, flattened in pre-order. Which of it is on screen is worked out here from `state.expanded`, so a caller that collapses a node passes exactly the same vector as before."
+    ],
+    "optionsType": "TreeViewOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "rowHeight",
+        "kind": "Number",
+        "type": "float",
+        "default": "26.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "indent",
+        "kind": "Number",
+        "type": "float",
+        "default": "15.0f",
+        "choices": [],
+        "doc": "How far one level steps in.",
+        "optional": false
+      },
+      {
+        "name": "guides",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "A hairline down each open level, joining a parent to its children. On, because indentation alone stops being readable at about four levels \u2014 the eye cannot hold which column belongs to which parent \u2014 and a file tree is routinely deeper than that.",
+        "optional": false
+      },
+      {
+        "name": "virtualise",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Builds only the rows on screen. Off draws them all, which is right for an outline of twenty and wrong for a repository.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the hierarchy is of \u2014 \"Branches\", \"Files\".",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "1.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "virtualList",
     "group": "Containers",
     "header": "gbui/widgets/virtualList.hpp",
@@ -3053,6 +3142,15 @@
         "default": "",
         "choices": [],
         "doc": "What the list is of \u2014 \"Commits\". Every row reports its position out of `count`, so a reader hears \"3 of 50 000\" and not \"3 of the fourteen that happen to be built\".",
+        "optional": false
+      },
+      {
+        "name": "itemRole",
+        "kind": "Opaque",
+        "type": "Role",
+        "default": "Role::ListItem",
+        "choices": [],
+        "doc": "What one slot is, to a reader. `ListItem` and its \"n of count\" is right for a list. **`None` hands the whole question to the row callback**, which is what a hierarchy needs: a tree's rows are `TreeItem`s counted among their *siblings*, not among the fifty thousand the list happens to hold, and a slot that announced both would be a row inside a row saying two different numbers.",
         "optional": false
       }
     ]

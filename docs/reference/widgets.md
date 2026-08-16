@@ -323,6 +323,51 @@ are the view's own — so the press, the drag and the paging are still handled b
 `scrollArea`. It draws; it does not behave. Turn the view's own bar off with
 `ScrollOptions::scrollbar` when you use it, or there will be two.
 
+### Tree view
+
+An expandable hierarchy: a branch sidebar, a file tree, an outline. The
+inventory calls it the single biggest gap for a git client, and the reason is
+that the three things it needs are each easy and never all three — an expansion
+model, keyboard walking that matches every file browser a reader has used, and
+virtualisation, because a repository's file tree is not a hundred rows.
+
+**The data is a flat vector in pre-order with a depth on each row**, not a
+recursive structure and not a "give me the children of X" callback. Flat is what
+makes virtualisation possible at all — a slice of a tree is only a slice if the
+tree is already a sequence — and it is what the caller usually has.
+
+```cpp
+const std::vector<TreeItem> files = {
+    {.id = "src", .label = "src", .hasChildren = true},
+    {.id = "src/ui.cpp", .label = "ui.cpp", .depth = 1},
+};
+treeView(ui, input, "files", files, model.tree, {.name = "Files"});
+```
+
+`hasChildren` is deliberately not "has rows after it at a greater depth": a lazy
+tree knows a directory has contents before it has read them, and a twisty that
+appears once the contents arrive is a twisty nobody presses.
+
+**The keys are the point.** Right opens a closed node and steps *into* an open
+one; Left closes an open one and steps *out* of a closed one. That pair is the
+whole of why a tree feels like a tree — making Right always step turns it into
+an indented list. Up and Down walk what is on screen, Home and End reach its
+ends, and Return or Space chooses.
+
+Clicking the twisty opens without choosing and clicking the row chooses: "show
+me what is in here" and "I want this one" are two gestures, and a file browser
+that conflates them selects a directory every time somebody looks inside it. The
+selection and the keyboard's row are likewise two things, the same separation
+`select` makes between its highlight and its value.
+
+**Accessibility.** One Tab stop for the whole hierarchy with `activeDescendant`
+carrying the row — the only arrangement that keeps Tab a way *out* of a
+nine-hundred-row tree. Each row is a `TreeItem` with `level` and a position
+counted among its **siblings**, because "item 2 of 5" in a hierarchy means whose
+five, and "row 340 of 900" is the size of the repository rather than of the
+directory the reader is in. `expanded` is set only where there is something to
+expand.
+
 ### Carousel
 
 A strip of slides, one screenful at a time. The content is a callback and the

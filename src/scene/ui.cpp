@@ -145,6 +145,7 @@ Ui& Ui::accessible(NodeId node, const Accessibility& info) {
         target.positionInSet = info.positionInSet;
         target.setSize = info.setSize;
     }
+    if (info.level != 0) target.level = info.level;
 
     return *this;
 }

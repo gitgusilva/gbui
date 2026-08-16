@@ -64,6 +64,36 @@ void addContainerExamples(std::vector<Example>& out) {
                                    });
                    }});
 
+    out.push_back({"treeView", [](Ui& ui, const Interaction& input, State& state) {
+                       // Flat, in pre-order, with a depth on each row — which is
+                       // what a `git ls-tree` walk already hands you.
+                       static const std::vector<TreeItem> files = {
+                           {.id = "src", .label = "src", .hasChildren = true,
+                            .icon = Icon::Folder},
+                           {.id = "src/widgets", .label = "widgets", .depth = 1,
+                            .hasChildren = true, .icon = Icon::Folder},
+                           {.id = "src/widgets/treeView.cpp", .label = "treeView.cpp",
+                            .depth = 2, .icon = Icon::File, .detail = "9.1k"},
+                           {.id = "src/widgets/toast.cpp", .label = "toast.cpp", .depth = 2,
+                            .icon = Icon::File, .detail = "11k"},
+                           {.id = "src/scene", .label = "scene", .depth = 1,
+                            .hasChildren = true, .icon = Icon::Folder},
+                           {.id = "src/scene/ui.cpp", .label = "ui.cpp", .depth = 2,
+                            .icon = Icon::File, .detail = "4.8k"},
+                           {.id = "README.md", .label = "README.md", .icon = Icon::File,
+                            .detail = "6.2k"},
+                       };
+                       // The first frame opens the two folders, so the preview
+                       // shows a hierarchy rather than two closed rows.
+                       if (state.tree.expanded.empty()) {
+                           state.tree.expanded.emplace("src");
+                           state.tree.expanded.emplace("src/widgets");
+                           state.tree.selected = "src/widgets/toast.cpp";
+                       }
+                       treeView(ui, input, "catalog.tree", files, state.tree,
+                                {.name = "Files", .height = 160.0f});
+                   }});
+
     out.push_back({"gallery", [](Ui& ui, const Interaction& input, State& state) {
                        static const char* captions[] = {
                            "Ridge line, first light", "The long approach",

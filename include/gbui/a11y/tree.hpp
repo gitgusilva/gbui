@@ -70,6 +70,8 @@ struct AccessibilityNode {
     AccessibilityValue value{};
     std::size_t positionInSet = 0;
     std::size_t setSize = 0;
+    /** How deep in a hierarchy, one-based; zero outside one. */
+    std::size_t level = 0;
     /** Where it is on screen, in window coordinates. A screen reader draws a
      *  highlight here and a magnifier scrolls to it. */
     Rect bounds{};

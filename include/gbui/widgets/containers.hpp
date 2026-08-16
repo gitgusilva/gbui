@@ -34,4 +34,5 @@
 #include "gbui/widgets/scroll.hpp"
 #include "gbui/widgets/table.hpp"
 #include "gbui/widgets/tabs.hpp"
+#include "gbui/widgets/treeView.hpp"
 #include "gbui/widgets/virtualList.hpp"

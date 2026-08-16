@@ -1308,3 +1308,94 @@ TEST("a filtering select says how much is left, and which row the typing is on")
     // And the rows the filter removed are not in the tree at all.
     CHECK(screen.of("b.list.0") == nullptr);
 }
+
+/**
+ * The one thing a hierarchy needs that a list does not: a level, and a position
+ * counted among *siblings*. "Item 2 of 5" in a tree means whose five, and a
+ * reader told "row 340 of 900" has been told the size of the repository rather
+ * than the size of the directory they are standing in.
+ */
+TEST("a tree row says how deep it is and where it sits among its siblings") {
+    Screen screen;
+    const std::vector<TreeItem> items{
+        {.id = "src", .label = "src", .depth = 0, .hasChildren = true},
+        {.id = "src/a.cpp", .label = "a.cpp", .depth = 1},
+        {.id = "src/b.cpp", .label = "b.cpp", .depth = 1},
+        {.id = "src/c.cpp", .label = "c.cpp", .depth = 1},
+        {.id = "docs", .label = "docs", .depth = 0, .hasChildren = true},
+        {.id = "README.md", .label = "README.md", .depth = 0},
+    };
+    TreeState state;
+    state.expanded.emplace("src");
+    state.selected = "src/b.cpp";
+    state.focused = "src/b.cpp";
+
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)treeView(ui, none, "t", items, state, {.name = "Files", .height = 300.0f});
+    });
+
+    const Accessibility* root = screen.of("t");
+    CHECK(root != nullptr);
+    if (root) {
+        CHECK(root->role == Role::Tree);
+        CHECK(root->name == "Files");
+        // One keyboard stop, so this is the only thing saying which row.
+        CHECK(root->relations.activeDescendant == "t.src/b.cpp");
+    }
+
+    // Three roots, of which `src` is the first.
+    const Accessibility* top = screen.of("t.src");
+    if (top) {
+        CHECK(top->role == Role::TreeItem);
+        CHECK_EQ(top->level, std::size_t{1});
+        CHECK_EQ(top->positionInSet, std::size_t{1});
+        CHECK_EQ(top->setSize, std::size_t{3});
+        CHECK(top->state.expanded == Flag::True);
+    }
+
+    // Its children are three of three, one level deeper — and *not* "2 of 6".
+    const Accessibility* middle = screen.of("t.src/b.cpp");
+    if (middle) {
+        CHECK_EQ(middle->level, std::size_t{2});
+        CHECK_EQ(middle->positionInSet, std::size_t{2});
+        CHECK_EQ(middle->setSize, std::size_t{3});
+        CHECK(middle->state.selected == Flag::True);
+        // A leaf has nothing to expand, and saying "collapsed" would be a leaf
+        // a reader keeps pressing Right on.
+        CHECK(middle->state.expanded == Flag::Unset);
+    }
+
+    // The last root is third of three, back at level one.
+    const Accessibility* last = screen.of("t.README.md");
+    if (last) {
+        CHECK_EQ(last->level, std::size_t{1});
+        CHECK_EQ(last->positionInSet, std::size_t{3});
+        CHECK_EQ(last->setSize, std::size_t{3});
+    }
+
+    // And a closed node says so rather than saying nothing.
+    const Accessibility* closed = screen.of("t.docs");
+    if (closed) CHECK(closed->state.expanded == Flag::False);
+}
+
+TEST("a tree is one Tab stop, whatever it holds") {
+    Screen screen;
+    std::vector<TreeItem> items;
+    static std::vector<std::string> names;
+    names.clear();
+    for (std::size_t i = 0; i < 40; ++i) names.push_back("row" + std::to_string(i));
+    for (std::size_t i = 0; i < 40; ++i) {
+        items.push_back({.id = names[i], .label = names[i], .depth = 0});
+    }
+    TreeState state;
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)treeView(ui, none, "t", items, state, {.name = "Rows", .height = 200.0f});
+    });
+
+    for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+        const Node& node = screen.arena[NodeId{static_cast<std::uint32_t>(i)}];
+        if (node.focusable && !node.id.empty()) CHECK(node.id == "t");
+    }
+}

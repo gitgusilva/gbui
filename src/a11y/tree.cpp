@@ -57,6 +57,7 @@ bool sameAs(const AccessibilityNode& a, const AccessibilityNode& b) {
     return a.role == b.role && a.name == b.name && a.description == b.description &&
            sameState(a.state, b.state) && sameValue(a.value, b.value) &&
            a.positionInSet == b.positionInSet && a.setSize == b.setSize &&
+           a.level == b.level &&
            sameRect(a.bounds, b.bounds) && a.parent == b.parent && a.children == b.children &&
            a.labelledBy == b.labelledBy && a.describedBy == b.describedBy &&
            a.controls == b.controls && a.activeDescendant == b.activeDescendant;
@@ -124,6 +125,7 @@ struct Builder {
         entry.value = info->value;
         entry.positionInSet = info->positionInSet;
         entry.setSize = info->setSize;
+        entry.level = info->level;
         entry.bounds = current.frame;
         entry.focused = !current.id.empty() && current.id == focused;
         entry.parent = parent;

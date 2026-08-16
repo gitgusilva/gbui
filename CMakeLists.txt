@@ -81,6 +81,7 @@ set(GBUI_SOURCES
     src/widgets/toast.cpp
     src/widgets/timePicker.cpp
     src/widgets/toolbar.cpp
+    src/widgets/treeView.cpp
     src/widgets/tooltip.cpp
     src/widgets/virtualList.cpp
     src/platform/font.cpp

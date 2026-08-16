@@ -56,6 +56,16 @@ struct VirtualListOptions {
      *  `count`, so a reader hears "3 of 50 000" and not "3 of the fourteen that
      *  happen to be built". */
     std::string_view name{};
+    /**
+     * What one slot is, to a reader.
+     *
+     * `ListItem` and its "n of count" is right for a list. **`None` hands the
+     * whole question to the row callback**, which is what a hierarchy needs: a
+     * tree's rows are `TreeItem`s counted among their *siblings*, not among the
+     * fifty thousand the list happens to hold, and a slot that announced both
+     * would be a row inside a row saying two different numbers.
+     */
+    Role itemRole = Role::ListItem;
 
     /** The row shape, for `revealRow` and for the arithmetic below. */
     RowMetrics rows() const { return {rowHeight, gap, padding.top}; }
