@@ -29,6 +29,8 @@ features:
     details: Six methods make a backend. A software rasteriser and an SVG writer ship with the library; a GPU one is the same six methods.
   - title: Vector everything
     details: An SVG path parser, 40 Lucide glyphs and a canvas node, so icons, commit graphs and charts are geometry rather than bitmaps — sharp at any scale, in the theme's colours.
+  - title: Every control says what it is
+    details: A role, a name, a state and the relations that tie a caption to its field, on every component — and a pruned tree with a diff, so a screen reader is told what changed rather than everything. Two gates in CI keep it true of the library and of the applications built on it.
 ---
 
 ## Have a look at it

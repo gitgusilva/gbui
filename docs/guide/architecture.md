@@ -36,22 +36,32 @@ include from itself and from the modules above it in this table, never below.
 | Module | Depends on | Holds |
 | --- | --- | --- |
 | `core` | — | `geometry` (`Vec2`, `Rect`, `Edges`, `Length`, `kAuto`), `color`, `cursor`, `json`, `path` |
+| `a11y` | — (`tree` also on core, scene, input) | `role`, `accessibility` (what a node *is*), `tree` (the pruned tree and its diff) |
 | `anim` | core | `easing` (the curve set), `animator` (the clock) |
 | `style` | core, anim | `style` (flexbox and paint properties), `theme` (tokens, typography), `design` (shape, sizing, motion) |
 | `layout` | core, style, scene | flexbox, min-content sizing, wrapping, hit testing, `textWrap` |
-| `scene` | core, style, layout, anim | `tree` (arena, node, shapes), `ui` (the building API) |
+| `scene` | core, style, layout, anim, a11y | `tree` (arena, node, shapes), `ui` (the building API) |
 | `overlay` | core | `placement`: where a floating box goes |
 | `input` | core, scene | `keys`, `interaction` (hover, press, focus, wheel), `textEdit` |
 | `paint` | core, style, scene, layout | display list, painter interface, SVG and software backends |
 | `widgets` | all of the above | one file per component, plus `icons` and the private `detail` |
 | `platform` | all of the above | window, event loop, fonts, `openUrl` |
 
-Two entries in that table are worth explaining. `scene` includes `layout`
+Three entries in that table are worth explaining. `scene` includes `layout`
 because `Ui` hands components the measurer — a caret has to sit at a byte offset
 that has a position on screen, and only the function layout uses can say where
-that is. And `style` includes `anim` because a `Design` carries the transition
+that is. `style` includes `anim` because a `Design` carries the transition
 everything animated uses, which is what makes switching design change the *feel*
 and not only the look.
+
+And **`a11y` is in two halves on purpose.** `role.hpp` and
+`accessibility.hpp` depend on nothing at all, which is what lets `scene` hold an
+`Accessibility` on the side of every node without gaining a dependency worth
+the name. `a11y/tree.hpp` is the other half and sits at the far end of the
+table: it reads a laid-out arena and an `Interaction`, so it is built *after* a
+frame rather than during one. Splitting them is what keeps "what a node is" a
+property of the node and "the tree a screen reader sees" a pass over the
+finished frame.
 
 `third_party/` may only be reached from `platform/`. Everything above it is
 standard library and nothing else, which is what keeps the core portable to a

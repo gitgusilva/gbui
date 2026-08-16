@@ -144,6 +144,38 @@ scale is applied once, in `DisplayList::setScale`, on the way to the backend —
 so the same tree at 1, 1.5 and 2 produces the same drawing at three resolutions,
 and no component has to know which one it is on.
 
+## One place this differs from CSS, and it will surprise you
+
+**Free space is computed from the *hypothetical* main sizes, not from the flex
+base sizes.** An item's minimum is therefore taken out of the container *before*
+the `grow` ratios are applied, where CSS §9.7 distributes first and clamps
+afterwards.
+
+The difference only shows when an item has both a `grow` and a minimum on the
+same axis, and then it is large. Two children with `basis = 0`, `grow` of 1 and
+3, and `minWidth = 120` each, in a 600-pixel row:
+
+| | leading | trailing |
+| --- | --- | --- |
+| CSS | 148 | 445 |
+| here | 208 | 385 |
+
+With bigger minimums the ratio stops meaning much at all. So **do not use `grow`
+to express a proportion of the container when the same item has a minimum** —
+use a percentage `basis` with `shrink`, which is exact:
+
+```cpp
+pane.basis = Length::percent(share * 100.0f);   // a share of the container
+pane.grow = 0.0f;
+pane.shrink = 1.0f;
+pane.minWidth = floorSize;                      // still a floor, still honoured
+```
+
+`splitPane` is built exactly that way and its header says why. Whether the
+engine should be brought in line with the spec is an open question rather than a
+plan: it sits under every component in the tree, so changing it is its own
+change with its own tests.
+
 ## What is not implemented
 
 Named rather than half-built:

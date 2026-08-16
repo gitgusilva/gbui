@@ -7,6 +7,7 @@ carry the finer detail and the reasoning.
 | Module | Include | Holds |
 | --- | --- | --- |
 | [core](/reference/core) | `gbui/core/*.hpp` | geometry, lengths, colour, cursors, JSON, vector paths |
+| [a11y](/reference/accessibility) | `gbui/a11y/*.hpp` | roles, names, states, relations, and the tree they are read into |
 | [style](/reference/style) | `gbui/style/*.hpp` | style properties, themes and tokens, the design system |
 | [scene](/reference/scene) | `gbui/scene/*.hpp` | the node arena and the building API |
 | [layout](/reference/layout) | `gbui/layout/*.hpp` | flexbox, measurement, wrapping, hit testing |

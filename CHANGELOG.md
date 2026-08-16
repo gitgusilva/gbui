@@ -11,8 +11,16 @@ named here and the reason for it is in the commit.
 
 ## [Unreleased]
 
-Work towards 0.3 lives on `main` and gets a number when it ships, not commit by
-commit.
+Nothing yet. The next version's work lands on `main` and gets a number when it
+ships, not commit by commit.
+
+## [0.3] — 2026-08-16
+
+The release that made the toolkit reachable. Everything below the components is
+the same three-stage pipeline it was; what changed is that **every control now
+says what it is**, that saying so is a rule rather than a milestone, and that
+seven components arrived — including the three the component inventory had named
+as the gaps that bite first.
 
 ### Added
 

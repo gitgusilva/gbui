@@ -1012,7 +1012,10 @@ apply — a row count cannot know how tall the window is), and **the box keeps t
 keyboard**: its rows are drawn and clickable but are not places Tab can land, so
 Tab leaves the control rather than walking into an open popup.
 
-The filterable form is not built.
+The filterable form is `filter` — see [Select, and the combobox it
+becomes](#select-and-the-combobox-it-becomes), where the keyboard moves into the
+filter box and the control hands the target back rather than moving focus
+itself.
 
 ## Charts
 

@@ -30,9 +30,16 @@ headers it vendors sit in the platform layer, where the machine already is.
 
 Each stage reads only the one before it, which is why layout is arithmetic you
 can assert without a window and painting is a list of commands you can inspect
-without a GPU. Over fifty components sit on top — from a button to a table, a
-rich-text editor and nine kinds of chart — all stateless functions, themed by
-token rather than by colour.
+without a GPU. Over sixty components sit on top — from a button to a table, a
+tree view, a rich-text editor and nine kinds of chart — all stateless functions,
+themed by token rather than by colour.
+
+**Every one of them says what it is.** A role, a name, whatever state and value
+apply, and the relations that attach a caption to its field — read into a pruned
+accessibility tree that is diffed each frame, so a screen reader is told what
+changed rather than everything. It is a rule rather than a milestone: two checks
+in CI fail the build for a control with nothing to announce, one over the library
+and one over the applications built on it.
 
 It was written for [GitBox](https://github.com/gitgusilva/gitbox) as a path off
 Electron, and reads the **same `theme.json`** the

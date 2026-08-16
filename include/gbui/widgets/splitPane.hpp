@@ -8,12 +8,17 @@
 //
 // ---- the split is a fraction, and the layout does the arithmetic ------------
 //
-// The panes are laid out by **flex grow ratios**, not by measured widths. A
+// The panes are laid out by **a percentage basis**, not by measured widths. A
 // split placed from last frame's geometry lags a resize by a frame and jumps
-// while the window is being dragged; a ratio is resolved during layout and is
-// right on the first frame. `compare` reaches the same conclusion by the same
-// road, and the minimums come for free — flexbox already refuses to shrink a
-// child below its `minWidth`, so the two panes cannot squeeze each other out.
+// while the window is being dragged; a fraction is resolved during layout and
+// is right on the first frame. `compare` reaches the same conclusion by the
+// same road, and the minimums come for free — flexbox already refuses to shrink
+// a child below its `minWidth`, so the two panes cannot squeeze each other out.
+//
+// Not `grow`, which was the obvious way and gives the wrong number here: this
+// engine takes its free space from the sizes already clamped to each minimum,
+// so two floors get paid first and the ratio only divides the remainder. The
+// implementation says which numbers, and the layout guide says why.
 //
 // The one thing that *is* measured is the drag, because turning a pointer
 // position into a fraction needs to know how wide the container is. That is one
