@@ -173,6 +173,104 @@
     ]
   },
   {
+    "name": "field",
+    "group": "Elements",
+    "header": "gbui/widgets/field.hpp",
+    "summary": "A control with its label, its help and its error, laid out as one thing.",
+    "signatures": [
+      "FieldResult field(Ui& ui, const Interaction& input, std::string_view id, const FieldOptions& options, const std::function<void(Ui&)>& control);"
+    ],
+    "notes": [
+      "Draws the caption, then `control`, then the help or the error."
+    ],
+    "optionsType": "FieldOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "label",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The caption above the control. Empty draws none, which is what a field inside a table cell or beside its own heading wants.",
+        "optional": false
+      },
+      {
+        "name": "forId",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The control this labels, so clicking the caption focuses it. The id of the control built inside the callback \u2014 this cannot be worked out from the tree, because the field is built before the control is and a component never reaches into what a caller wrote.",
+        "optional": false
+      },
+      {
+        "name": "help",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Guidance under the control. Replaced by `error` while there is one: advice and a complaint in the same place, at the same time, is two things asking to be read first.",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is wrong. Non-empty puts the field in its invalid state \u2014 the message is drawn in the error colour and the caption goes with it. It does **not** restyle the control. A component does not reach into another component's options, and a border that changed colour by remote control would be exactly that; pass `invalid` to the control as well where it has one. What this owns is the message and the caption.",
+        "optional": false
+      },
+      {
+        "name": "required",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Marks the caption with the usual asterisk.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "5.0f",
+        "choices": [],
+        "doc": "Between the caption, the control and the message.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "hyperlink",
     "group": "Elements",
     "header": "gbui/widgets/hyperlink.hpp",
@@ -1255,6 +1353,95 @@
         "default": "32.0f",
         "choices": [],
         "doc": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "textarea",
+    "group": "Elements",
+    "header": "gbui/widgets/textarea.hpp",
+    "summary": "A multi-line plain text box.",
+    "signatures": [
+      "TextEditResult textarea(Ui& ui, const Interaction& input, std::string_view id, TextareaState& state, const TextareaOptions& options = {});"
+    ],
+    "notes": [
+      "Edits `state` in place when it has focus, and reports what happened. `submitted` is the modified Return; `changed` is any edit at all. The component never writes to your model \u2014 the text in `state` is yours and this is the only thing that touches it. The view follows the caret: typing at the bottom of a full box scrolls it, and so does moving there with the arrows. Nothing else moves it on its own, so a reader who has scrolled up to check something stays where they put themselves until they type again."
+    ],
+    "optionsType": "TextareaOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "placeholder",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "readOnly",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "rows",
+        "kind": "Number",
+        "type": "int",
+        "default": "4",
+        "choices": [],
+        "doc": "How many lines tall the box is, before anything is typed. A count of lines rather than a height in pixels, because that is the unit the answer is in \u2014 \"about four lines\" survives a change of type size and \"96 px\" does not.",
+        "optional": false
+      },
+      {
+        "name": "maxRows",
+        "kind": "Number",
+        "type": "int",
+        "default": "0",
+        "choices": [],
+        "doc": "Grows with the content, to this many lines, then scrolls. Zero keeps the box at `rows` from the first frame, which is what a form with a fixed layout wants. A chat composer or a commit message box wants this set: the box starts small and opens up as the writing goes on, which is the behaviour everyone now expects and nobody asks for.",
+        "optional": false
+      },
+      {
+        "name": "submitOnModifiedReturn",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Ctrl+Return \u2014 Cmd+Return on macOS \u2014 reports `submitted`. Return itself belongs to the text.",
         "optional": false
       },
       {

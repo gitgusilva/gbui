@@ -49,9 +49,11 @@
 // ---- input -----------------------------------------------------------------
 #include "gbui/widgets/button.hpp"
 #include "gbui/widgets/checkbox.hpp"
+#include "gbui/widgets/field.hpp"
 #include "gbui/widgets/numberField.hpp"
 #include "gbui/widgets/radio.hpp"
 #include "gbui/widgets/select.hpp"
 #include "gbui/widgets/slider.hpp"
+#include "gbui/widgets/textarea.hpp"
 #include "gbui/widgets/textField.hpp"
 #include "gbui/widgets/toggle.hpp"

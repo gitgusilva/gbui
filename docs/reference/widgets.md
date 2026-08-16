@@ -9,7 +9,7 @@ uses. Four umbrellas gather the groups for callers who want all of it:
 
 | Umbrella | What it pulls in |
 | --- | --- |
-| `gbui/widgets/elements.hpp` | text, link, label, icon, image, badge, progress, spacing — and the input set: button, checkbox, radio, switch, select, slider, text field, number field |
+| `gbui/widgets/elements.hpp` | text, link, label, icon, image, badge, progress, spacing — and the input set: button, checkbox, radio, switch, select, slider, text field, textarea, number field, and the `field` that wraps one |
 | `gbui/widgets/containers.hpp` | box, panel, list row, toolbar, scroll view, table, tabs, virtualised list, marquee |
 | `gbui/widgets/overlays.hpp` | tooltip, popover, menu, modal |
 | `gbui/widgets/components.hpp` | the composed editors — colour, date, time and rich text — and the charts |
@@ -484,6 +484,8 @@ not what decides whether the control is a primitive.
 | `radio` | `(ui, input, id, selected, options)` | `true` when chosen; nothing when already selected |
 | `toggle` | `(ui, input, id, on, options)` | `true` on the frame it was flipped |
 | `textField` | `(ui, input, id, TextEditState&, options)` | `TextFieldResult` — changed, moved, submitted, cancelled, toggledReveal |
+| `textarea` | `(ui, input, id, TextareaState&, options)` | `TextEditResult` — `submitted` is the modified Return |
+| `field` | `(ui, input, id, options, control)` | `FieldResult` — the id to focus when the caption was clicked |
 | `numberField` | `(ui, input, id, value, options)` | `{value, changed}`, already clamped and stepped |
 | `slider` | `(ui, input, id, value, options)` | `{value, changed}`, snapped to `step` |
 | `progressBar` | `(ui, options)` | nothing; a negative value draws the indeterminate form |

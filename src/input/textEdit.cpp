@@ -70,6 +70,17 @@ std::size_t nextWord(std::string_view text, std::size_t offset) {
     return index;
 }
 
+std::size_t lineStart(std::string_view text, std::size_t offset) {
+    offset = std::min(offset, text.size());
+    const std::size_t newline = text.rfind('\n', offset == 0 ? 0 : offset - 1);
+    return newline == std::string_view::npos || offset == 0 ? 0 : newline + 1;
+}
+
+std::size_t lineEnd(std::string_view text, std::size_t offset) {
+    const std::size_t newline = text.find('\n', std::min(offset, text.size()));
+    return newline == std::string_view::npos ? text.size() : newline;
+}
+
 TextEditResult insertText(TextEditState& state, std::string_view text) {
     if (text.empty()) return {};
     state.clampToText();
@@ -80,7 +91,8 @@ TextEditResult insertText(TextEditState& state, std::string_view text) {
     return {.changed = true};
 }
 
-TextEditResult applyKey(TextEditState& state, const KeyEvent& event) {
+TextEditResult applyKey(TextEditState& state, const KeyEvent& event,
+                        const TextEditOptions& options) {
     state.clampToText();
     const Modifiers& modifiers = event.modifiers;
     const bool extend = modifiers.shift;
@@ -92,6 +104,69 @@ TextEditResult applyKey(TextEditState& state, const KeyEvent& event) {
         if (!extend) state.anchor = offset;
         return {.moved = true};
     };
+
+    // ---- the keys one line and many disagree about -------------------------
+    //
+    // Handled before the shared switch rather than inside it, so the
+    // single-line path below is exactly the code it always was.
+    if (options.multiline) {
+        // How many *characters* into its line the caret is. Characters and not
+        // bytes, because the column is carried to a line whose bytes are a
+        // different length — an accented line and a plain one of the same
+        // apparent width do not agree about byte counts.
+        const auto columnOf = [&](std::size_t offset) {
+            const std::size_t start = lineStart(state.text, offset);
+            std::size_t column = 0;
+            for (std::size_t at = start; at < offset; at = nextCharacter(state.text, at)) ++column;
+            return column;
+        };
+        /** The offset `column` characters into the line starting at `start`,
+         *  clamped to that line's end — a short line takes the caret to its
+         *  end rather than into the next one. */
+        const auto offsetInLine = [&](std::size_t start, std::size_t column) {
+            const std::size_t end = lineEnd(state.text, start);
+            std::size_t at = start;
+            for (std::size_t i = 0; i < column && at < end; ++i) {
+                at = nextCharacter(state.text, at);
+            }
+            return std::min(at, end);
+        };
+
+        switch (event.key) {
+            case Key::Home:
+                return moveTo(lineStart(state.text, state.caret));
+            case Key::End:
+                return moveTo(lineEnd(state.text, state.caret));
+
+            case Key::Up: {
+                const std::size_t start = lineStart(state.text, state.caret);
+                // On the first line Up goes to the very beginning, the way it
+                // does everywhere: a caret that refuses to move is read as the
+                // key not working.
+                if (start == 0) return moveTo(0);
+                const std::size_t column = columnOf(state.caret);
+                return moveTo(offsetInLine(lineStart(state.text, start - 1), column));
+            }
+            case Key::Down: {
+                const std::size_t end = lineEnd(state.text, state.caret);
+                if (end >= state.text.size()) return moveTo(state.text.size());
+                const std::size_t column = columnOf(state.caret);
+                return moveTo(offsetInLine(end + 1, column));
+            }
+
+            case Key::Return:
+                // The modifier is what submits here, because Return belongs to
+                // the text. Without the modifier — or with it turned off — a
+                // newline is inserted like any other character.
+                if (options.submitOnModifiedReturn && modifiers.command()) {
+                    return {.submitted = true};
+                }
+                return insertText(state, "\n");
+
+            default:
+                break;
+        }
+    }
 
     switch (event.key) {
         case Key::Left:
@@ -158,10 +233,10 @@ TextEditResult applyKey(TextEditState& state, const KeyEvent& event) {
 }
 
 TextEditResult applyInput(TextEditState& state, const std::vector<KeyEvent>& keys,
-                          std::string_view typed) {
+                          std::string_view typed, const TextEditOptions& options) {
     TextEditResult result;
     for (const KeyEvent& event : keys) {
-        const TextEditResult one = applyKey(state, event);
+        const TextEditResult one = applyKey(state, event, options);
         result.changed |= one.changed;
         result.moved |= one.moved;
         result.submitted |= one.submitted;
@@ -170,10 +245,17 @@ TextEditResult applyInput(TextEditState& state, const std::vector<KeyEvent>& key
     if (!typed.empty()) {
         // Control characters arrive as keys, not as text; letting them through
         // here would put a literal tab or newline in a single-line field.
+        //
+        // A newline is the exception once the box has more than one line, and
+        // it is not a theoretical one: a paste arrives as typed text, so
+        // filtering it here is what silently turns three pasted lines into one
+        // long one. Return still comes through as a key either way.
         std::string printable;
         printable.reserve(typed.size());
         for (const char c : typed) {
-            if (static_cast<unsigned char>(c) >= 0x20 || static_cast<unsigned char>(c) >= 0x80) {
+            if (c == '\n' && options.multiline) {
+                printable.push_back(c);
+            } else if (static_cast<unsigned char>(c) >= 0x20) {
                 printable.push_back(c);
             }
         }

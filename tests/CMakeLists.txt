@@ -6,6 +6,7 @@ add_executable(gbui_tests
     pathTest.cpp
     interactionTest.cpp
     virtualListTest.cpp
+    formTest.cpp
     textFieldTest.cpp
     selectTest.cpp
     placementTest.cpp

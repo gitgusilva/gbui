@@ -339,3 +339,53 @@ TEST("a popup outside its parent's frame is still hittable") {
     // list unhoverable and unclickable.
     CHECK_EQ(std::string(input.hovered()), std::string("popup"));
 }
+
+TEST("a press focuses the nearest focusable ancestor, not what it landed on") {
+    // A control is rarely one node. This is the shape that made it matter: a
+    // focusable box, and inside it a tagged child that is not focusable and is
+    // what the pointer actually resolves to. Focusing the child leaves the
+    // keyboard on something no key handler is listening to — click into the
+    // box, type, and nothing happens.
+    Arena arena;
+    Ui ui{arena};
+    Theme theme = Theme::dark();
+    {
+        auto box = ui.scope({.width = 100.0f, .height = 40.0f});
+        ui.tag("box").focusable();
+        ui.add({.width = 80.0f, .height = 20.0f});
+        ui.tag("box.inner");   // tagged, and deliberately not focusable
+        (void)box;
+    }
+    LayoutContext context;
+    context.theme = &theme;
+    layout(arena, ui.root(), Rect{0, 0, 100, 40}, context);
+
+    Interaction input;
+    InputFrame down;
+    down.pointer = {20.0f, 10.0f};
+    down.pointerDown = true;
+    input.update(arena, ui.root(), down);
+
+    // The press still belongs to the inner node — that is what was under the
+    // pointer, and hit testing is not what this changes.
+    CHECK_EQ(std::string(input.dragging()), std::string("box.inner"));
+    // The keyboard went to the box.
+    CHECK(input.isFocused("box"));
+    CHECK(!input.isFocused("box.inner"));
+    // And by the pointer, so no ring: the click already showed where it went.
+    CHECK(!input.isFocusVisible("box"));
+}
+
+TEST("a press on nothing focusable still clears the focus") {
+    Scene scene;
+    Interaction input;
+    feed(input, scene, InputFrame{.pointer = {50.0f, 20.0f}, .pointerDown = true});
+    CHECK(input.isFocused("first"));
+    // Released, or the next press is not a new one.
+    feed(input, scene, InputFrame{.pointer = {50.0f, 20.0f}});
+
+    // Clicking the page background is how a reader says "not here", and it has
+    // to keep working now that the press walks up looking for a target.
+    feed(input, scene, InputFrame{.pointer = {150.0f, 300.0f}, .pointerDown = true});
+    CHECK(!input.isFocused("first"));
+}

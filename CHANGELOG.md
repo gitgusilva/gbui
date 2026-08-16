@@ -63,7 +63,33 @@ commit.
 
 ### Added
 
-- **A tag now publishes a release.** Until now a tag was the whole of a release:
+- **`textarea`**, the multi-line plain text box — the gap between `textField`
+  and `richEditor`, and a wide one: a commit message, a description, a note.
+  Return takes a newline and Ctrl+Return (Cmd+Return on macOS) submits, which is
+  what every composer does. `rows` is a floor and `maxRows` a ceiling, so a box
+  can start small and open up as the writing goes on before it scrolls; the view
+  follows the caret and nothing else moves it. Lines are the ones a `\n` makes —
+  Up, Down, Home and End move by hard line, not by the line a box happens to
+  wrap to, the same limit `richEditor` has and for the same reason. The editing
+  model gained a `multiline` mode rather than a second copy of itself, and a
+  pasted paragraph now keeps its line breaks instead of arriving as one line.
+- **`field`**, the wrapper every form writes by hand: a caption, the control,
+  and a line underneath that is either guidance or a complaint — never both, as
+  advice and a complaint in the same place is two things asking to be read
+  first. It is also where the accessibility relations will attach, since a label
+  is only a label because it is *for* something and something has to know both
+  ends.
+- **A tag now publishes a release.**
+
+### Fixed
+
+- **A press focused whatever node it landed on, rather than the control.** A
+  control is rarely one node — a textarea is a box around a scroll view around a
+  column of runs — and a click on the text resolved to a tag the scroll view
+  invented. The keyboard went there, no key handler was listening, and typing
+  did nothing. The press now walks up to the nearest focusable ancestor, which
+  is what the browser does when you click the text inside a `<textarea>`.
+  Clicking nothing focusable still clears focus. Until now a tag was the whole of a release:
   CI built it and nothing else happened, so every `releases/tag/v…` link in this
   file and the documentation's "Release notes" entry led to an empty page.
   `release.yml` publishes the GitHub release, with that version's section of

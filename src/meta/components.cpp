@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(59);
+    out.reserve(61);
 
     out.push_back(ComponentInfo{
         "badge",
@@ -84,6 +84,28 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "[[nodiscard]] bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checked, const CheckboxOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "field",
+        "Elements",
+        "gbui/widgets/field.hpp",
+        "Draws the caption, then `control`, then the help or the error.",
+        "A control with its label, its help and its error, laid out as one thing.",
+        "FieldOptions",
+        {
+            PropertyInfo{"label", PropertyKind::Text, "std::string_view", "", {}, "The caption above the control. Empty draws none, which is what a field inside a table cell or beside its own heading wants.", false},
+            PropertyInfo{"forId", PropertyKind::Text, "std::string_view", "", {}, "The control this labels, so clicking the caption focuses it. The id of the control built inside the callback — this cannot be worked out from the tree, because the field is built before the control is and a component never reaches into what a caller wrote.", false},
+            PropertyInfo{"help", PropertyKind::Text, "std::string_view", "", {}, "Guidance under the control. Replaced by `error` while there is one: advice and a complaint in the same place, at the same time, is two things asking to be read first.", false},
+            PropertyInfo{"error", PropertyKind::Text, "std::string_view", "", {}, "What is wrong. Non-empty puts the field in its invalid state — the message is drawn in the error colour and the caption goes with it. It does **not** restyle the control. A component does not reach into another component's options, and a border that changed colour by remote control would be exactly that; pass `invalid` to the control as well where it has one. What this owns is the message and the caption.", false},
+            PropertyInfo{"required", PropertyKind::Bool, "bool", "false", {}, "Marks the caption with the usual asterisk.", false},
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"gap", PropertyKind::Number, "float", "5.0f", {}, "Between the caption, the control and the message.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "FieldResult field(Ui& ui, const Interaction& input, std::string_view id, const FieldOptions& options, const std::function<void(Ui&)>& control);",
     });
     out.push_back(ComponentInfo{
         "hyperlink",
@@ -391,6 +413,27 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "TextFieldResult textField(Ui& ui, const Interaction& input, std::string_view id, TextEditState& state, const TextFieldOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "textarea",
+        "Elements",
+        "gbui/widgets/textarea.hpp",
+        "Edits `state` in place when it has focus, and reports what happened. `submitted` is the modified Return; `changed` is any edit at all. The component never writes to your model — the text in `state` is yours and this is the only thing that touches it. The view follows the caret: typing at the bottom of a full box scrolls it, and so does moving there with the arrows. Nothing else moves it on its own, so a reader who has scrolled up to check something stays where they put themselves until they type again.",
+        "A multi-line plain text box.",
+        "TextareaOptions",
+        {
+            PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "", {}, "", false},
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"readOnly", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"rows", PropertyKind::Number, "int", "4", {}, "How many lines tall the box is, before anything is typed. A count of lines rather than a height in pixels, because that is the unit the answer is in — \"about four lines\" survives a change of type size and \"96 px\" does not.", false},
+            PropertyInfo{"maxRows", PropertyKind::Number, "int", "0", {}, "Grows with the content, to this many lines, then scrolls. Zero keeps the box at `rows` from the first frame, which is what a form with a fixed layout wants. A chat composer or a commit message box wants this set: the box starts small and opens up as the writing goes on, which is the behaviour everyone now expects and nobody asks for.", false},
+            PropertyInfo{"submitOnModifiedReturn", PropertyKind::Bool, "bool", "true", {}, "Ctrl+Return — Cmd+Return on macOS — reports `submitted`. Return itself belongs to the text.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+        },
+        false,
+        true,
+        "TextEditResult textarea(Ui& ui, const Interaction& input, std::string_view id, TextareaState& state, const TextareaOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "toggle",

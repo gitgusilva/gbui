@@ -56,6 +56,10 @@ struct State {
 
     TextEditState text{"themes/nord", 11, 11};
     TextEditState secret{"hunter2", 7, 7};
+    TextareaState note{};
+    /** What the `field` example is complaining about, so the example shows the
+     *  invalid state rather than only describing it. */
+    std::string_view fieldError{};
     RichDocument document{};
     RichEditorState rich{};
 

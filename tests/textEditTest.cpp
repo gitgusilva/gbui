@@ -170,3 +170,108 @@ TEST("a whole frame of input applies keys before the text it typed") {
     CHECK(result.changed);
     CHECK_EQ(state.text, std::string("maiX"));
 }
+
+// ---- more than one line ----------------------------------------------------
+
+namespace {
+
+/** Three lines, so a caret has somewhere above it and somewhere below. */
+TextEditState paragraph(std::size_t caret) {
+    TextEditState state;
+    state.text = "first\nsecond line\nthird";
+    state.caret = state.anchor = caret;
+    return state;
+}
+
+constexpr TextEditOptions kMultiline{.multiline = true};
+
+}  // namespace
+
+TEST("a line knows where it starts and ends") {
+    const std::string_view text = "first\nsecond line\nthird";
+    // Inside the middle line, from anywhere in it.
+    CHECK_EQ(lineStart(text, 9), std::size_t{6});
+    CHECK_EQ(lineEnd(text, 9), std::size_t{17});
+    // At the very start, and at the very end, where there is no newline to find.
+    CHECK_EQ(lineStart(text, 0), std::size_t{0});
+    CHECK_EQ(lineEnd(text, text.size()), text.size());
+    // On the newline itself: it belongs to the line it terminates.
+    CHECK_EQ(lineStart(text, 5), std::size_t{0});
+    CHECK_EQ(lineEnd(text, 6), std::size_t{17});
+}
+
+TEST("Home and End reach the ends of the line, not of the text") {
+    TextEditState state = paragraph(9);   // inside "second line"
+    applyKey(state, key(Key::Home), kMultiline);
+    CHECK_EQ(state.caret, std::size_t{6});
+    applyKey(state, key(Key::End), kMultiline);
+    CHECK_EQ(state.caret, std::size_t{17});
+
+    // A single-line field is unchanged by any of this.
+    TextEditState single = paragraph(9);
+    applyKey(single, key(Key::Home));
+    CHECK_EQ(single.caret, std::size_t{0});
+}
+
+TEST("Up and Down keep the column, and stop at a short line's end") {
+    // Column 8 of "second line" — past the end of "first", which is 5 long.
+    TextEditState state = paragraph(14);
+    applyKey(state, key(Key::Up), kMultiline);
+    // Clamped to the end of the shorter line rather than spilling into it.
+    CHECK_EQ(state.caret, std::size_t{5});
+
+    // Back down, from column 5 of the first line into the second.
+    applyKey(state, key(Key::Down), kMultiline);
+    CHECK_EQ(state.caret, std::size_t{11});
+
+    // Off the bottom goes to the very end, and off the top to the very start —
+    // a caret that refuses to move reads as the key not working.
+    TextEditState last = paragraph(20);
+    applyKey(last, key(Key::Down), kMultiline);
+    CHECK_EQ(last.caret, last.text.size());
+    TextEditState top = paragraph(3);
+    applyKey(top, key(Key::Up), kMultiline);
+    CHECK_EQ(top.caret, std::size_t{0});
+}
+
+TEST("Shift with Up and Down extends the selection over whole lines") {
+    TextEditState state = paragraph(0);
+    applyKey(state, key(Key::Down, /*shift=*/true), kMultiline);
+
+    CHECK(state.hasSelection());
+    CHECK_EQ(state.anchor, std::size_t{0});
+    CHECK_EQ(state.caret, std::size_t{6});
+    CHECK_EQ(std::string(state.selectedText()), std::string("first\n"));
+}
+
+TEST("Return writes a newline, and the modifier is what submits") {
+    TextEditState state = paragraph(5);   // end of "first"
+    const auto typed = applyKey(state, key(Key::Return), kMultiline);
+    CHECK(typed.changed);
+    CHECK(!typed.submitted);
+    CHECK_EQ(state.text, std::string("first\n\nsecond line\nthird"));
+
+    TextEditState done = paragraph(5);
+    const auto sent = applyKey(done, commandKey(Key::Return), kMultiline);
+    CHECK(sent.submitted);
+    CHECK(!sent.changed);
+    CHECK_EQ(done.text, std::string("first\nsecond line\nthird"));
+
+    // And a single-line field still submits on a bare Return, as it always did.
+    TextEditState single = paragraph(5);
+    CHECK(applyKey(single, key(Key::Return)).submitted);
+}
+
+TEST("a pasted paragraph keeps its line breaks") {
+    // The newlines arrive as *typed text*, not as keys — which is how a paste
+    // reaches the model, and where they were being filtered out.
+    TextEditState state;
+    applyInput(state, {}, "one\ntwo\nthree", kMultiline);
+    CHECK_EQ(state.text, std::string("one\ntwo\nthree"));
+
+    // A single-line field still refuses them, which is the whole reason the
+    // filter is there.
+    TextEditState single;
+    applyInput(single, {}, "one\ntwo");
+    CHECK_EQ(single.text, std::string("onetwo"));
+}

@@ -80,7 +80,29 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
         // Clicking anything moves the keyboard with it, and clicking nothing
         // takes focus away — the same rule every desktop toolkit uses. The ring
         // stays off either way: the pointer already showed where focus went.
-        focus(pressed_, FocusSource::Pointer);
+        //
+        // **The nearest focusable ancestor**, not whatever the pointer landed
+        // on. A control is rarely one node: a textarea is a box around a scroll
+        // view around a column of runs, and a press on the text resolves to a
+        // tag the scroll view invented. Focusing that leaves the keyboard on
+        // something no key handler is listening to — click into the box, type,
+        // and nothing happens — which is exactly what a textarea did. The
+        // browser walks up for the same reason: clicking the text inside a
+        // `<textarea>` focuses the textarea.
+        //
+        // A press that finds nothing focusable above it still clears focus,
+        // because clicking the page background is how a reader says "not here".
+        std::string_view target;
+        if (haveTree) {
+            for (NodeId node = hitTest(arena, root, frame.pointer); node.valid();
+                 node = arena[node].parent) {
+                if (arena[node].focusable && !arena[node].id.empty()) {
+                    target = arena[node].id;
+                    break;
+                }
+            }
+        }
+        focus(target, FocusSource::Pointer);
     } else if (!frame.pointerDown && wasDown_) {
         if (!pressed_.empty() && pressed_ == under) clicked_ = pressed_;
         pressed_.clear();

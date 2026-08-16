@@ -48,6 +48,7 @@ set(GBUI_SOURCES
     src/widgets/colorPicker.cpp
     src/widgets/datePicker.cpp
     src/widgets/dateTimePicker.cpp
+    src/widgets/field.cpp
     src/widgets/icon.cpp
     src/widgets/image.cpp
     src/widgets/icons.cpp
@@ -71,6 +72,7 @@ set(GBUI_SOURCES
     src/widgets/table.cpp
     src/widgets/tabs.cpp
     src/widgets/text.cpp
+    src/widgets/textarea.cpp
     src/widgets/textField.cpp
     src/widgets/timePicker.cpp
     src/widgets/toolbar.cpp

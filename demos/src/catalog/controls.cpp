@@ -60,6 +60,36 @@ void addControlExamples(std::vector<Example>& out) {
                                  {.placeholder = "Repository name", .leading = Icon::Search});
                    }});
 
+    out.push_back({"textarea", [](Ui& ui, const Interaction& input, State& state) {
+                       // Two to four rows: it starts small and opens up as the
+                       // writing goes on, which is what a commit message box
+                       // does. Return takes a newline here; Ctrl+Return sends.
+                       textarea(ui, input, "catalog.textarea", state.note,
+                                {.placeholder = "Describe the change\u2026",
+                                 .rows = 2,
+                                 .maxRows = 4});
+                   }});
+
+    out.push_back({"field", [](Ui& ui, const Interaction& input, State& state) {
+                       // The caption, the control and the message as one thing
+                       // \u2014 and the message is the error when there is one,
+                       // never both at once.
+                       state.fieldError =
+                           state.text.text.find(' ') == std::string::npos
+                               ? std::string_view{}
+                               : std::string_view("A repository name cannot contain spaces.");
+                       field(ui, input, "catalog.field.wrap",
+                             {.label = "Repository",
+                              .forId = "catalog.field",
+                              .help = "Lowercase, no spaces.",
+                              .error = state.fieldError,
+                              .required = true},
+                             [&](Ui& inner) {
+                                 textField(inner, input, "catalog.field", state.text,
+                                           {.placeholder = "Repository name", .grow = 1.0f});
+                             });
+                   }});
+
     out.push_back({"progressBar", [](Ui& ui, const Interaction&, State& state) {
                        progressBar(ui, {.value = state.fraction});
                        // Below zero is the indeterminate form, which needs a
