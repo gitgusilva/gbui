@@ -203,6 +203,11 @@ private:
     /** The tagged ancestors of the focused node, innermost first. */
     std::vector<std::string> focusChain_;
     std::vector<std::string> focusables_;
+    /** The tag of the node confining Tab right now, or empty. */
+    std::string trap_;
+    /** Where the keyboard was when that node appeared, so closing it can put
+     *  the reader back rather than at the top of the page. */
+    std::string focusBeforeTrap_;
     std::map<std::string, Rect, std::less<>> frames_;
 
     Vec2 pointer_{};

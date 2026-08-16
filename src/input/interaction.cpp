@@ -149,12 +149,40 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
         focusables_.clear();
         frames_.clear();
         NodeId focusedNode;
+        NodeId trapNode;
+        // Collected with their ids, because whether a control is a Tab stop
+        // this frame depends on where it sits and not only on its own flag.
+        std::vector<std::pair<std::string_view, NodeId>> candidates;
         arena.forEach(root, [&](NodeId id, const Node& node, int) {
+            // The *last* one wins, which is the innermost dialog: overlays are
+            // built in the order they stack, so the one on top is the one whose
+            // turn it is to hold the keyboard.
+            if (node.trapsFocus && !node.id.empty()) trapNode = id;
             if (node.id.empty()) return;
             frames_.insert_or_assign(std::string(node.id), node.frame);
-            if (node.focusable) focusables_.emplace_back(node.id);
+            if (node.focusable) candidates.emplace_back(node.id, id);
             if (node.id == focused_) focusedNode = id;
         });
+
+        // ---- the trap ------------------------------------------------------
+        //
+        // A modal that Tab walks out of the back of is a modal in name only:
+        // the reader lands on the page behind it, which the backdrop says they
+        // cannot use, and there is nothing on screen telling them where they
+        // went. So while something is trapping, the Tab order *is* its subtree.
+        //
+        // Done here rather than in `modal` because Tab is resolved here and
+        // nowhere else, and because a component cannot see the tree it is in.
+        const auto inside = [&](NodeId id) {
+            if (!trapNode.valid()) return true;
+            for (NodeId at = id; at.valid(); at = arena[at].parent) {
+                if (at == trapNode) return true;
+            }
+            return false;
+        };
+        for (const auto& [tag, id] : candidates) {
+            if (inside(id)) focusables_.emplace_back(tag);
+        }
 
         // A focused node that stopped being built must not take the keyboard
         // with it.
@@ -184,6 +212,41 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
             // away, and holding a name nobody answers to would keep the ring
             // off screen for good.
             if (!focusedNode.valid()) focused_.clear();
+        }
+
+        const std::string trap = trapNode.valid() ? std::string(arena[trapNode].id) : std::string{};
+        if (trap != trap_) {
+            if (!trap.empty()) {
+                // Opening. Remember where the reader was, so closing can put
+                // them back — a dialog that dumps the keyboard at the top of
+                // the page costs them their place.
+                if (trap_.empty()) focusBeforeTrap_ = focused_;
+                if (!inside(focusedNode)) {
+                    if (focusables_.empty()) blur();
+                    else focus(focusables_.front(), FocusSource::Program);
+                }
+            } else {
+                // Closing. Back where it came from, if that is still there.
+                const bool survives = !focusBeforeTrap_.empty() &&
+                                      std::find(focusables_.begin(), focusables_.end(),
+                                                focusBeforeTrap_) != focusables_.end();
+                if (survives) focus(focusBeforeTrap_, FocusSource::Program);
+                focusBeforeTrap_.clear();
+            }
+            trap_ = trap;
+        } else if (!trap.empty() && !inside(focusedNode) && !focusables_.empty()) {
+            // A click on the backdrop, or a control inside that went away. The
+            // keyboard belongs to the dialog for as long as it is up.
+            focus(focusables_.front(), FocusSource::Program);
+        }
+
+        // Re-resolved, because the block above may have moved the keyboard and
+        // the chain below is built from where it actually is.
+        if (!focused_.empty()) {
+            focusedNode = NodeId{};
+            arena.forEach(root, [&](NodeId id, const Node& node, int) {
+                if (node.id == focused_) focusedNode = id;
+            });
         }
 
         // Where the focused node sits, so a container can ask whether the

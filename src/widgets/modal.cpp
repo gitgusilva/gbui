@@ -79,14 +79,16 @@ Modal modal(Ui& ui, const Interaction& input, std::string_view id, std::string_v
     dialog.overflow = Overflow::Hidden;
 
     auto body = ui.scope(dialog);
-    ui.tag(id);
+    // **Tab is confined to the dialog while it is up.** Before this it walked
+    // straight out of the back and into the page the backdrop says cannot be
+    // used — with nothing on screen saying where the keyboard had gone. Focus
+    // moves inside on the frame this appears and returns to whatever opened it
+    // on the frame it stops being built; both are `Interaction`'s to do,
+    // because it is the only thing that can see the whole order.
+    ui.tag(id).trapsFocus();
     // `AlertDialog` when it is the dangerous kind: the difference is whether the
     // reader was interrupted or asked for this, and it is the one thing a
     // confirmation has to get across before its buttons are read out.
-    //
-    // **Focus is still not trapped in here**, and a role does not fix that —
-    // Tab walks straight out of the back of the dialog into the page behind it.
-    // That is stage 7, and it is named rather than papered over.
     ui.accessible({
         .role = options.danger ? Role::AlertDialog : Role::Dialog,
         .name = title,

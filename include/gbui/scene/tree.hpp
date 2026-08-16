@@ -127,6 +127,15 @@ struct Node {
     /** What the pointer looks like over this node. Default means "ask my
      *  parent", so a label inside a button inherits the button's. */
     Cursor cursor = Cursor::Default;
+    /**
+     * Tab is confined to this subtree while it exists — a modal dialog.
+     *
+     * Resolved in `Interaction`, because Tab is resolved there and nowhere
+     * else and because a component cannot see the tree it is in. Needs a tag,
+     * like everything else that has to survive the tree being rebuilt: the
+     * innermost tagged one wins, so a dialog opened from a dialog takes over.
+     */
+    bool trapsFocus = false;
 
     /** A slice of the arena's shape store, drawn after this node's background
      *  and before its children. A range rather than a vector so a node stays

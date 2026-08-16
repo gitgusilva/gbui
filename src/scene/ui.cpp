@@ -158,6 +158,11 @@ Ui& Ui::ignoresPointer(bool value) {
     return *this;
 }
 
+Ui& Ui::trapsFocus(bool value) {
+    if (last_.valid()) arena_[last_].trapsFocus = value;
+    return *this;
+}
+
 Ui& Ui::cursor(Cursor value) {
     if (last_.valid()) arena_[last_].cursor = value;
     return *this;

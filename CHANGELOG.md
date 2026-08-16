@@ -225,6 +225,21 @@ commit.
 
 ### Fixed
 
+- **A modal did not trap focus.** Tab walked straight out of the back of the
+  dialog and into the page the backdrop says cannot be used, with nothing on
+  screen saying where the keyboard had gone. `Node::trapsFocus` and
+  `Ui::trapsFocus()` say a subtree confines Tab; `Interaction` resolves it,
+  because Tab is resolved there and nowhere else and because a component cannot
+  see the tree it is in. Focus moves inside on the frame the dialog appears and
+  **returns to whatever opened it** on the frame it stops being built. Nested
+  dialogs work: the innermost tagged trap wins.
+- **The colour picker could only be used with a pointer.** The square had no
+  Tab stop and no keys at all, which is a worse gap than a missing role — a
+  role at least says the control is there. The square and both rails are Tab
+  stops now: Left and Right move along, Up and Down are the square's second
+  axis, Home and End go to the ends of the axis the key belongs to, and Shift
+  is ten times the step. Each draws a focus ring, and the square's description
+  says so, because nothing about a `Group` implies it answers the arrows.
 - **A button was never a Tab stop.** It had not been since focus was built:
   `activated` gives every control Space and Return once it has the keyboard, and
   nothing could ever give the keyboard to a button — so the most ordinary control

@@ -210,11 +210,11 @@ Named rather than discovered, which is this project's habit:
   that already matches the one above, in `platform/` beside SDL2 and optional the
   same way. Until it exists this is a tested data model, not something a screen
   reader can read.
-- **Focus is not trapped in a modal.** `modal` has the right role and Tab still
-  walks straight out of the back of it. Stage 7.
-- **The colour picker's square has no keyboard**, in any form. A pointer is the
-  only way to reach it. Stage 6 is the widget-by-widget audit that finds the rest
-  of these.
+- **The rest of the keyboard audit.** Two are fixed — a modal confines Tab to
+  itself and hands the keyboard back when it closes, and the colour picker's
+  square and rails answer the arrows — but *checked* is a different claim from
+  *right*, and only those two have been checked. Stage 6 is a conformance case
+  per widget against the WAI-ARIA pattern for it.
 - **`richEditor` does not report the marks under the caret** — bold, the heading
   level, which list a block is in. That is a property of a *position* rather than
   of a node, and it wants a text-range interface that comes after stage 4.

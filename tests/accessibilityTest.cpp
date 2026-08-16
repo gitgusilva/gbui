@@ -885,3 +885,159 @@ TEST("an open select's active descendant resolves to the highlighted row") {
     CHECK(list->role == Role::ListBox);
     CHECK(row->name == "release");
 }
+
+// ---- the keyboard, where it was missing -------------------------------------
+//
+// Stage 6 and stage 7, for the two the audit had already found. Both are cases
+// where the role was right and the control was still unreachable, which is the
+// failure a role alone cannot catch — and the reason the audit is a test rather
+// than a read.
+
+TEST("a colour picker can be driven from the keyboard") {
+    // It could not be, at all: the square had no Tab stop and no keys, so the
+    // only way to pick a colour was to point at it.
+    Screen screen;
+    ColorPickerState state;
+    state.value = Hsv{200.0f, 0.5f, 0.5f, 1.0f};
+    // The picker's own `Interaction`, not a throwaway: this is the one test in
+    // the file that drives a control rather than reading the tree it built.
+    const auto build = [&](Ui& ui) {
+        (void)colorPicker(ui, screen.input, "pick", state, {.name = "Accent"});
+    };
+
+    screen.frame(build);
+
+    // The real frame order, which matters here and did not in the cases above:
+    // the keys are resolved against last frame's tree *before* the build, so a
+    // component reads them while it is being built.
+    const auto press = [&](Key key, bool shift = false) {
+        InputFrame event;
+        event.keys.push_back(KeyEvent{key, Modifiers{.shift = shift}});
+        screen.input.update(screen.arena, NodeId{0}, event);
+        screen.input.focus("pick.square", FocusSource::Keyboard);
+
+        screen.arena.reset();
+        Ui ui(screen.arena);
+        ui.setMeasure(&measureFixed, screen.theme.typography());
+        {
+            auto column = ui.column({.gap = 8.0f, .width = kWindow.width});
+            build(ui);
+            (void)column;
+        }
+        LayoutContext context;
+        context.theme = &screen.theme;
+        context.measure = &measureFixed;
+        layout(screen.arena, ui.root(), kWindow, context);
+    };
+
+    const float saturation = state.value.saturation;
+    press(Key::Right);
+    CHECK(state.value.saturation > saturation);
+    press(Key::Left);
+    CHECK_NEAR(state.value.saturation, saturation);
+
+    // Up and Down are the second axis, which is the whole reason the square
+    // cannot be a slider.
+    const float brightness = state.value.value;
+    press(Key::Up);
+    CHECK(state.value.value > brightness);
+
+    // Shift is the coarse gesture, ten times over.
+    press(Key::Home);
+    CHECK_NEAR(state.value.saturation, 0.0);
+    press(Key::Right, true);
+    CHECK_NEAR(state.value.saturation, 0.5);
+    press(Key::End);
+    CHECK_NEAR(state.value.saturation, 1.0);
+}
+
+TEST("the picker's three targets are Tab stops, and say what they are") {
+    Screen screen;
+    ColorPickerState state;
+    screen.frame([&](Ui& ui) {
+        Interaction none;
+        (void)colorPicker(ui, none, "pick", state, {.name = "Accent"});
+    });
+
+    for (const char* tag : {"pick.square", "pick.hue", "pick.alpha"}) {
+        bool focusable = false;
+        for (std::size_t i = 0; i < screen.arena.size(); ++i) {
+            const Node& node = screen.arena[NodeId{static_cast<std::uint32_t>(i)}];
+            if (node.id == tag) focusable = node.focusable;
+        }
+        CHECK(focusable);
+        const Accessibility* info = screen.of(tag);
+        CHECK(info != nullptr);
+        if (info) {
+            CHECK(info->role != Role::None);
+            CHECK(!info->name.empty());
+        }
+    }
+}
+
+/**
+ * The bug this pins: Tab walked straight out of the back of a modal into the
+ * page the backdrop says cannot be used, with nothing on screen saying where
+ * the keyboard had gone.
+ */
+TEST("a modal confines Tab to itself, and gives the keyboard back when it closes") {
+    Theme theme = Theme::dark();
+    Arena arena;
+    Interaction input;
+    bool open = false;
+    Vec2 at{200.0f, 100.0f};
+
+    const auto frame = [&](const InputFrame& event = {}) {
+        arena.reset();
+        Ui ui(arena);
+        ui.setMeasure(&measureFixed, theme.typography());
+        NodeId root;
+        {
+            auto column = ui.column({.gap = 8.0f, .width = kWindow.width});
+            button(ui, input, "Open", {.id = "open"});
+            button(ui, input, "Elsewhere", {.id = "elsewhere"});
+            if (open) {
+                Modal dialog = modal(ui, input, "confirm", "Discard changes?", at);
+                at = dialog.result.position;
+                button(ui, input, "Cancel", {.id = "cancel"});
+                button(ui, input, "Discard", {.id = "discard"});
+            }
+            root = column.id();
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        context.measure = &measureFixed;
+        layout(arena, root, kWindow, context);
+        input.update(arena, root, event);
+    };
+
+    const auto tab = [&] {
+        InputFrame event;
+        event.keys.push_back(KeyEvent{Key::Tab});
+        frame(event);
+    };
+
+    frame();
+    input.focus("elsewhere", FocusSource::Keyboard);
+    frame();
+    CHECK(input.isFocused("elsewhere"));
+
+    // Opening moves the keyboard inside, because a dialog nobody can type into
+    // is a dialog that has to be dismissed with the pointer.
+    open = true;
+    frame();
+    CHECK(!input.isFocused("elsewhere"));
+    CHECK(input.isFocused("confirm.close"));
+
+    // …and Tab stays inside, however long it is held.
+    for (int i = 0; i < 8; ++i) {
+        tab();
+        const std::string_view where = input.focused();
+        CHECK(where == "confirm.close" || where == "cancel" || where == "discard");
+    }
+
+    // Closing puts it back where it was, rather than at the top of the page.
+    open = false;
+    frame();
+    CHECK(input.isFocused("elsewhere"));
+}

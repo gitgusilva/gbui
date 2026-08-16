@@ -240,6 +240,16 @@ public:
      *  finds it, and hit testing walks past it to the tagged ancestor. */
     Ui& ignoresPointer(bool value = true);
 
+    /**
+     * Confines Tab to the most recently added node while it is built.
+     *
+     * What makes a modal modal. Focus moves inside on the frame it appears and
+     * returns to wherever it came from on the frame it stops being built —
+     * both handled by `Interaction`, which is the only thing that can see the
+     * whole order.
+     */
+    Ui& trapsFocus(bool value = true);
+
     /** Sets what the pointer looks like over the most recently added node. */
     Ui& cursor(Cursor value);
 

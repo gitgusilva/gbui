@@ -132,6 +132,50 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         state.value.alpha = fractionIn(alphaFrame, input.pointer()).x;
     }
 
+    // ---- the keys ----------------------------------------------------------
+    //
+    // **A picker reachable only by pointer is a picker most people cannot
+    // use**, and until this the square had no keyboard at all. That is not a
+    // smaller gap than a missing role, it is a worse one: a role at least says
+    // the control is there. All three targets are Tab stops now and all three
+    // answer the arrows.
+    //
+    // The steps are the ones a reader can actually aim with. One percent moves
+    // a 150-pixel square by a pixel and takes a hundred presses to cross it;
+    // five gets there in twenty and is still finer than a hand on a trackpad.
+    // Shift is the coarse gesture everywhere else, so it is ten times the step
+    // here. Home and End go to the ends of the axis the key belongs to, which
+    // is the only unambiguous reading of them on a two-dimensional control.
+    const auto arrows = [&](std::string_view target, float& along, float step, float low,
+                            float high, float* upDown = nullptr) {
+        if (!input.isFocused(target)) return;
+        for (const KeyEvent& event : input.keys()) {
+            const float delta = step * (event.modifiers.shift ? 10.0f : 1.0f);
+            switch (event.key) {
+                case Key::Left: along = std::clamp(along - delta, low, high); break;
+                case Key::Right: along = std::clamp(along + delta, low, high); break;
+                case Key::Home: along = low; break;
+                case Key::End: along = high; break;
+                // The second axis, where there is one, and always 0 to 1: the
+                // only control with two is the square, and its vertical axis is
+                // brightness.
+                case Key::Up:
+                    if (upDown) *upDown = std::clamp(*upDown + delta, 0.0f, 1.0f);
+                    break;
+                case Key::Down:
+                    if (upDown) *upDown = std::clamp(*upDown - delta, 0.0f, 1.0f);
+                    break;
+                default: break;
+            }
+        }
+    };
+    // Up and Down are *brightness* on the square and nothing on a rail: a rail
+    // is one axis, and swallowing the vertical arrows there would take them
+    // from whatever the picker is sitting in.
+    arrows(squareId, state.value.saturation, 0.05f, 0.0f, 1.0f, &state.value.value);
+    arrows(hueId, state.value.hue, 360.0f * 0.02f, 0.0f, 360.0f);
+    arrows(alphaId, state.value.alpha, 0.05f, 0.0f, 1.0f);
+
     const Color current = state.color();
     const Color pureHue = Hsv{state.value.hue, 1.0f, 1.0f, 1.0f}.toColor();
 
@@ -149,20 +193,23 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         square.radius = 6.0f;
         square.background = Fill{pureHue};
         square.cursorHint = Cursor::Crosshair;
+        if (input.isFocusVisible(squareId)) {
+            square.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
+        }
         auto squareScope = ui.scope(square);
-        ui.tag(squareId).cursor(Cursor::Crosshair);
+        ui.tag(squareId).focusable().cursor(Cursor::Crosshair);
         // Two dimensions in one control, and no role for that anywhere — ARIA
         // has `slider` and nothing two-dimensional. So it says what it *is*
         // rather than pretending to be one axis of itself, and the value it
         // reports is the colour, which is the answer either way.
         //
-        // **This is not enough, and the gap is named rather than dressed up:**
-        // the square has no keyboard at all, here or in the drag handling
-        // above. A pointer is currently the only way to reach it. That is
-        // stage 6 — the widget-by-widget keyboard audit — and it is on the list.
+        // The description carries the keys, because a reader has no other way
+        // to find out that a `Group` answers the arrows: nothing about the role
+        // implies it, and the affordance a sighted user gets is the crosshair.
         ui.accessible({
             .role = Role::Group,
             .name = "Saturation and brightness",
+            .description = "Arrow keys adjust; hold Shift for larger steps",
             .value = {.present = true, .text = current.hex()},
         });
 
@@ -197,8 +244,11 @@ ColorPickerResult colorPicker(Ui& ui, const Interaction& input, std::string_view
         track.height = options.railHeight;
         track.radius = options.railHeight / 2.0f;
         track.cursorHint = Cursor::Pointer;
+        if (input.isFocusVisible(railId)) {
+            track.outline = Outline{2.0f, 2.0f, Fill{Token::Accent}};
+        }
         auto trackScope = ui.scope(track);
-        ui.tag(railId).cursor(Cursor::Pointer);
+        ui.tag(railId).focusable().cursor(Cursor::Pointer);
         // A rail is a slider in everything but its drawing, so it says so and
         // reports where it is on its own scale — 0 to 360 for the hue, 0 to 1
         // for the alpha, which is what `position` already carries.
