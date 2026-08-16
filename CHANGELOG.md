@@ -20,7 +20,8 @@ commit.
   a `Node` carried a style, a tag and a frame and nothing that said what it
   *was* — a screen reader was handed one blank rectangle where an application
   should have been. `gbui/a11y/role.hpp` and `accessibility.hpp` are stages 1 to
-  3 of the plan: a `Role` and a name on every control, the state and value that
+  3 of the plan (stage 4 is below): a `Role` and a name on every control, the
+  state and value that
   go with it, and the relations that tie a caption to its field and an error to
   its input. Set with `ui.accessible({…})` beside the `tag` and the `focusable`
   that were already there; `ui.role(…)` and `ui.name(…)` are the shorthands.
@@ -58,12 +59,37 @@ commit.
   the chart options' `name`, `MenuItemOptions::role`, `PopoverOptions::role` and
   `name`, and `BoxOptions::role` and `name`.
 
-  **This is a data model with tests, not something a screen reader can read
-  yet.** Stage 4 prunes it into a tree and diffs it; stage 5 pushes that through
-  AccessKit. Neither exists, and [the reference
+- **The accessibility tree, and a diff of it.** Stage 4:
+  `buildAccessibilityTree(arena, root, interaction)` reads the records above into
+  one node per thing a reader can perceive, and `diffAccessibility` says what
+  changed. Three jobs. It **prunes** — every box that exists for layout is
+  collapsed away and its children re-parented, so a button wrapped in three
+  containers is one node and not four. It **resolves** — `labels` and `describes`
+  become the `labelledBy` and `describedBy` that belong on the control, a control
+  with no name takes its caption's, and one with neither takes the text inside
+  it, stopping at anything that is a node of its own so a table is not announced
+  as every cell it holds. And it **diffs**, because pushing a whole tree at a
+  screen reader sixty times a second is how an application becomes unusable
+  *with* accessibility turned on.
+
+  An `AccessibilityId` is a **hash of the tag** — the identity scheme focus, hit
+  testing and the animation clock already run on, and the only kind that survives
+  a tree being rebuilt. Untagged nodes derive one from their parent and their
+  position. The consequence is the one worth having: an unchanged frame diffs to
+  nothing, even though every node in the arena is new. Focus is reported
+  separately, because it moves between two nodes that are otherwise identical.
+
+  **The relations are resolved in two passes, and it has to be two.** A caption
+  is built before the control it names, so a single pass writes the control's
+  `labelledBy` and then reaches the control and overwrites it with the nothing
+  the control knows.
+
+  **This is a tested data model, not something a screen reader can read yet.**
+  Stage 5 pushes it through AccessKit, and that is a decision before it is a task
+  because it would be the library's second dependency. [The reference
   page](docs/reference/accessibility.md) lists the rest of what is missing —
   including that `modal` still does not trap focus and the colour picker's
-  square has no keyboard at all.
+  saturation square has no keyboard at all.
 
 ### Changed
 

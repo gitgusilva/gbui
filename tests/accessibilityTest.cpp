@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "gbui/a11y/accessibility.hpp"
+#include "gbui/a11y/tree.hpp"
 #include "gbui/input/interaction.hpp"
 #include "gbui/layout/layout.hpp"
 #include "gbui/scene/ui.hpp"
@@ -560,4 +561,327 @@ TEST("every Tab stop in a form has a role and a name") {
     // A form of eleven controls: if this collapses, the loop above stopped
     // checking anything and would pass in silence.
     CHECK(stops >= 11);
+}
+
+// ---- the tree ---------------------------------------------------------------
+//
+// Stage 4: the records on the arena pruned into one node per thing a reader can
+// perceive, the relations resolved onto the controls they belong to, and the
+// whole thing diffed so a screen reader is told what changed rather than
+// everything, sixty times a second.
+
+namespace {
+
+/** Builds the tree for one frame of `build`. */
+struct Reader {
+    Theme theme = Theme::dark();
+    Arena arena;
+    Interaction input;
+    AccessibilityTree tree;
+
+    template <typename Fn>
+    void frame(Fn&& build) {
+        arena.reset();
+        Ui ui(arena);
+        ui.setMeasure(&measureFixed, theme.typography());
+        NodeId root;
+        {
+            auto column = ui.column({.gap = 8.0f, .width = kWindow.width});
+            build(ui);
+            root = column.id();
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        context.measure = &measureFixed;
+        layout(arena, root, kWindow, context);
+        input.update(arena, root, InputFrame{});
+        tree = buildAccessibilityTree(arena, root, input);
+    }
+
+    std::size_t countOf(Role role) const {
+        std::size_t total = 0;
+        for (const AccessibilityNode& node : tree.nodes) {
+            if (node.role == role) ++total;
+        }
+        return total;
+    }
+};
+
+}  // namespace
+
+TEST("the tree collapses everything that exists only for layout") {
+    Reader reader;
+    reader.frame([](Ui& ui) {
+        Interaction none;
+        // Three layout boxes around one button, which is how a real screen is
+        // built and what the pruning exists for.
+        auto card = ui.column({.padding = Edges::all(8.0f)});
+        auto row = ui.row({.gap = 6.0f});
+        auto slot = ui.column({});
+        button(ui, none, "Commit", {.id = "commit"});
+        (void)slot;
+        (void)row;
+        (void)card;
+    });
+
+    // The window root, and the button. Nothing else survives.
+    CHECK_EQ(reader.tree.nodes.size(), std::size_t{2});
+    const AccessibilityNode* commit = reader.tree.find("commit");
+    CHECK(commit != nullptr);
+    if (commit) {
+        CHECK(commit->role == Role::Button);
+        CHECK(commit->name == "Commit");
+        // Re-parented to the root, because everything between them was layout.
+        CHECK_EQ(commit->parent, reader.tree.root);
+        CHECK(commit->bounds.width > 0.0f);
+    }
+}
+
+TEST("a hidden subtree is not in the tree at all") {
+    Reader reader;
+    MarqueeState state;
+    reader.frame([&](Ui& ui) {
+        Interaction none;
+        (void)marquee(ui, none, "ticker", state, 0.0f,
+                      [](Ui& inner) { inner.label("ALPHA 12.40"); },
+                      {.name = "Market"});
+    });
+
+    // The strip is one `Group`, not two: the second pass is drawn to hide the
+    // seam and a reader given both is read the same sentence twice.
+    CHECK_EQ(reader.countOf(Role::Group), std::size_t{2});   // the window, and the strip
+}
+
+TEST("a caption's name lands on the control, and the caption keeps its own") {
+    Reader reader;
+    TextEditState text{};
+    reader.frame([&](Ui& ui) {
+        Interaction none;
+        field(ui, none, "f",
+              {.label = "Repository",
+               .forId = "name",
+               .help = "Lowercase, no spaces.",
+               .required = true},
+              [&](Ui& inner) { (void)textInput(inner, none, "name", text); });
+    });
+
+    const AccessibilityNode* control = reader.tree.find("name");
+    const AccessibilityNode* caption = reader.tree.find("f.label");
+    const AccessibilityNode* help = reader.tree.find("f.help");
+    CHECK(control != nullptr);
+    CHECK(caption != nullptr);
+    CHECK(help != nullptr);
+    if (!control || !caption || !help) return;
+
+    // Resolved onto the control, which never knew it was named.
+    CHECK_EQ(control->labelledBy, caption->id);
+    CHECK(control->name == "Repository");
+    // And `required` came across the same edge, because the asterisk is a
+    // statement about the control drawn where there was room for it.
+    CHECK(control->state.required == Flag::True);
+    // The help is a description of the control, not a sibling paragraph.
+    CHECK_EQ(control->describedBy, help->id);
+    CHECK(control->description == "Lowercase, no spaces.");
+}
+
+TEST("a row with no name of its own is named by the text in it") {
+    Reader reader;
+    reader.frame([](Ui& ui) {
+        auto row = listRow(ui, {.selected = true, .id = "row.3"});
+        ui.label("themes/nord/theme.json");
+        (void)row;
+    });
+
+    const AccessibilityNode* row = reader.tree.find("row.3");
+    CHECK(row != nullptr);
+    if (row) {
+        CHECK(row->role == Role::ListItem);
+        CHECK(row->name == "themes/nord/theme.json");
+        CHECK(row->state.selected == Flag::True);
+    }
+}
+
+TEST("a name is not gathered through a node that has one of its own") {
+    // A table must not be announced as every cell it contains, which is what an
+    // unbounded text walk would do.
+    Reader reader;
+    TableState state;
+    const std::vector<Column> columns{{.title = "Author"}, {.title = "Commits"}};
+    reader.frame([&](Ui& ui) {
+        Interaction none;
+        (void)table(ui, none, "stats", columns, 2, state,
+                    [](Ui& cell, std::size_t row, std::size_t) {
+                        cell.label(row == 0 ? "ana" : "bruno");
+                    },
+                    {.virtualise = false, .name = "Commits by author"});
+    });
+
+    const AccessibilityNode* whole = reader.tree.find("stats");
+    CHECK(whole != nullptr);
+    if (whole) CHECK(whole->name == "Commits by author");
+
+    // The cells are their own nodes and carry their own text.
+    bool sawCell = false;
+    for (const AccessibilityNode& node : reader.tree.nodes) {
+        if (node.role != Role::Cell) continue;
+        sawCell = true;
+        CHECK(node.name == "ana" || node.name == "bruno");
+    }
+    CHECK(sawCell);
+}
+
+TEST("an id is the same node next frame, so an unchanged frame diffs to nothing") {
+    Reader reader;
+    const auto build = [](Ui& ui) {
+        Interaction none;
+        (void)checkbox(ui, none, "tags", true, {.label = "Show tags"});
+        button(ui, none, "Commit", {.id = "commit"});
+    };
+
+    reader.frame(build);
+    const AccessibilityTree first = reader.tree;
+    reader.frame(build);
+
+    // Every node in the arena is new — that is the memory model — and every id
+    // here is the same, because an id is a function of the tag.
+    CHECK_EQ(first.nodes.size(), reader.tree.nodes.size());
+    for (std::size_t i = 0; i < first.nodes.size(); ++i) {
+        CHECK_EQ(first.nodes[i].id, reader.tree.nodes[i].id);
+    }
+
+    const AccessibilityUpdate update = diffAccessibility(first, reader.tree);
+    CHECK(update.empty());
+}
+
+TEST("a diff reports the node that changed and nothing else") {
+    Reader reader;
+    bool checked = false;
+    const auto build = [&](Ui& ui) {
+        Interaction none;
+        (void)checkbox(ui, none, "tags", checked, {.label = "Show tags"});
+        button(ui, none, "Commit", {.id = "commit"});
+    };
+
+    reader.frame(build);
+    const AccessibilityTree before = reader.tree;
+    checked = true;
+    reader.frame(build);
+
+    const AccessibilityUpdate update = diffAccessibility(before, reader.tree);
+    CHECK_EQ(update.changed.size(), std::size_t{1});
+    if (update.changed.size() == 1) {
+        CHECK(update.changed.front().tag == "tags");
+        CHECK(update.changed.front().state.checked == Flag::True);
+    }
+    CHECK(update.removed.empty());
+}
+
+TEST("a row that goes away is reported as removed") {
+    Reader reader;
+    std::size_t rows = 3;
+    const auto build = [&](Ui& ui) {
+        for (std::size_t i = 0; i < rows; ++i) {
+            auto row = listRow(ui, {.id = "row." + std::to_string(i)});
+            ui.label("line " + std::to_string(i));
+            (void)row;
+        }
+    };
+
+    reader.frame(build);
+    const AccessibilityTree before = reader.tree;
+    rows = 2;
+    reader.frame(build);
+
+    const AccessibilityUpdate update = diffAccessibility(before, reader.tree);
+    CHECK_EQ(update.removed.size(), std::size_t{1});
+    const AccessibilityNode* gone = before.find("row.2");
+    CHECK(gone != nullptr);
+    if (gone && update.removed.size() == 1) CHECK_EQ(update.removed.front(), gone->id);
+}
+
+/** Focus moves between two nodes that are otherwise unchanged, so it is
+ *  reported on its own. It is the one message a reader must never miss. */
+TEST("focus is reported even when nothing else about either node changed") {
+    Reader reader;
+    const auto build = [](Ui& ui) {
+        Interaction none;
+        button(ui, none, "Commit", {.id = "commit"});
+        button(ui, none, "Discard", {.id = "discard"});
+    };
+
+    reader.frame(build);
+    const AccessibilityTree before = reader.tree;
+    CHECK_EQ(diffAccessibility(before, before).focus, AccessibilityId{0});
+
+    reader.input.focus("discard");
+    reader.frame(build);
+
+    const AccessibilityUpdate update = diffAccessibility(before, reader.tree);
+    const AccessibilityNode* discard = reader.tree.find("discard");
+    CHECK(discard != nullptr);
+    if (discard) {
+        CHECK(discard->focused);
+        CHECK_EQ(update.focus, discard->id);
+    }
+    CHECK(update.focusMoved);
+}
+
+TEST("a virtualised row carries its real position into the tree") {
+    Reader reader;
+    ScrollState scroll;
+    reader.frame([&](Ui& ui) {
+        Interaction none;
+        (void)virtualList(ui, none, "commits", scroll,
+                          {.count = 50000, .rowHeight = 24.0f, .height = 120.0f,
+                           .name = "Commits"},
+                          [](Ui& row, std::size_t index) {
+                              row.label("commit " + std::to_string(index));
+                          });
+    });
+
+    const AccessibilityNode* list = reader.tree.find("commits");
+    CHECK(list != nullptr);
+    // `commits` is the scroll viewport; the list is its content, and both are in
+    // the tree because both are things a reader meets.
+    CHECK(reader.countOf(Role::List) == 1);
+
+    std::size_t items = 0;
+    for (const AccessibilityNode& node : reader.tree.nodes) {
+        if (node.role != Role::ListItem) continue;
+        ++items;
+        CHECK_EQ(node.setSize, std::size_t{50000});
+        CHECK(node.positionInSet >= 1);
+        // Named from its own text, so a reader hears the commit and not "list
+        // item".
+        CHECK(node.name.rfind("commit ", 0) == 0);
+    }
+    CHECK(items > 0);
+    CHECK(items < 100);
+}
+
+TEST("an open select's active descendant resolves to the highlighted row") {
+    Reader reader;
+    const std::vector<std::string> items{"main", "develop", "release"};
+    SelectState state;
+    state.open = true;
+    state.highlighted = 2;
+    reader.frame([&](Ui& ui) {
+        Interaction none;
+        SelectOptions options;
+        options.name = "Branch";
+        (void)select(ui, none, "branch", items, std::size_t{0}, state, options);
+    });
+
+    const AccessibilityNode* box = reader.tree.find("branch");
+    const AccessibilityNode* row = reader.tree.find("branch.list.2");
+    const AccessibilityNode* list = reader.tree.find("branch.list");
+    CHECK(box != nullptr);
+    CHECK(row != nullptr);
+    CHECK(list != nullptr);
+    if (!box || !row || !list) return;
+
+    CHECK_EQ(box->activeDescendant, row->id);
+    CHECK_EQ(box->controls, list->id);
+    CHECK(list->role == Role::ListBox);
+    CHECK(row->name == "release");
 }

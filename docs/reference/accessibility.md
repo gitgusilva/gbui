@@ -1,17 +1,19 @@
 # a11y
 
-`#include "gbui/a11y/role.hpp"`, `accessibility.hpp`
+`#include "gbui/a11y/role.hpp"`, `accessibility.hpp`, `tree.hpp`
 
 What a node is, to somebody who cannot see it. A `Style` says how a node is
 drawn and a `Role` says what it *is* — and until this existed, a screen reader
 was handed one blank rectangle where an application should have been.
 
-**This is stages 1 to 3 of the accessibility plan**: a role and a name on every
-control, the state and value that go with it, and the relations that tie a
-caption to its field and an error to its input. What it is **not** yet is a
-platform bridge — nothing is sent to UIA, AT-SPI or NSAccessibility. That is
-stage 5, and it needs the pruned tree of stage 4 in front of it. Everything here
-is in the arena and testable today, which is exactly how it should be built.
+**This is stages 1 to 4 of the accessibility plan**: a role and a name on every
+control, the state and value that go with it, the relations that tie a caption to
+its field and an error to its input, and the pruned tree those are read into.
+What it is **not** yet is a platform bridge — nothing is sent to UIA, AT-SPI or
+NSAccessibility. That is stage 5, and it is a decision before it is a task
+because AccessKit would be the library's second dependency. Everything here is in
+the arena and testable with no window, no GPU and no screen reader, which is
+exactly how it should be built.
 
 ## The rule
 
@@ -160,14 +162,54 @@ might be". It is for content drawn twice on purpose — a marquee draws its text
 second time to hide the seam, and a reader given both would be read the same
 sentence twice with nothing to say why.
 
+## The tree
+
+```cpp
+AccessibilityTree tree = buildAccessibilityTree(arena, root, interaction);
+AccessibilityUpdate update = diffAccessibility(previous, tree);
+```
+
+Built **after layout**, because a node's bounds are part of what it says. Three
+jobs, and each is why the stage exists:
+
+**It prunes.** A frame is hundreds of nodes and a dozen things. Every box that
+exists for layout is collapsed away and its children are re-parented, so a
+button wrapped in three containers is one node and not four.
+
+**It resolves.** `labels` and `describes` are turned into the `labelledBy` and
+`describedBy` that belong on the control, and a control with no name of its own
+takes the caption's — which is what makes `field` work without every call site
+repeating the label. A node with no name and nothing naming it takes the text
+inside it, stopping at anything that is a node of its own: a `listRow` announces
+its contents, and a `table` does not announce every cell it holds.
+
+**It diffs.** Pushing a whole tree at a screen reader sixty times a second is how
+an application becomes unusable *with* accessibility turned on. `changed` holds
+every node that is new or different — whole, because half a node is not something
+that can be sent — and `removed` the ids that have gone. Focus is reported
+separately, because it moves between two nodes that are otherwise identical and
+"the keyboard is here now" is the one message a reader must never miss.
+
+### Identity
+
+A screen reader holds on to a node between frames and the arena does not: a
+`NodeId` names a different node next frame, or none. So an `AccessibilityId` is a
+**hash of the tag** — the identity scheme focus, hit testing and the animation
+clock already run on. Untagged nodes get one from their parent's id and their
+position among its accessible children, which is stable while the shape of the
+tree is and no weaker than the guarantee the tag scheme gives.
+
+The consequence is the one worth having: **an unchanged frame diffs to nothing**,
+even though every node in the arena is new.
+
 ## What is still missing
 
 Named rather than discovered, which is this project's habit:
 
-- **The tree and the bridge.** Stage 4 prunes this into one node per thing a user
-  can perceive and diffs it against last frame; stage 5 pushes that through
-  AccessKit. Neither exists. Until then this is a data model with tests, not
-  something a screen reader can read.
+- **The platform bridge.** Stage 5: AccessKit behind a single tree-and-diff model
+  that already matches the one above, in `platform/` beside SDL2 and optional the
+  same way. Until it exists this is a tested data model, not something a screen
+  reader can read.
 - **Focus is not trapped in a modal.** `modal` has the right role and Tab still
   walks straight out of the back of it. Stage 7.
 - **The colour picker's square has no keyboard**, in any form. A pointer is the
