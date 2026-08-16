@@ -286,7 +286,7 @@ Theme Host::themeFor() const {
         if (info_->palette == Palette::Light) dark = false;
     }
 
-    Theme theme = themeOverride_ ? *themeOverride_
+    Theme theme = themeOverride_           ? *themeOverride_
                   : skinId_ == "material"  ? Theme::material(dark)
                   : skinId_ == "cupertino" ? Theme::cupertino(dark)
                   : skinId_ == "fluent"    ? Theme::fluent(dark)

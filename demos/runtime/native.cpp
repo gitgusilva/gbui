@@ -215,8 +215,7 @@ std::optional<Theme> loadTheme(const std::string& path) {
         std::fprintf(stderr, "gbui_demo: cannot read %s\n", path.c_str());
         return std::nullopt;
     }
-    const std::string text{std::istreambuf_iterator<char>(file),
-                           std::istreambuf_iterator<char>()};
+    const std::string text{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
     json::ParseError parseError;
     const std::optional<json::Value> root = json::parse(text, &parseError);
     if (!root) {
