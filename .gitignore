@@ -8,6 +8,31 @@
 /build*/
 /out/
 /gallery/
+
+# An **in-source** build, which the rules above do not catch because it has no
+# directory of its own — it puts CMakeCache.txt, CMakeFiles/, a Makefile and
+# every object file beside the sources. One stray `cmake .` in the repository
+# root did exactly that, and the next `git add -A` committed 326 generated
+# files. Anchored, because `tests/CMakeLists.txt` and friends are real.
+/CMakeCache.txt
+/CMakeFiles/
+/Makefile
+/cmake_install.cmake
+/CTestTestfile.cmake
+/gbuiConfig.cmake
+/gbuiConfigVersion.cmake
+/libgbui*.a
+/libgbui*.so*
+# And the same wreckage one directory down, which an in-source build also
+# leaves in src/, tests/ and demos/.
+demos/Makefile
+tests/Makefile
+tools/Makefile
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+*.o
+*.o.d
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/

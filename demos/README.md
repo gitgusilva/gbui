@@ -8,14 +8,20 @@ WebAssembly module.
 directory links them, they are not installed, they have no API stability, and
 they carry no `gbui::` alias — that alias is the signal that something is part
 of the product, and these are not. Copy a screen into your own application if
-it is useful; do not depend on this one. `examples/` follows the same rule.
+it is useful; do not depend on this one.
 
-What they *do* prove is why they are separate from `examples/`, which shares a
-header and demonstrates the pipeline. These are ordinary consumers: they
-include `<gbui/…>`, link `gbui::gbui`, and would build unchanged against an
-installed copy of the toolkit. A change that makes them awkward has made the
-library awkward — which is the whole reason they exist as a target rather than
-as seven loose files.
+What they *do* prove is that the library works from outside it. These are
+ordinary consumers: they include `<gbui/…>`, link `gbui::gbui`, reach into no
+source directory, and would build unchanged against an installed copy. A change
+that makes them awkward has made the library awkward — which is the whole reason
+they exist as a target rather than as seven loose files.
+
+This directory replaced an `examples/` beside it, which had grown four programs
+covering the same ground by hand: a widget gallery that had drifted far enough
+to still call `toggle` "switch", a panel that wrote SVGs, a theme sheet, and an
+application screen. `gbui_demo` does all of it — `--component`, `--svg`,
+`--theme`, `--stills` — and the catalogue here is held against the metadata by a
+coverage gate, which is the part a hand-written gallery could never be.
 
 ```
 demos/

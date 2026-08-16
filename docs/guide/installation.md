@@ -126,7 +126,7 @@ A C ABI with opaque handles would remove that constraint and is not planned.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `GBUI_BUILD_TESTS` | on standalone | Build the test suite |
-| `GBUI_BUILD_EXAMPLES` | on standalone | Build the examples |
+| `GBUI_BUILD_DEMOS` | on standalone | Build the demo screens and their runners |
 | `GBUI_WERROR` | on standalone | Treat warnings as errors |
 | `GBUI_PLATFORM_SDL2` | `ON` | Use SDL2 for windowing when it is present |
 
@@ -134,30 +134,43 @@ A C ABI with opaque handles would remove that constraint and is not planned.
 off when it is consumed from another one — your build should not grow a test
 suite because of a dependency.
 
-## Run the examples
+## Run it
 
-Four binaries land in `build/examples`, and between them they are the fastest
-way to see what the library draws.
+One binary, `build/demos/gbui_demo`, and it is the fastest way to see what the
+library draws. It carries seven application screens and a live example of every
+single component, and it renders them in a window or straight to a file.
 
 ```sh
-./build/examples/gbui_controls                  # every interactive component
-./build/examples/gbui_controls --shot out.ppm --scale 2   # one frame at 2×, no display
-./build/examples/gbui_controls --light --design 1         # light mode, Material
-
-./build/examples/gbui_app                                  # a GitBox screen
-./build/examples/gbui_app --themes ../gitbox-themes/themes # left/right to switch
-./build/examples/gbui_app --shot frame.ppm                 # one frame, no display
-
-./build/examples/gbui_gallery out/ ../gitbox-themes/themes # every theme, four widths
-./build/examples/gbui_panel out/                           # a panel, three variants
+./build/demos/gbui_demo --list              # the screens
+./build/demos/gbui_demo weather             # open one
+./build/demos/gbui_demo --components        # every component the library has
+./build/demos/gbui_demo --component select  # one component's live example
 ```
 
-`gbui_controls` is the widget gallery: tabbed pages covering toggles, text,
-numbers, pickers, lists, tables, overlays and charts, with the design system and
-the theme switchable at runtime — which is the honest test of a toolkit that
+Left and right move between screens while it runs, `t` cycles the design system
+and `d` toggles light and dark — which is the honest test of a toolkit that
 claims to re-theme.
 
-`gbui_gallery` writes an `index.html` alongside its SVGs; open it and use the
-arrow keys to step through themes and widths. Nothing in the screen it draws is
-theme-aware or width-aware, so the sweep is a review of the components and the
-themes at once.
+Nothing here needs a display:
+
+```sh
+./build/demos/gbui_demo weather --shot out.ppm --scale 2   # one frame at 2×
+./build/demos/gbui_demo weather --svg out.svg              # the same frame as SVG
+./build/demos/gbui_demo --stills out/ --at 12              # every screen, 12s in
+./build/demos/gbui_demo --component slider --shot s.ppm --at-pointer 420 260
+```
+
+`--at` winds the clock forward before the shot, so an animation is caught where
+you want it rather than at frame one, and `--at-pointer` parks the pointer so a
+still can catch a hover — a chart's readout, a row's highlight.
+
+`--theme` takes a palette file in the
+[gitbox-themes](https://github.com/gitgusilva/gitbox-themes) format, which is
+what `Theme::fromJson` reads. A whole registry is a shell loop:
+
+```sh
+for t in ../gitbox-themes/themes/*/theme.json; do
+  ./build/demos/gbui_demo analytics --theme "$t" \
+    --svg "out/$(basename "$(dirname "$t")").svg"
+done
+```

@@ -6,7 +6,7 @@
 # and they carry no `gbui::` alias, because a `gbui::` alias is the signal that
 # something is part of the product and these are not.
 #
-# What they *do* prove is worth the separation from `examples/`: they link
+# What they *do* prove is that the library works from outside it: they link
 # `gbui::gbui` and nothing else, reach into no source directory, include no
 # header by path, and would build unchanged against an installed copy. A change
 # that makes them awkward has made the library awkward, which is the only

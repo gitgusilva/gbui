@@ -206,6 +206,6 @@ drawFrame(canvas, theme, fonts, arena);
 // canvas.pixels() is RGBA8, row-major, canvas.pitch() bytes per row
 ```
 
-The examples do exactly this: `gbui_app --shot frame.ppm` renders one frame and
-writes it to a file, and `gbui_controls --shot out.ppm --scale 2` does it at
+The demo runner does exactly this: `gbui_demo weather --shot frame.ppm` renders
+one frame and writes it to a file, and `--scale 2` does it at
 twice the resolution.

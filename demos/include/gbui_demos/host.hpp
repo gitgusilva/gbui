@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -109,6 +110,20 @@ public:
     /** One of `skins()`. Unknown names are ignored. */
     void setSkin(std::string_view id);
     std::string_view skin() const { return skinId_; }
+
+    /**
+     * A palette read from a file instead of a built-in one.
+     *
+     * `Theme::fromJson` takes the gitbox-themes format, which is the reason
+     * that function exists in the library at all — and this is how a whole
+     * registry of them gets looked at without a separate program. Set it to
+     * nothing to go back to `setSkin`'s palette.
+     *
+     * Only the colours are taken: the shape rules stay the skin's, because a
+     * theme file says what things are coloured and not how round they are.
+     */
+    void setThemeOverride(std::optional<Theme> theme);
+    bool hasThemeOverride() const { return themeOverride_.has_value(); }
 
     /** The reader's light/dark preference. A demo whose `Palette` is fixed
      *  overrides it — a control room screen is dark at noon too. */
@@ -207,6 +222,7 @@ private:
     const DemoInfo* info_ = nullptr;
     std::string selectedId_;
     std::string skinId_ = "gitbox";
+    std::optional<Theme> themeOverride_{};
     std::string uiFamily_;
     std::string monoFamily_;
 

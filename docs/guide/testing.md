@@ -118,9 +118,9 @@ all asserted.
 For anything visual, render it:
 
 ```sh
-./build/examples/gbui_app --shot frame.ppm             # one frame, no display needed
-./build/examples/gbui_controls --shot out.ppm --page 3 --tab 2   # a page, with focus moved
-./build/examples/gbui_gallery out/ themes/             # every theme, four widths
+./build/demos/gbui_demo weather --shot frame.ppm      # one frame, no display needed
+./build/demos/gbui_demo --component table --shot t.ppm --at-pointer 420 260
+./build/demos/gbui_demo --stills out/ --at 12          # every screen, twelve seconds in
 ```
 
 The gallery is the review tool: the same screen in every theme it finds, at
@@ -140,10 +140,10 @@ Two things worth knowing before a first contribution: clang-format is checked on
 report rather than a gate. Both are explained in
 [CONTRIBUTING.md](https://github.com/gitgusilva/gbui/blob/main/CONTRIBUTING.md).
 
-`gbui_controls --shot` is worth knowing in detail, because photographing a UI
-that has no state of its own takes some care: `--pointer x y` parks the pointer
-so a hover can be captured, `--tab n` presses Tab that many times so a focus ring
-exists to photograph, and the shot renders several frames before writing —
-everything that places itself from last frame's geometry needs a few frames to
-settle, and a picture taken too early shows a layout that never appears on
-screen.
+`--shot` is worth knowing in detail, because photographing a UI that has no
+state of its own takes some care: `--at-pointer x y` parks the pointer so a
+hover can be captured, `--at seconds` winds the clock forward so an animation is
+caught where you want it rather than at frame one, and the shot renders several
+frames before writing — everything that places itself from last frame's geometry
+needs a few frames to settle, and a picture taken too early shows a layout that
+never appears on screen.

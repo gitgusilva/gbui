@@ -59,8 +59,8 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ctest --test-dir build --output-on-failure
 
-./build/examples/gbui_controls     # every component, interactive
-./build/demos/gbui_demo --list     # seven application screens, and one to open
+./build/demos/gbui_demo --list                 # seven application screens
+./build/demos/gbui_demo --component treeView   # one component's live example
 ```
 
 C++20 and CMake 3.20. SDL2 is optional — without it everything still builds and

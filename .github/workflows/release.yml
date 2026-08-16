@@ -102,8 +102,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
             -DGBUI_BUILD_TESTS=OFF \
-            -DGBUI_BUILD_EXAMPLES=OFF \
-            -DGBUI_BUILD_DEMOS=OFF \
+                    -DGBUI_BUILD_DEMOS=OFF \
             -DGBUI_PLATFORM_SDL2=OFF \
             -DCMAKE_INSTALL_LIBDIR=lib \
             -DCMAKE_INSTALL_PREFIX="$PWD/stage/${{ steps.name.outputs.stem }}"

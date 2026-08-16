@@ -12,6 +12,7 @@
 //     --size W H     logical size, default the screen's own design size
 //     --scale S      device pixels per logical pixel
 //     --skin NAME    gitbox | material | cupertino | fluent
+//     --theme FILE   a palette in the gitbox-themes format, instead of a skin's
 //     --light        the light palette
 //     --at SECONDS   wind the demo clock forward before the shot
 //     --at-pointer X Y   park the pointer there first, so a still can catch a
@@ -30,9 +31,11 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include "gbui/core/json.hpp"
 #include "gbui/meta/components.hpp"
 #include "gbui/platform/window.hpp"
 #include "gbui_demos/catalog.hpp"
@@ -195,6 +198,40 @@ void settle(demos::Host& host, float seconds, Vec2 pointer, bool pointed) {
     for (int i = 0; i < 4; ++i) host.frame(kStep);
 }
 
+/**
+ * A palette read off disk, in the gitbox-themes format.
+ *
+ * `Theme::fromJson` is in the library for exactly this, and until now the only
+ * thing that called it was a separate example program. Reading one here is what
+ * lets the whole registry be looked at with a shell loop instead:
+ *
+ *     for t in ../gitbox-themes/themes/ *.json; do
+ *       gbui_demo analytics --theme "$t" --svg "out/$(basename "$t" .json).svg"
+ *     done
+ */
+std::optional<Theme> loadTheme(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        std::fprintf(stderr, "gbui_demo: cannot read %s\n", path.c_str());
+        return std::nullopt;
+    }
+    const std::string text{std::istreambuf_iterator<char>(file),
+                           std::istreambuf_iterator<char>()};
+    json::ParseError parseError;
+    const std::optional<json::Value> root = json::parse(text, &parseError);
+    if (!root) {
+        std::fprintf(stderr, "gbui_demo: %s is not JSON: %s\n", path.c_str(),
+                     parseError.message.c_str());
+        return std::nullopt;
+    }
+    std::string error;
+    std::optional<Theme> theme = Theme::fromJson(*root, &error);
+    if (!theme) {
+        std::fprintf(stderr, "gbui_demo: %s is not a theme: %s\n", path.c_str(), error.c_str());
+    }
+    return theme;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -203,6 +240,7 @@ int main(int argc, char** argv) {
     std::string shotPath;
     std::string svgPath;
     std::string stillsDirectory;
+    std::string themePath;
     float at = 0.0f;
     float fontSize = 0.0f;
     bool sized = false;
@@ -241,6 +279,8 @@ int main(int argc, char** argv) {
             component = argv[++i];
         else if (std::strcmp(argument, "--skin") == 0 && i + 1 < argc)
             options.skin = argv[++i];
+        else if (std::strcmp(argument, "--theme") == 0 && i + 1 < argc)
+            themePath = argv[++i];
         else if (std::strcmp(argument, "--light") == 0)
             options.darkMode = false;
         else if (std::strcmp(argument, "--at") == 0 && i + 1 < argc) {
@@ -275,6 +315,12 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    std::optional<Theme> external;
+    if (!themePath.empty()) {
+        external = loadTheme(themePath);
+        if (!external) return 1;
+    }
+
     // Each screen carries the size it was drawn for — and a component preview
     // its own, which is far smaller than any screen — so a still is composed
     // the way its author composed it unless the caller says otherwise.
@@ -294,6 +340,7 @@ int main(int argc, char** argv) {
             demos::HostOptions one = options;
             one.demo = std::string(entry.id);
             demos::Host host(one);
+            if (external) host.setThemeOverride(external);
             if (fontSize > 0.0f) host.setFontSize(fontSize);
             applyDesignSize(host);
             settle(host, at, pointer, pointed);
@@ -308,6 +355,7 @@ int main(int argc, char** argv) {
     }
 
     demos::Host host(options);
+    if (external) host.setThemeOverride(external);
     if (fontSize > 0.0f) host.setFontSize(fontSize);
     if (!component.empty() && !host.selectComponent(component)) {
         std::fprintf(stderr, "gbui_demo: no example for component '%s'\n", component.c_str());

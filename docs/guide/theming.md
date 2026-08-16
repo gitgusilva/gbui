@@ -133,7 +133,10 @@ whether a press throws ink decides whether a node exists at all.
 ## Seeing every theme at once
 
 ```sh
-./build/examples/gbui_gallery out/ path/to/gitbox-themes/themes
+for t in path/to/gitbox-themes/themes/*/theme.json; do
+  ./build/demos/gbui_demo analytics --theme "$t" \
+    --svg "out/$(basename "$(dirname "$t")").svg"
+done
 ```
 
 One screen, rendered in every theme it finds, at four widths, with an

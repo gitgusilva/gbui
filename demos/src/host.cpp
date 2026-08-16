@@ -286,7 +286,8 @@ Theme Host::themeFor() const {
         if (info_->palette == Palette::Light) dark = false;
     }
 
-    Theme theme = skinId_ == "material"    ? Theme::material(dark)
+    Theme theme = themeOverride_ ? *themeOverride_
+                  : skinId_ == "material"  ? Theme::material(dark)
                   : skinId_ == "cupertino" ? Theme::cupertino(dark)
                   : skinId_ == "fluent"    ? Theme::fluent(dark)
                                            : (dark ? Theme::dark() : Theme::light());
@@ -301,6 +302,8 @@ Theme Host::themeFor() const {
     type.editorFontSize = fontSize_ - 1.0f;
     return theme;
 }
+
+void Host::setThemeOverride(std::optional<Theme> theme) { themeOverride_ = std::move(theme); }
 
 Design Host::designFor() const {
     Design chosen = Design::gitbox();

@@ -108,14 +108,15 @@ jobs:
 
       # Rendering without a display is a property worth checking, not a nicety:
       # it is what lets a build machine produce a frame, and it is how every
-      # screenshot in the documentation is made. `gbui_app --shot` opens no
-      # window even where SDL2 is present.
+      # screenshot in the documentation is made. `--shot` opens no window even
+      # where SDL2 is present, and `--svg` proves the other painter still
+      # composes the same tree.
       - name: Render a frame with no display
         if: runner.os == 'Linux'
         run: |
-          ./build/examples/gbui_app --shot frame.ppm
-          ./build/examples/gbui_panel out/
-          test -s frame.ppm && test -s out/panel-wide.svg
+          ./build/demos/gbui_demo analytics --shot frame.ppm
+          ./build/demos/gbui_demo analytics --svg out/analytics.svg
+          test -s frame.ppm && test -s out/analytics.svg
 
       # Every demo screen, rendered headless. It is a smoke test with teeth:
       # each one builds a tree, lays it out, records a display list and
@@ -221,7 +222,6 @@ jobs:
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
-            -DGBUI_BUILD_EXAMPLES=OFF \
             -DGBUI_BUILD_DEMOS=OFF \
             -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
           cmake --build build --config Release --parallel
@@ -266,7 +266,6 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DGBUI_BUILD_EXAMPLES=OFF \
             -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer -g" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
 

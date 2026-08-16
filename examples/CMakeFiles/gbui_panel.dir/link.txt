@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/gbui_panel.dir/link.d CMakeFiles/gbui_panel.dir/panel/main.cpp.o -o gbui_panel  ../libgbui.a /usr/lib64/libSDL2-2.0.so.0.3200.70

@@ -72,6 +72,31 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   track, because a bar nobody can see that pages the view when clicked is worse
   than no bar.
 
+### Removed
+
+- **`examples/` is gone** — 3,163 lines across four programs that `demos/` now
+  covers better. The widget gallery there duplicated the component catalogue by
+  hand and had drifted far enough to still call `toggle` "switch"; the
+  catalogue is held against the metadata by a coverage gate, which a
+  hand-written gallery could never be.
+
+  Nothing was lost. `gbui_demo --component NAME` is the gallery, `--shot` and
+  `--svg` are the two renderers, `--stills` is the sheet, and the one
+  capability that had no equivalent — rendering an external palette from the
+  gitbox-themes registry — is now `--theme FILE`, which makes a whole registry
+  a shell loop instead of a bespoke HTML generator. `Theme::fromJson` was
+  already in the library for exactly this and had only ever been called by an
+  example program.
+
+### Fixed
+
+- **326 generated files had been committed.** A stray in-source `cmake .` in
+  the repository root left `CMakeCache.txt`, `CMakeFiles/`, a `Makefile` and
+  every object file beside the sources, and the next `git add -A` swept them
+  in. Untracked, deleted, and `.gitignore` now names the in-source case
+  specifically — the existing rules only knew about build *directories*, which
+  is precisely what an in-source build does not have.
+
 ### Changed
 
 - **A skin swap in the demos changes colour and behaviour, not layout.** Each
