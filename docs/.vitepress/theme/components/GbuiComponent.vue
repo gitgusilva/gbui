@@ -34,7 +34,7 @@ const message = ref('')
  * module for it as soon as the module is there. Until then the idle state is a
  * button, and this is the box the button sits in.
  */
-const height = ref(220)
+const height = ref(200)
 
 async function run() {
   if (status.value === 'loading') return

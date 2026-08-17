@@ -40,7 +40,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                               .bounds = input.viewport(),
                               .width = 250.0f,
                               .margin = 14.0f});
-                   }, 280});
+                   }, 240});
 
     out.push_back({"select", [](Ui& ui, const Interaction& input, State& state) {
                        static const std::vector<std::string> branches = {"main", "feat/nord-tuning",
@@ -72,7 +72,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        // back rather than done: a component here never moves
                        // the keyboard behind the application's back.
                        if (picked.focus) state.focusRequest = std::string(*picked.focus);
-                   }, 520});
+                   }, 430});
 
     out.push_back({"menuItem", [](Ui& ui, const Interaction& input, State& state) {
                        // Drawn inline here rather than inside a popover, which
@@ -86,14 +86,14 @@ void addOverlayExamples(std::vector<Example>& out) {
                                 {.selected = state.on});
                        menuItem(ui, input, "catalog.menu.discard", "Discard changes",
                                 {.leading = Icon::RotateCcw, .disabled = true});
-                   }, 220});
+                   }, 180});
 
     out.push_back({"menuSeparator", [](Ui& ui, const Interaction& input, State&) {
                        auto panelScope = panel(ui, {.padding = Edges::symmetric(4.0f, 0.0f)});
                        menuItem(ui, input, "catalog.sep.copy", "Copy");
                        menuSeparator(ui);
                        menuItem(ui, input, "catalog.sep.delete", "Delete");
-                   }, 180});
+                   }, 140});
 
     out.push_back({"tooltip", [](Ui& ui, const Interaction& input, State&) {
                        button(ui, input, "HOVER ME",
@@ -102,7 +102,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        // two need not be siblings and the button knows nothing
                        // about it.
                        tooltip(ui, input, "catalog.tip.anchor", "Fetches every remote");
-                   }, 200});
+                   }, 160});
 
     out.push_back({"popover", [](Ui& ui, const Interaction& input, State& state) {
                        button(
@@ -117,7 +117,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                            sectionHeading(ui, "REMOTE");
                            text(ui, "origin/main", {.color = Token::TextMuted});
                        }
-                   }, 260});
+                   }, 220});
 
     out.push_back({"drawer", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "FILTERS",
@@ -138,7 +138,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                                            {.label = "Merged branches"});
                        state.off = checkbox(ui, input, "catalog.drawer.stale", state.off,
                                             {.label = "Stale over 90 days"});
-                   }, 380});
+                   }, 300});
 
     out.push_back({"modal", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "DISCARD ALL",
@@ -157,7 +157,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        auto body = ui.column({.padding = Edges::all(16.0f)});
                        text(ui, "This cannot be undone.",
                             {.overflow = TextOverflow::Wrap, .lineHeight = 1.5f});
-                   }, 340});
+                   }, 300});
 
     out.push_back({"modalActions", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "OPEN DIALOG",
@@ -182,7 +182,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        button(ui, input, "PUSH",
                               {.variant = ButtonVariant::Primary, .id = "catalog.actions.ok"});
                        if (input.clicked("catalog.actions.ok")) state.modalOpen = false;
-                   }, 340});
+                   }, 300});
 }
 
 }  // namespace gbui::demos::catalog

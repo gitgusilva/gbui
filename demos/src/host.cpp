@@ -24,6 +24,30 @@ namespace {
  * table wants the room and a checkbox does not, and one frame for all of them
  * is what makes fifty previews read as a set.
  */
+/**
+ * The smallest canvas a host will accept, in logical pixels.
+ *
+ * A floor only so that a zero-sized element — a canvas measured before it has
+ * been laid out — does not ask for a zero-sized framebuffer. It used to be 240,
+ * which was fine while every preview was 320 and wrong the moment they stopped
+ * being: a checkbox asking for 140 got a 240-pixel picture squeezed into a
+ * 140-pixel box, which is what "the element previews are broken" looked like.
+ * Whatever the caller asks for above this is theirs.
+ */
+constexpr int kMinimumHeight = 80;
+
+/**
+ * What `ComponentDemo`'s frame costs, above the example inside it.
+ *
+ * The page's padding and gaps, the title, two lines of summary, the stage's
+ * own padding and border, and the header path underneath — none of which the
+ * example knows about. `catalog::Example::height` is the room the *example*
+ * needs, measured on its own; this is what has to be added before that becomes
+ * a canvas size. Keeping them apart is what stops every one of sixty numbers
+ * having to be re-derived the day this frame gains a line.
+ */
+constexpr int kPreviewChrome = 144;
+
 constexpr float kPreviewWidth = 600.0f;
 constexpr float kPreviewHeight = 460.0f;
 
@@ -142,7 +166,7 @@ const std::vector<Skin>& skins() {
 
 Host::Host(const HostOptions& options)
     : width_(std::max(320, options.width)),
-      height_(std::max(240, options.height)),
+      height_(std::max(kMinimumHeight, options.height)),
       scale_(options.scale > 0.0f ? options.scale : 1.0f),
       darkMode_(options.darkMode) {
     arena_.reserve(2048);
@@ -221,7 +245,7 @@ void Host::setFontSize(float size) { fontSize_ = std::clamp(size, 9.0f, 24.0f); 
 
 void Host::resize(int width, int height, float scale) {
     width_ = std::max(320, width);
-    height_ = std::max(240, height);
+    height_ = std::max(kMinimumHeight, height);
     scale_ = scale > 0.0f ? scale : 1.0f;
     canvas_.resize(static_cast<int>(static_cast<float>(width_) * scale_),
                    static_cast<int>(static_cast<float>(height_) * scale_));
@@ -304,6 +328,10 @@ Theme Host::themeFor() const {
 }
 
 void Host::setThemeOverride(std::optional<Theme> theme) { themeOverride_ = std::move(theme); }
+
+int previewHeightFor(std::string_view component) {
+    return catalog::heightOf(component) + kPreviewChrome;
+}
 
 Design Host::designFor() const {
     Design chosen = Design::gitbox();

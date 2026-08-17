@@ -374,7 +374,7 @@ EMSCRIPTEN_KEEPALIVE int gbui_demos_select_component(void* handle, const char* n
  * hundred and forty.
  */
 EMSCRIPTEN_KEEPALIVE int gbui_demos_component_height(const char* name) {
-    return demos::catalog::heightOf(name ? name : "");
+    return demos::previewHeightFor(name ? name : "");
 }
 
 EMSCRIPTEN_KEEPALIVE void gbui_demos_set_skin(void* handle, const char* id) {

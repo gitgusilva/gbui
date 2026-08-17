@@ -37,8 +37,10 @@ export interface Component {
 export interface ComponentPage {
   /** The URL segment: `/components/color-picker`. */
   slug: string
-  /** What the sidebar calls it — a component's name, or the header's. */
+  /** The identifier the page is named after: `colorPicker`, `pickers`. */
   title: string
+  /** The same thing capitalised, for anywhere it is a label rather than code. */
+  label: string
   group: string
   components: Component[]
 }
@@ -76,6 +78,20 @@ function kebab(name: string) {
   return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
 }
 
+/**
+ * `colorPicker` -> `ColorPicker`, which is what a *label* should look like.
+ *
+ * The identifier is `colorPicker` and stays that way everywhere it is code — in
+ * the signatures, in the option tables, in the mono line above each running
+ * example. This is only for the places the name is being *named*: the sidebar,
+ * the index cards, the page heading. A column of sixty lowercase words is hard
+ * to scan and reads like a list of variables rather than a set of components,
+ * which is why every toolkit's gallery capitalises them.
+ */
+export function label(name: string) {
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
 function build(): ComponentPage[] {
   const byKey = new Map<string, Component[]>()
   for (const component of all) {
@@ -101,7 +117,13 @@ function build(): ComponentPage[] {
     // The one the page is named after comes first; the rest keep the
     // metadata's order, which is alphabetical.
     components.sort((a, b) => Number(b.name === title) - Number(a.name === title))
-    pages.push({ slug: kebab(title), title, group: components[0].group, components })
+    pages.push({
+      slug: kebab(title),
+      title,
+      label: label(title),
+      group: components[0].group,
+      components,
+    })
   }
   return pages
 }
@@ -130,7 +152,7 @@ export function sidebar() {
       text: group.text,
       collapsed: false,
       items: group.pages.map((page) => ({
-        text: page.title,
+        text: page.label,
         link: `/components/${page.slug}`,
       })),
     })),

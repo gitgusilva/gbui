@@ -10,7 +10,9 @@ import GbuiCode from './components/GbuiCode.vue'
 import GbuiComponent from './components/GbuiComponent.vue'
 import GbuiComponentIndex from './components/GbuiComponentIndex.vue'
 import GbuiDemo from './components/GbuiDemo.vue'
+import GbuiBand from './components/GbuiBand.vue'
 import GbuiDownloads from './components/GbuiDownloads.vue'
+import GbuiShowcase from './components/GbuiShowcase.vue'
 import './custom.css'
 
 export default {
@@ -21,5 +23,7 @@ export default {
     app.component('GbuiComponent', GbuiComponent)
     app.component('GbuiComponentIndex', GbuiComponentIndex)
     app.component('GbuiDownloads', GbuiDownloads)
+    app.component('GbuiShowcase', GbuiShowcase)
+    app.component('GbuiBand', GbuiBand)
   },
 } satisfies Theme

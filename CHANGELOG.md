@@ -72,6 +72,21 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
   track, because a bar nobody can see that pages the view when clicked is worse
   than no bar.
 
+- **A separate download screen**, with no sidebar and no document chrome — a
+  page whose whole job is to hand somebody a file, rather than a chapter of the
+  guide that happens to have links in it.
+- **The landing page runs, rather than offering to.** Everywhere else a demo
+  opens on its source and downloads nothing until asked, which is right for a
+  page whose job is to teach and wrong for the one page whose job is to show
+  that any of this works — a visitor made to press a button before seeing what
+  a UI toolkit draws has been asked to take it on trust. It starts when it
+  scrolls into view, so nobody who never gets there pays for it, and the design
+  system can be swapped from the page to watch the same screen re-shape.
+- **The component set is on the landing page**, as a wall of names built from
+  the metadata. A list of features says what a library believes; this answers
+  the question a visitor actually arrived with, which is whether the thing they
+  need is in it.
+
 ### Removed
 
 - **`examples/` is gone** — 3,163 lines across four programs that `demos/` now
@@ -90,6 +105,27 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
 
 ### Fixed
 
+- **The element previews were broken, and it was the height work that broke
+  them.** Two mistakes, one after the other. The host and the embed both
+  clamped a canvas to 320×240 — a floor from when every preview was 320 tall,
+  which turned a 140-pixel stage into a 240-pixel picture squeezed into it. And
+  the heights themselves were measured on the example alone, with nothing for
+  the frame the preview draws around it: a title, a summary, the stage's
+  padding and the header path. The frame owns its own overhead now
+  (`previewHeightFor`), the example declares only what it needs, and
+  `gbui_demo --preview-height NAME` prints the answer so a page's number can be
+  checked against a real render instead of trusted.
+- **Seven examples had the wrong height and one had none.** The script that
+  wrote them matched `out.push_back({"name",` with a regex and took the last
+  `}});` before the *next* match as the end of an entry — but seven entries are
+  written with the brace on the following line, so the regex skipped them and
+  their predecessors' spans ran straight through, landing one entry's number on
+  another. Brace-matched now.
+- **Component names read as lowercase everywhere they were a label.** The
+  identifier is `colorPicker` and stays that way in every signature and option
+  table; the sidebar, the index and the page heading say `ColorPicker`. A
+  column of sixty lowercase words reads as a list of variables rather than a
+  set of components, which is why every gallery capitalises them.
 - **326 generated files had been committed.** A stray in-source `cmake .` in
   the repository root left `CMakeCache.txt`, `CMakeFiles/`, a `Makefile` and
   every object file beside the sources, and the next `git add -A` swept them

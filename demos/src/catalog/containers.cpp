@@ -12,7 +12,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        auto card = box(ui, BoxStyle::card({.gap = 6.0f}));
                        sectionHeading(ui, "A CARD");
                        text(ui, "Padding, a border and a radius.", {.color = Token::TextMuted});
-                   }, 160});
+                   }, 120});
 
     out.push_back({"scrollArea", [](Ui& ui, const Interaction& input, State& state) {
                        {
@@ -36,7 +36,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        for (int i = 1; i <= 30; ++i) {
                            text(ui, "row " + std::to_string(i), {.color = Token::TextMuted});
                        }
-                   }, 400});
+                   }, 320});
 
     out.push_back({"scrollbar", [](Ui& ui, const Interaction& input, State& state) {
                        // A bar drawn somewhere other than the view it drives.
@@ -62,7 +62,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        const Rect here = input.frameOf("catalog.bar.box");
                        scrollbar(ui, input, "catalog.bar", state.scroll2,
                                  Rect{0.0f, 0.0f, here.width, here.height});
-                   }, 240});
+                   }, 190});
 
     out.push_back({"virtualList", [](Ui& ui, const Interaction& input, State& state) {
                        // Fifty thousand rows, and only the visible ones are
@@ -78,7 +78,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                        text(rowUi, "commit " + std::to_string(index),
                                             {.role = FontRole::Mono, .size = 11.5f});
                                    });
-                   }, 240});
+                   }, 190});
 
     out.push_back({"splitPane", [](Ui& ui, const Interaction& input, State& state) {
                        // The shape every IDE is: a sidebar beside a pane, with
@@ -111,7 +111,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                       .trailingLabel = "Editor",
                                       .height = 150.0f});
                        if (result.changed) state.split = result.position;
-                   }, 240});
+                   }, 200});
 
     out.push_back({"treeView", [](Ui& ui, const Interaction& input, State& state) {
                        // Flat, in pre-order, with a depth on each row — which is
@@ -141,7 +141,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        }
                        treeView(ui, input, "catalog.tree", files, state.tree,
                                 {.name = "Files", .height = 160.0f});
-                   }, 260});
+                   }, 210});
 
     out.push_back({"gallery", [](Ui& ui, const Interaction& input, State& state) {
                        static const char* captions[] = {
@@ -161,7 +161,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                 .name = "Site survey",
                                 .height = 150.0f,
                                 .grow = 1.0f});
-                   }, 340});
+                   }, 290});
 
     out.push_back({"carousel", [](Ui& ui, const Interaction& input, State& state) {
                        // Two and a half across, so the strip says there is more
@@ -191,7 +191,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                  .name = "Screenshots",
                                  .height = 110.0f,
                                  .grow = 1.0f});
-                   }, 240});
+                   }, 190});
 
     out.push_back({"compare", [](Ui& ui, const Interaction& input, State& state) {
                        // Two flat washes rather than two photographs: the
@@ -220,7 +220,7 @@ void addContainerExamples(std::vector<Example>& out) {
                                     .height = 150.0f,
                                     .grow = 1.0f});
                        if (result.changed) state.seam = result.position;
-                   }, 240});
+                   }, 200});
 
     out.push_back({"marquee", [](Ui& ui, const Interaction& input, State& state) {
                        // Zero delta stops it: held while the pointer is over
@@ -255,7 +255,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        },
                        {.name = "Market"});
                        (void)scope;
-                   }, 140});
+                   }, 90});
 
     out.push_back({"tabs", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<TabItem> pages = {
@@ -263,7 +263,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        if (const auto chosen = tabs(ui, input, "catalog.tabs", pages, state.tab)) {
                            state.tab = *chosen;
                        }
-                   }, 140});
+                   }, 90});
 
     out.push_back({"tabPanels", [](Ui& ui, const Interaction& input, State& state) {
                        const std::vector<TabItem> pages = {{.label = "One"}, {.label = "Two"}};
@@ -277,7 +277,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        tabPanels(ui, state.tab,
                                  {[](Ui& panel) { text(panel, "The first panel"); },
                                   [](Ui& panel) { text(panel, "The second panel"); }});
-                   }});
+                   }, 130});
 
     out.push_back(
         {"table", [](Ui& ui, const Interaction& input, State& state) {
@@ -318,7 +318,7 @@ void addContainerExamples(std::vector<Example>& out) {
                        }
                    },
                    {.height = 160.0f, .name = "Recent commits"});
-         }, 180});
+         }, 210});
 }
 
 }  // namespace gbui::demos::catalog

@@ -15,19 +15,19 @@ void addComponentExamples(std::vector<Example>& out) {
                        text(ui, "themes/nord/theme.json");
                        text(ui, "Muted, and one size down",
                             {.color = Token::TextMuted, .size = 11.0f});
-                   }, 140});
+                   }, 90});
 
     out.push_back({"strong", [](Ui& ui, const Interaction&, State&) {
                        // Semantic, in the sense HTML gives it: importance,
                        // which happens to be drawn as a weight.
                        strong(ui, "3 files changed");
-                   }});
+                   }, 70});
 
     out.push_back(
-        {"emphasis", [](Ui& ui, const Interaction&, State&) { emphasis(ui, "detached HEAD"); }, 140});
+        {"emphasis", [](Ui& ui, const Interaction&, State&) { emphasis(ui, "detached HEAD"); }, 70});
 
     out.push_back({"sectionHeading",
-                   [](Ui& ui, const Interaction&, State&) { sectionHeading(ui, "UNSTAGED (3)"); }});
+                   [](Ui& ui, const Interaction&, State&) { sectionHeading(ui, "UNSTAGED (3)"); }, 70});
 
     out.push_back(
         {"richText", [](Ui& ui, const Interaction&, State&) {
@@ -38,7 +38,7 @@ void addComponentExamples(std::vector<Example>& out) {
              richText(ui, {{.text = "on branch "},
                            {.text = "main", .color = Token::Accent, .weight = FontWeight::SemiBold},
                            {.text = ", 3 files changed"}});
-         }, 140});
+         }, 70});
 
     out.push_back({"image", [](Ui& ui, const Interaction& input, State& state) {
                        (void)input;
@@ -74,7 +74,7 @@ void addComponentExamples(std::vector<Example>& out) {
                               .background = Fill{Token::BgOverlay},
                               .alt = "N/A"});
                        (void)scope;
-                   }, 140});
+                   }, 100});
 
     out.push_back({"badge", [](Ui& ui, const Interaction&, State&) {
                        // A row, because the stage stretches its children and a
@@ -83,13 +83,13 @@ void addComponentExamples(std::vector<Example>& out) {
                        badge(ui, "M");
                        badge(ui, "Enterprise",
                              {.background = Token::Accent, .foreground = Token::AccentFg});
-                   }, 140});
+                   }, 70});
 
     out.push_back({"icon", [](Ui& ui, const Interaction&, State&) {
                        auto row = ui.row({.align = Align::Center, .gap = 10.0f});
                        icon(ui, Icon::GitBranch);
                        icon(ui, Icon::CircleAlert, {.color = Token::Removed, .size = 20.0f});
-                   }, 140});
+                   }, 70});
 
     out.push_back({"button", [](Ui& ui, const Interaction& input, State&) {
                        auto row = ui.row({.align = Align::Center, .gap = 8.0f});
@@ -101,7 +101,7 @@ void addComponentExamples(std::vector<Example>& out) {
                               {.variant = ButtonVariant::Ghost, .id = "catalog.button.ghost"});
                        button(ui, input, "DISCARD",
                               {.variant = ButtonVariant::Danger, .id = "catalog.button.danger"});
-                   }, 140});
+                   }, 80});
 
     out.push_back({"divider", [](Ui& ui, const Interaction&, State&) {
                        // Told which way the container it sits in runs, because
@@ -110,21 +110,21 @@ void addComponentExamples(std::vector<Example>& out) {
                        text(ui, "above");
                        divider(ui, Direction::Column);
                        text(ui, "below");
-                   }, 160});
+                   }, 110});
 
     out.push_back({"spacer", [](Ui& ui, const Interaction&, State&) {
                        auto row = ui.row({.align = Align::Center});
                        text(ui, "left");
                        spacer(ui);
                        text(ui, "right", {.color = Token::TextMuted});
-                   }, 140});
+                   }, 70});
 
     out.push_back({"panel", [](Ui& ui, const Interaction&, State&) {
                        auto panelScope = panel(ui);
                        sectionHeading(ui, "COMMIT MESSAGE");
                        text(ui, "A surface with a border and a radius.",
                             {.color = Token::TextMuted});
-                   }});
+                   }, 120});
 
     out.push_back(
         {"listRow", [](Ui& ui, const Interaction& input, State&) {
@@ -148,7 +148,7 @@ void addComponentExamples(std::vector<Example>& out) {
                               {.variant = ButtonVariant::Ghost,
                                .leading = Icon::Download,
                                .id = "catalog.toolbar.pull"});
-                   }, 140});
+                   }, 90});
 }
 
 }  // namespace gbui::demos::catalog

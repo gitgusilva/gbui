@@ -11,6 +11,8 @@
 //
 //     --size W H     logical size, default the screen's own design size
 //     --scale S      device pixels per logical pixel
+//     gbui_demo --preview-height NAME    the canvas height that example wants
+//
 //     --skin NAME    gitbox | material | cupertino | fluent
 //     --theme FILE   a palette in the gitbox-themes format, instead of a skin's
 //     --light        the light palette
@@ -259,6 +261,13 @@ int main(int argc, char** argv) {
         }
         if (std::strcmp(argument, "--a11y") == 0) {
             return reportAccessibility() == 0 ? 0 : 1;
+        }
+        // What the documentation asks the wasm module for, from the command
+        // line — so the number a page will use can be checked against a real
+        // render rather than trusted.
+        if (std::strcmp(argument, "--preview-height") == 0 && i + 1 < argc) {
+            std::printf("%d\n", demos::previewHeightFor(argv[++i]));
+            return 0;
         }
         if (std::strcmp(argument, "--components") == 0) {
             for (const meta::ComponentInfo& entry : meta::components()) {

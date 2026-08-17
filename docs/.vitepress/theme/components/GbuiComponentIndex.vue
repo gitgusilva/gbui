@@ -53,7 +53,7 @@ const count = computed(() => shown.value.reduce((n, group) => n + group.pages.le
       <h2>{{ group.text }}</h2>
       <ul class="gbui-index-list">
         <li v-for="page in group.pages" :key="page.slug">
-          <a :href="withBase(`/components/${page.slug}`)">{{ page.title }}</a>
+          <a :href="withBase(`/components/${page.slug}`)">{{ page.label }}</a>
           <span class="gbui-index-summary">{{ page.components[0].summary }}</span>
           <span v-if="page.components.length > 1" class="gbui-index-also">
             {{ page.components.map((component) => component.name).join(' · ') }}

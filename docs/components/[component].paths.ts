@@ -5,7 +5,7 @@
 // nobody finds: this way the summaries, signatures and option tables are in the
 // built HTML and in the search index. The Vue component on each page is only
 // the thing Markdown cannot be — a running example.
-import { pages, type Component } from '../.vitepress/componentPages'
+import { label, pages, type Component } from '../.vitepress/componentPages'
 
 /** Markdown tables end a cell at `|`, and a doc comment is allowed to use one. */
 function cell(text: string) {
@@ -40,7 +40,14 @@ function options(component: Component, level: string) {
 function body(component: Component, alone: boolean) {
   const lines: string[] = []
   if (!alone) {
-    lines.push(`## ${component.name}`, '', `<span class="gbui-facts">${facts(component)}</span>`, '')
+    // Capitalised as a heading and spelt as code underneath it: the reader is
+    // looking for the component here and for the call site there.
+    lines.push(
+      `## ${label(component.name)}`,
+      '',
+      `<span class="gbui-facts"><code>${component.name}</code> · ${facts(component)}</span>`,
+      '',
+    )
   }
   // Every component runs under its own heading, including the only one on a
   // page of its own — a page that shows two of three is a page that has
@@ -65,9 +72,11 @@ export default {
       const headers = [...new Set(page.components.map((component) => component.header))]
       const includes = headers.map((header) => `\`#include "${header}"\``).join(' ')
       const lines = [
-        `# ${page.title}`,
+        `# ${page.label}`,
         '',
-        `<span class="gbui-facts">${includes}${alone ? ` · ${facts(first)}` : ` · ${first.group}`}</span>`,
+        `<span class="gbui-facts">${alone ? `<code>${first.name}</code> · ` : ''}${includes}${
+          alone ? ` · ${facts(first)}` : ` · ${first.group}`
+        }</span>`,
         '',
         first.summary,
         '',
@@ -77,7 +86,7 @@ export default {
       return {
         params: {
           component: page.slug,
-          title: page.title,
+          title: page.label,
           description: first.summary,
         },
         content: lines.join('\n'),

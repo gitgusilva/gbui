@@ -22,7 +22,6 @@ function everywhere(items: unknown[]) {
     '/reference/': items,
     '/components': items,
     '/demos': items,
-    '/download': items,
   } as never
 }
 
@@ -53,7 +52,10 @@ export default defineConfig({
     // Everything is one tree now, the way PrimeVue and most large component
     // sites do it: the whole map is on screen wherever you are, and the navbar
     // keeps only what is not navigation — the version, the search, the source.
-    nav: [versionMenu()],
+    // Not navigation, which now lives in the sidebar — a destination. The
+    // download page is a screen of its own with no sidebar at all, so this is
+    // the only way to it that is always on screen.
+    nav: [{ text: 'Download', link: '/download' }, versionMenu()],
 
     sidebar: everywhere([
       {

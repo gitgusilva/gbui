@@ -131,8 +131,13 @@ export async function mountDemo(canvas, options = {}) {
   const box = () => {
     const rect = canvas.getBoundingClientRect()
     return {
-      width: Math.max(320, Math.round(rect.width)) || 960,
-      height: Math.max(240, Math.round(rect.height)) || 600,
+      // Floors only so a canvas measured before layout does not ask for a
+      // zero-sized framebuffer. They were 320×240, which was fine while every
+      // component preview was 320 tall and wrong the moment they stopped being:
+      // a 140-pixel stage got a 240-pixel picture squeezed into it. The host
+      // has the same floor for the same reason.
+      width: Math.max(200, Math.round(rect.width)) || 960,
+      height: Math.max(80, Math.round(rect.height)) || 600,
       scale: Math.min(maxScale, window.devicePixelRatio || 1),
     }
   }

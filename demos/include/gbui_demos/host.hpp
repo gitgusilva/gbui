@@ -235,4 +235,13 @@ private:
     bool darkMode_ = true;
 };
 
+/**
+ * How tall a canvas showing one component's example should be.
+ *
+ * The example's own declared height plus what the preview frame around it costs
+ * — a title, a summary, the stage's padding, the header path. The example
+ * cannot know the second half and the frame should not have to know the first.
+ */
+int previewHeightFor(std::string_view component);
+
 }  // namespace gbui::demos
