@@ -62,9 +62,8 @@ NodeId spinner(Ui& ui, const SpinnerOptions& options) {
     if (options.name.empty()) {
         ui.accessible(id, {.hidden = true});
     } else {
-        ui.accessible(id, {.role = Role::ProgressBar,
-                           .name = options.name,
-                           .state = {.busy = Flag::True}});
+        ui.accessible(
+            id, {.role = Role::ProgressBar, .name = options.name, .state = {.busy = Flag::True}});
     }
     return id;
 }

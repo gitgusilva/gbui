@@ -53,8 +53,7 @@ ChipResult chip(Ui& ui, const Interaction& input, std::string_view id, std::stri
         icon(ui, *options.leading,
              {.color = options.selected ? options.color : Token::TextMuted, .size = 13.0f});
     }
-    text(ui, label,
-         {.color = options.selected ? Token::TextStrong : Token::Text, .size = 12.0f});
+    text(ui, label, {.color = options.selected ? Token::TextStrong : Token::Text, .size = 12.0f});
 
     if (options.removable) {
         Style cross;

@@ -119,7 +119,8 @@ void addOverlayExamples(std::vector<Example>& out) {
                        }
                    }, 220});
 
-    out.push_back({"banner", [](Ui& ui, const Interaction& input, State& state) {
+    out.push_back({"banner",
+                   [](Ui& ui, const Interaction& input, State& state) {
                        auto column = ui.column({.gap = 10.0f});
                        // The case a toast cannot take: the merge is still going
                        // on, so a message that went away would take the only
@@ -130,11 +131,13 @@ void addOverlayExamples(std::vector<Example>& out) {
                                .action = "Resolve"});
                        if (!state.off) {
                            if (banner(ui, input, "catalog.banner.note", "Signed commits are on",
-                                      {.closable = true}).dismissed) {
+                                      {.closable = true})
+                                   .dismissed) {
                                state.off = true;
                            }
                        }
-                   }, 150});
+                   },
+                   150});
 
     out.push_back({"drawer", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "FILTERS",
@@ -144,8 +147,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        // Called every frame, open or not — the flag goes *in*.
                        // A component that stopped being built could not animate
                        // its own way out; see the top of drawer.hpp.
-                       auto sheet = drawer(ui, input, "catalog.drawer", "Filters",
-                                           state.drawerOpen,
+                       auto sheet = drawer(ui, input, "catalog.drawer", "Filters", state.drawerOpen,
                                            {.size = 260.0f, .icon = Icon::Funnel});
                        if (sheet.result.dismissed) state.drawerOpen = false;
                        if (!sheet.result.visible) return;

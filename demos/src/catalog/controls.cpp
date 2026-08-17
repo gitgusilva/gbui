@@ -96,36 +96,43 @@ void addControlExamples(std::vector<Example>& out) {
                              });
                    }, 130});
 
-    out.push_back({"spinner", [](Ui& ui, const Interaction&, State& state) {
-                       auto row = ui.row({.align = Align::Center, .gap = 14.0f});
-                       spinner(ui, {.phase = state.clock});
-                       spinner(ui, {.size = 24.0f, .name = "Cloning", .phase = state.clock});
-                       // Inside a button, which is the case a bar cannot take:
-                       // there is no room for a rule in a control this size.
-                       {
-                           auto pill = ui.row({.align = Align::Center, .gap = 8.0f,
-                                               .padding = Edges::symmetric(6.0f, 12.0f)});
-                           spinner(ui, {.size = 13.0f, .color = Token::TextMuted,
-                                        .phase = state.clock * 1.4f});
-                           text(ui, "Pushing…", {.color = Token::TextMuted, .size = 12.0f});
-                       }
-                   }, 60});
+    out.push_back(
+        {"spinner",
+         [](Ui& ui, const Interaction&, State& state) {
+             auto row = ui.row({.align = Align::Center, .gap = 14.0f});
+             spinner(ui, {.phase = state.clock});
+             spinner(ui, {.size = 24.0f, .name = "Cloning", .phase = state.clock});
+             // Inside a button, which is the case a bar cannot take:
+             // there is no room for a rule in a control this size.
+             {
+                 auto pill = ui.row({.align = Align::Center,
+                                     .gap = 8.0f,
+                                     .padding = Edges::symmetric(6.0f, 12.0f)});
+                 spinner(ui,
+                         {.size = 13.0f, .color = Token::TextMuted, .phase = state.clock * 1.4f});
+                 text(ui, "Pushing…", {.color = Token::TextMuted, .size = 12.0f});
+             }
+         },
+         60});
 
-    out.push_back({"skeleton", [](Ui& ui, const Interaction&, State& state) {
+    out.push_back({"skeleton",
+                   [](Ui& ui, const Interaction&, State& state) {
                        // The shape of a commit row, three times, so the page
                        // does not jump when the real ones arrive.
                        auto column = ui.column({.gap = 10.0f});
                        for (int i = 0; i < 3; ++i) {
                            auto row = ui.row({.align = Align::Center, .gap = 10.0f});
-                           skeleton(ui, {.shape = SkeletonShape::Circle, .width = 24.0f,
+                           skeleton(ui, {.shape = SkeletonShape::Circle,
+                                         .width = 24.0f,
                                          .phase = state.clock * 0.6f,
                                          .name = i == 0 ? "Loading commits" : ""});
                            auto lines = ui.column({.gap = 6.0f, .grow = 1.0f});
                            skeleton(ui, {.grow = 1.0f, .phase = state.clock * 0.6f});
-                           skeleton(ui, {.width = 140.0f, .height = 9.0f,
-                                         .phase = state.clock * 0.6f});
+                           skeleton(ui,
+                                    {.width = 140.0f, .height = 9.0f, .phase = state.clock * 0.6f});
                        }
-                   }, 110});
+                   },
+                   110});
 
     out.push_back({"progressBar", [](Ui& ui, const Interaction&, State& state) {
                        progressBar(ui, {.value = state.fraction, .name = "Cloning"});

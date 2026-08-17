@@ -47,9 +47,8 @@ NodeId skeleton(Ui& ui, const SkeletonOptions& options) {
     if (options.name.empty()) {
         ui.accessible(id, {.hidden = true});
     } else {
-        ui.accessible(id, {.role = Role::Status,
-                           .name = options.name,
-                           .state = {.busy = Flag::True}});
+        ui.accessible(id,
+                      {.role = Role::Status, .name = options.name, .state = {.busy = Flag::True}});
     }
     return id;
 }

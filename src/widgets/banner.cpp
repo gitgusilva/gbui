@@ -13,10 +13,14 @@ namespace {
 
 Token toneOf(BannerKind kind) {
     switch (kind) {
-        case BannerKind::Success: return Token::Added;
-        case BannerKind::Warning: return Token::Modified;
-        case BannerKind::Danger: return Token::Removed;
-        case BannerKind::Info: break;
+        case BannerKind::Success:
+            return Token::Added;
+        case BannerKind::Warning:
+            return Token::Modified;
+        case BannerKind::Danger:
+            return Token::Removed;
+        case BannerKind::Info:
+            break;
     }
     return Token::Accent;
 }
@@ -37,10 +41,14 @@ Token toneOf(BannerKind kind) {
  */
 Icon glyphOf(BannerKind kind) {
     switch (kind) {
-        case BannerKind::Success: return Icon::CircleCheck;
-        case BannerKind::Warning: return Icon::TriangleAlert;
-        case BannerKind::Danger: return Icon::CircleAlert;
-        case BannerKind::Info: break;
+        case BannerKind::Success:
+            return Icon::CircleCheck;
+        case BannerKind::Warning:
+            return Icon::TriangleAlert;
+        case BannerKind::Danger:
+            return Icon::CircleAlert;
+        case BannerKind::Info:
+            break;
     }
     return Icon::Info;
 }
@@ -86,7 +94,8 @@ BannerResult banner(Ui& ui, const Interaction& input, std::string_view id, std::
         column.minWidth = 0.0f;
         auto columnScope = ui.scope(column);
         text(ui, title,
-             {.color = Token::TextStrong, .weight = FontWeight::Medium,
+             {.color = Token::TextStrong,
+              .weight = FontWeight::Medium,
               .overflow = TextOverflow::Wrap});
         if (!options.detail.empty()) {
             text(ui, options.detail,

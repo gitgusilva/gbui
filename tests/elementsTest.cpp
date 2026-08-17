@@ -181,8 +181,7 @@ TEST("a chip's remove button is named after the chip") {
     bench.frame([](Ui& ui, const Interaction& input) {
         (void)chip(ui, input, "c", "feat/nord", {.removable = true});
     });
-    CHECK_EQ(std::string(bench.accessibilityOf("c.remove")->name),
-             std::string("Remove feat/nord"));
+    CHECK_EQ(std::string(bench.accessibilityOf("c.remove")->name), std::string("Remove feat/nord"));
 }
 
 TEST("Delete takes a removable chip off, and does not press it on the way") {
@@ -225,7 +224,7 @@ TEST("a shortcut is split into caps, and read out as one thing") {
         ui.tag("shortcut");
     });
     const Accessibility* group = bench.accessibilityOf("shortcut");
-    CHECK(group == nullptr);   // the tag lands on the last cap, not the group
+    CHECK(group == nullptr);  // the tag lands on the last cap, not the group
 
     // The group is the first record, and every cap under it is hidden — a
     // reader hears the shortcut once rather than three loose letters.
@@ -236,7 +235,7 @@ TEST("a shortcut is split into caps, and read out as one thing") {
     for (const Accessibility* entry : all) {
         if (entry->hidden) ++hidden;
     }
-    CHECK_EQ(hidden, std::size_t{3});   // three caps
+    CHECK_EQ(hidden, std::size_t{3});  // three caps
 }
 
 TEST("spaces around a key are trimmed, and no separator means one cap") {
@@ -336,9 +335,8 @@ TEST("a banner's × is named after it, and reports being pressed") {
 
 TEST("a banner with no × and no action is still a message") {
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)banner(ui, input, "b", "Read only");
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)banner(ui, input, "b", "Read only"); });
     CHECK(bench.input.frameOf("b.close").empty());
     CHECK(bench.accessibilityOf("b") != nullptr);
 }

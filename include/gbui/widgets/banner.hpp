@@ -61,7 +61,7 @@ struct BannerResult {
  * conflict a reader has to know about now and a note they can hear in a moment
  * are not the same message.
  */
-BannerResult banner(Ui& ui, const Interaction& input, std::string_view id,
-                    std::string_view title, const BannerOptions& options = {});
+BannerResult banner(Ui& ui, const Interaction& input, std::string_view id, std::string_view title,
+                    const BannerOptions& options = {});
 
 }  // namespace gbui
