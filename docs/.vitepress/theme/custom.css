@@ -62,6 +62,41 @@ html.dark .light-only {
   max-width: none;
 }
 
+/* ---- the hero, centred -----------------------------------------------------
+ *
+ * VitePress lays the hero out as a row — text on the left, image on the right —
+ * and keeps the text left-aligned even when there is no image to sit beside.
+ * With nothing on the right that reads as a page whose content has slid off
+ * centre, so the whole block is centred and the buttons with it. */
+.VPHero .container {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.VPHero .main {
+  /* `align-items` centres the column's items; this keeps the block itself in
+   * the middle when it is the only child and the container is wider than it. */
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.VPHero .name,
+.VPHero .text {
+  /* The default clamps these to a narrow measure for a two-column hero, which
+   * wraps "A UI toolkit for C++" in the middle once it is centred. */
+  max-width: none;
+}
+
+.VPHero .tagline {
+  max-width: 620px;
+  margin-inline: auto;
+}
+
+.VPHero .actions {
+  justify-content: center;
+}
+
 /* A component's page makes the same trade as the demos', for two things rather
  * than one: the running example, and the options table. A table of four columns
  * where the last is a sentence is unreadable at a prose measure, and it is the

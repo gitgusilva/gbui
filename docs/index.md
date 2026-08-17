@@ -12,12 +12,6 @@ hero:
     - theme: alt
       text: Components
       link: /components
-    - theme: alt
-      text: Download a build
-      link: /download
-    - theme: alt
-      text: GitHub
-      link: https://github.com/gitgusilva/gbui
 ---
 
 ## This is it, running
