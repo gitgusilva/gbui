@@ -30,7 +30,7 @@ TextMetrics measureFixed(std::string_view text, const TextStyle& style, const Ty
 const std::vector<MenuEntry> kEntries = {
     {.id = "stage", .label = "Stage file", .shortcut = "Ctrl+S"},
     {.id = "tags", .label = "Show tags", .checked = true},
-    {},   // a separator
+    {},  // a separator
     {.id = "later", .label = "Not yet", .disabled = true},
     {.id = "discard", .label = "Discard changes", .danger = true},
 };
@@ -275,12 +275,12 @@ TEST("the secondary button is its own press, and moves no focus") {
     down.pointer = at;
     down.secondaryDown = true;
     build(down);
-    CHECK(input.dragging().empty());        // no drag started
-    CHECK(input.focused() == "other");      // and the keyboard did not move
+    CHECK(input.dragging().empty());    // no drag started
+    CHECK(input.focused() == "other");  // and the keyboard did not move
 
     InputFrame up;
     up.pointer = at;
     build(up);
     CHECK(input.secondaryClicked("row"));
-    CHECK(!input.clicked("row"));           // and it is not a primary click
+    CHECK(!input.clicked("row"));  // and it is not a primary click
 }

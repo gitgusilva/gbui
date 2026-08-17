@@ -45,8 +45,8 @@ std::vector<std::size_t> window(std::size_t current, std::size_t count, std::siz
         }
         // A gap of exactly one page is drawn as the page: an ellipsis that
         // stands in for a single button is strictly worse than the button.
-        const bool single = at + 1 < count && keep[at + 1] && !pages.empty() &&
-                            pages.back() == at - 1;
+        const bool single =
+            at + 1 < count && keep[at + 1] && !pages.empty() && pages.back() == at - 1;
         if (single) {
             pages.push_back(at);
         } else if (!pages.empty() && pages.back() != kGap) {
@@ -104,9 +104,8 @@ PaginationResult pagination(Ui& ui, const Interaction& input, std::string_view i
             const Style box = cell(previousId, false, dead);
             auto scope = ui.scope(box);
             ui.tag(previousId).focusable(!dead).cursor(box.cursorHint);
-            ui.accessible({.role = Role::Button,
-                           .name = "Previous page",
-                           .state = {.disabled = flag(dead)}});
+            ui.accessible(
+                {.role = Role::Button, .name = "Previous page", .state = {.disabled = flag(dead)}});
             icon(ui, Icon::ChevronLeft, {.color = Token::TextMuted, .size = 14.0f});
             (void)scope;
         }
@@ -167,9 +166,8 @@ PaginationResult pagination(Ui& ui, const Interaction& input, std::string_view i
             const Style box = cell(nextId, false, dead);
             auto scope = ui.scope(box);
             ui.tag(nextId).focusable(!dead).cursor(box.cursorHint);
-            ui.accessible({.role = Role::Button,
-                           .name = "Next page",
-                           .state = {.disabled = flag(dead)}});
+            ui.accessible(
+                {.role = Role::Button, .name = "Next page", .state = {.disabled = flag(dead)}});
             icon(ui, Icon::ChevronRight, {.color = Token::TextMuted, .size = 14.0f});
             (void)scope;
         }
@@ -195,7 +193,8 @@ PaginationResult pagination(Ui& ui, const Interaction& input, std::string_view i
                 case Key::End:
                     if (current + 1 != pageCount) result.chosen = pageCount - 1;
                     break;
-                default: break;
+                default:
+                    break;
             }
         }
     }

@@ -185,9 +185,8 @@ SelectResult selectImpl(Ui& ui, const Interaction& input, std::string_view id,
 
         // One label whichever form this is: a single value reads as itself, and
         // several read as themselves until there are too many to be a label.
-        const std::string shown = summarise(items, selected, options.multiple
-                                                                 ? options.summariseFrom
-                                                                 : 0);
+        const std::string shown =
+            summarise(items, selected, options.multiple ? options.summariseFrom : 0);
         const bool hasValue = !shown.empty();
         ui.accessible({
             .role = Role::ComboBox,
@@ -199,8 +198,8 @@ SelectResult selectImpl(Ui& ui, const Interaction& input, std::string_view id,
         });
         text(ui, hasValue ? std::string_view(shown) : options.placeholder,
              {.color = options.disabled ? Token::TextMuted
-                       : hasValue        ? Token::Text
-                                         : Token::TextMuted,
+                       : hasValue       ? Token::Text
+                                        : Token::TextMuted,
               .grow = 1.0f,
               .overflow = TextOverflow::Ellipsis});
         // Down when closed, up when open — the convention every platform's
@@ -309,8 +308,10 @@ SelectResult selectImpl(Ui& ui, const Interaction& input, std::string_view id,
                 // select behaves everywhere — but only when there *is* one
                 // value. Stepping a set has no meaning, so a multiple one
                 // opens instead, which is what the reader wanted anyway.
-                if (options.multiple) open();
-                else result.chosen = step(firstSelected.value_or(0), count, down);
+                if (options.multiple)
+                    open();
+                else
+                    result.chosen = step(firstSelected.value_or(0), count, down);
             }
         }
     }
@@ -468,8 +469,10 @@ SelectResult selectImpl(Ui& ui, const Interaction& input, std::string_view id,
                 result.chosen = i;
                 // A row is a toggle when the control holds several, and the
                 // list stays where it is: the reader is probably not finished.
-                if (!options.multiple) close();
-                else state.highlighted = i;
+                if (!options.multiple)
+                    close();
+                else
+                    state.highlighted = i;
             }
         }
         (void)view;
@@ -501,9 +504,8 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
 }
 
 SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
-                    const std::vector<std::string>& items,
-                    const std::vector<std::size_t>& selected, SelectState& state,
-                    const SelectOptions& options) {
+                    const std::vector<std::string>& items, const std::vector<std::size_t>& selected,
+                    SelectState& state, const SelectOptions& options) {
     return selectImpl(ui, input, id, items, selected, state, options);
 }
 

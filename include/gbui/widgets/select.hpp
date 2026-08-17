@@ -183,8 +183,8 @@ struct SelectResult {
  * is the single-value control with a set awkwardly attached.
  */
 [[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
-                    const std::vector<std::string>& items,
-                    const std::vector<std::size_t>& selected, SelectState& state,
-                    const SelectOptions& options = {});
+                                  const std::vector<std::string>& items,
+                                  const std::vector<std::size_t>& selected, SelectState& state,
+                                  const SelectOptions& options = {});
 
 }  // namespace gbui

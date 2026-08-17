@@ -33,8 +33,7 @@ std::optional<std::size_t> segmented(Ui& ui, const Interaction& input, std::stri
     std::optional<std::size_t> chosen;
     if (segments.empty()) return chosen;
 
-    const float height =
-        options.height > 0.0f ? options.height : ui.design().controlHeight - 2.0f;
+    const float height = options.height > 0.0f ? options.height : ui.design().controlHeight - 2.0f;
 
     Style track;
     track.direction = Direction::Row;
@@ -132,12 +131,21 @@ std::optional<std::size_t> segmented(Ui& ui, const Interaction& input, std::stri
         for (const KeyEvent& event : input.keys()) {
             switch (event.key) {
                 case Key::Left:
-                case Key::Up: chosen = nextEnabled(segments, selected, false); break;
+                case Key::Up:
+                    chosen = nextEnabled(segments, selected, false);
+                    break;
                 case Key::Right:
-                case Key::Down: chosen = nextEnabled(segments, selected, true); break;
-                case Key::Home: chosen = nextEnabled(segments, segments.size() - 1, true); break;
-                case Key::End: chosen = nextEnabled(segments, 0, false); break;
-                default: break;
+                case Key::Down:
+                    chosen = nextEnabled(segments, selected, true);
+                    break;
+                case Key::Home:
+                    chosen = nextEnabled(segments, segments.size() - 1, true);
+                    break;
+                case Key::End:
+                    chosen = nextEnabled(segments, 0, false);
+                    break;
+                default:
+                    break;
             }
         }
     }

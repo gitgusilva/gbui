@@ -12,29 +12,29 @@ void addContainerExamples(std::vector<Example>& out) {
                             .title = "General",
                             .detail = "Startup, updates, language",
                             .icon = Icon::Settings,
-                            .body = [](Ui& inner) {
-                                text(inner, "Open on the last repository.",
-                                     {.color = Token::TextMuted, .size = 12.0f});
-                            }},
+                            .body =
+                                [](Ui& inner) {
+                                    text(inner, "Open on the last repository.",
+                                         {.color = Token::TextMuted, .size = 12.0f});
+                                }},
                            {.id = "git",
                             .title = "Git",
                             .icon = Icon::GitBranch,
                             .badge = "2",
-                            .body = [](Ui& inner) {
-                                text(inner, "Sign every commit; prune on fetch.",
-                                     {.color = Token::TextMuted, .size = 12.0f});
-                            }},
-                           {.id = "advanced",
-                            .title = "Advanced",
-                            .disabled = true,
-                            .body = {}}};
+                            .body =
+                                [](Ui& inner) {
+                                    text(inner, "Sign every commit; prune on fetch.",
+                                         {.color = Token::TextMuted, .size = 12.0f});
+                                }},
+                           {.id = "advanced", .title = "Advanced", .disabled = true, .body = {}}};
                        const AccordionResult result =
                            accordion(ui, input, "catalog.accordion", sections, state.sections,
                                      {.name = "Settings"});
                        // The caller's half of the focus contract, which the
                        // arrows between headers need.
                        if (result.focus) state.focusRequest = std::string(*result.focus);
-                   }, 240});
+                   },
+                   240});
 
     out.push_back({"box", [](Ui& ui, const Interaction&, State&) {
                        // `ui.scope(Style{…})` builds any box the layout engine

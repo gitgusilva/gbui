@@ -89,7 +89,8 @@ void addComponentExamples(std::vector<Example>& out) {
                        // Beside its own name, so it says nothing: a row that
                        // reads "Ada Lovelace, Ada Lovelace" has said it twice.
                        avatar(ui, "Ada Lovelace", {.size = 20.0f, .decorative = true});
-                   }, 70});
+                   },
+                   70});
 
     out.push_back(
         {"chip",
@@ -107,7 +108,8 @@ void addComponentExamples(std::vector<Example>& out) {
              // its own, and Delete takes it off from the keyboard.
              chip(ui, input, "catalog.chip.branch", "feat/nord-tuning",
                   {.removable = true, .leading = Icon::GitBranch});
-         }, 60});
+         },
+         60});
 
     out.push_back({"kbd",
                    [](Ui& ui, const Interaction&, State&) {
@@ -122,15 +124,15 @@ void addComponentExamples(std::vector<Example>& out) {
                            text(ui, "Stage everything", {.color = Token::Text, .grow = 1.0f});
                            kbd(ui, "Ctrl + A");
                        }
-                   }, 80});
+                   },
+                   80});
 
     out.push_back({"segmented",
                    [](Ui& ui, const Interaction& input, State& state) {
                        static const std::vector<Segment> layouts = {
                            {.label = "Unified"}, {.label = "Split"}, {.label = "Ribbon"}};
-                       if (const auto picked =
-                               segmented(ui, input, "catalog.segmented", layouts, state.segment,
-                                         {.name = "Diff layout"})) {
+                       if (const auto picked = segmented(ui, input, "catalog.segmented", layouts,
+                                                         state.segment, {.name = "Diff layout"})) {
                            state.segment = *picked;
                        }
                        // Icon-only, and named — "1m" is a word to a reader who
@@ -141,25 +143,26 @@ void addComponentExamples(std::vector<Example>& out) {
                            {.icon = Icon::TrendingDown, .name = "Falling"}};
                        (void)segmented(ui, input, "catalog.segmented.icons", ranges, 0,
                                        {.name = "Direction"});
-                   }, 120});
+                   },
+                   120});
 
-    out.push_back({"breadcrumbs",
-                   [](Ui& ui, const Interaction& input, State& state) {
-                       static const std::vector<Crumb> trail = {
-                           {.label = "gbui", .icon = Icon::Folder},
-                           {.label = "src"},
-                           {.label = "widgets"},
-                           {.label = "treeView.cpp", .icon = Icon::File}};
-                       if (const auto hit =
-                               breadcrumbs(ui, input, "catalog.crumbs", trail).chosen) {
-                           state.crumb = *hit;
-                       }
-                       // The same trail with no room for it: the *middle* goes,
-                       // because the ends are the two a reader needs — where
-                       // they are, and the way home.
-                       (void)breadcrumbs(ui, input, "catalog.crumbs.tight", trail,
-                                         {.maxVisible = 3});
-                   }, 110});
+    out.push_back(
+        {"breadcrumbs",
+         [](Ui& ui, const Interaction& input, State& state) {
+             static const std::vector<Crumb> trail = {
+                 {.label = "gbui", .icon = Icon::Folder},
+                 {.label = "src"},
+                 {.label = "widgets"},
+                 {.label = "treeView.cpp", .icon = Icon::File}};
+             if (const auto hit = breadcrumbs(ui, input, "catalog.crumbs", trail).chosen) {
+                 state.crumb = *hit;
+             }
+             // The same trail with no room for it: the *middle* goes,
+             // because the ends are the two a reader needs — where
+             // they are, and the way home.
+             (void)breadcrumbs(ui, input, "catalog.crumbs.tight", trail, {.maxVisible = 3});
+         },
+         110});
 
     out.push_back({"pagination",
                    [](Ui& ui, const Interaction& input, State& state) {
@@ -169,7 +172,8 @@ void addComponentExamples(std::vector<Example>& out) {
                        }
                        text(ui, "Page " + std::to_string(state.page + 1) + " of 20",
                             {.color = Token::TextMuted, .size = 11.5f});
-                   }, 100});
+                   },
+                   100});
 
     out.push_back({"badge", [](Ui& ui, const Interaction&, State&) {
                        // A row, because the stage stretches its children and a

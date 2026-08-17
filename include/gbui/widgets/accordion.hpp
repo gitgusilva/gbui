@@ -64,8 +64,10 @@ struct AccordionState {
 
     bool isOpen(std::string_view id) const { return open.find(id) != open.end(); }
     void toggle(std::string_view id) {
-        if (const auto at = open.find(id); at != open.end()) open.erase(at);
-        else open.emplace(id);
+        if (const auto at = open.find(id); at != open.end())
+            open.erase(at);
+        else
+            open.emplace(id);
     }
 };
 

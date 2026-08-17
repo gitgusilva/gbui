@@ -333,8 +333,10 @@ struct Multi {
             toggled = result.chosen;
             if (result.chosen) {
                 const auto at = std::find(picked.begin(), picked.end(), *result.chosen);
-                if (at != picked.end()) picked.erase(at);
-                else picked.push_back(*result.chosen);
+                if (at != picked.end())
+                    picked.erase(at);
+                else
+                    picked.push_back(*result.chosen);
             }
             if (result.focus) input.focus(*result.focus, FocusSource::Keyboard);
             (void)checkbox(ui, input, "after", false, {.label = "something else"});
@@ -433,7 +435,7 @@ TEST("Return takes a row without closing, and Escape closes") {
     Multi multi;
     multi.settle();
     multi.input.focus("sel", FocusSource::Keyboard);
-    multi.press(Key::Return);   // opens
+    multi.press(Key::Return);  // opens
     multi.frame();
     CHECK(multi.state.open);
 

@@ -118,8 +118,7 @@ AccordionResult accordion(Ui& ui, const Interaction& input, std::string_view id,
                 column.basis = 0.0f;
                 column.minWidth = 0.0f;
                 auto columnScope = ui.scope(column);
-                text(ui, section.title,
-                     {.color = Token::TextStrong, .weight = FontWeight::Medium});
+                text(ui, section.title, {.color = Token::TextStrong, .weight = FontWeight::Medium});
                 if (!section.detail.empty()) {
                     text(ui, section.detail, {.color = Token::TextMuted, .size = 11.5f});
                 }
@@ -175,16 +174,25 @@ AccordionResult accordion(Ui& ui, const Interaction& input, std::string_view id,
         for (const KeyEvent& event : input.keys()) {
             std::optional<std::size_t> target;
             switch (event.key) {
-                case Key::Down: target = step(sections, from, true); break;
-                case Key::Up: target = step(sections, from, false); break;
-                case Key::Home: target = firstEnabled(sections, false); break;
-                case Key::End: target = firstEnabled(sections, true); break;
-                default: break;
+                case Key::Down:
+                    target = step(sections, from, true);
+                    break;
+                case Key::Up:
+                    target = step(sections, from, false);
+                    break;
+                case Key::Home:
+                    target = firstEnabled(sections, false);
+                    break;
+                case Key::End:
+                    target = firstEnabled(sections, true);
+                    break;
+                default:
+                    break;
             }
-            if (target && input.isFocused(std::string(id) + "." +
-                                          std::string(sections[from].id))) {
+            if (target && input.isFocused(std::string(id) + "." + std::string(sections[from].id))) {
                 state.focused = std::string(sections[*target].id);
-                result.focus = ui.qualify(std::string(id) + "." + std::string(sections[*target].id));
+                result.focus =
+                    ui.qualify(std::string(id) + "." + std::string(sections[*target].id));
             }
         }
     }

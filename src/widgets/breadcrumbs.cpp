@@ -11,8 +11,7 @@ namespace gbui {
 using namespace detail;
 
 BreadcrumbsResult breadcrumbs(Ui& ui, const Interaction& input, std::string_view id,
-                              const std::vector<Crumb>& trail,
-                              const BreadcrumbsOptions& options) {
+                              const std::vector<Crumb>& trail, const BreadcrumbsOptions& options) {
     BreadcrumbsResult result;
     if (trail.empty()) return result;
 
@@ -74,9 +73,9 @@ BreadcrumbsResult breadcrumbs(Ui& ui, const Interaction& input, std::string_view
                 ui.tag(ellipsisId).focusable().cursor(Cursor::Pointer);
                 // Says how many, because "…" is a button whose whole meaning is
                 // the number it is standing in for.
-                ui.accessible({.role = Role::Button,
-                               .name = "Show " + std::to_string(hiddenTo - hiddenFrom) +
-                                       " more steps"});
+                ui.accessible(
+                    {.role = Role::Button,
+                     .name = "Show " + std::to_string(hiddenTo - hiddenFrom) + " more steps"});
                 text(ui, "…", {.color = Token::TextMuted, .size = options.size});
                 (void)moreScope;
             }
@@ -128,7 +127,7 @@ BreadcrumbsResult breadcrumbs(Ui& ui, const Interaction& input, std::string_view
             }
             if (!trail[i].label.empty()) {
                 text(ui, trail[i].label,
-                     {.color = last ? Token::TextStrong
+                     {.color = last      ? Token::TextStrong
                                : hovered ? Token::Text
                                          : Token::TextMuted,
                       .weight = last ? FontWeight::Medium : FontWeight::Regular,

@@ -71,8 +71,7 @@ MenuResult menuImpl(Ui& ui, const Interaction& input, std::string_view id, Rect 
     // be clipped to fourteen rows must be *placed* as fourteen rows or it flips
     // above an anchor it would have fitted below.
     if (options.maxVisible > 0 && entries.size() > options.maxVisible) {
-        surface.maxHeight = static_cast<float>(options.maxVisible) *
-                                (kMenuItemHeight + kRowGap) +
+        surface.maxHeight = static_cast<float>(options.maxVisible) * (kMenuItemHeight + kRowGap) +
                             2.0f * kMenuPadding;
         surface.scroll = ScrollAxis::Vertical;
         surface.scrollState = &state.list;
@@ -127,9 +126,14 @@ MenuResult menuImpl(Ui& ui, const Interaction& input, std::string_view id, Rect 
                 case Key::Up:
                     at = at ? nextOf(*at, walkable.size(), false) : walkable.size() - 1;
                     break;
-                case Key::Home: at = 0; break;
-                case Key::End: at = walkable.size() - 1; break;
-                default: break;
+                case Key::Home:
+                    at = 0;
+                    break;
+                case Key::End:
+                    at = walkable.size() - 1;
+                    break;
+                default:
+                    break;
             }
         }
         state.highlighted = at ? std::string(entries[walkable[*at]].id) : std::string{};

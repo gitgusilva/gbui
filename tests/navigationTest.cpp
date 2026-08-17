@@ -173,10 +173,11 @@ std::vector<AccordionSection> sections(bool* built) {
         {.id = "general", .title = "General"},
         {.id = "git",
          .title = "Git",
-         .body = [built](Ui& ui) {
-             if (built) *built = true;
-             text(ui, "inside");
-         }},
+         .body =
+             [built](Ui& ui) {
+                 if (built) *built = true;
+                 text(ui, "inside");
+             }},
         {.id = "advanced", .title = "Advanced", .disabled = true},
     };
 }
@@ -190,15 +191,13 @@ TEST("a closed section's body is never built") {
     AccordionState state;
     Bench bench;
     const auto list = sections(&built);
-    bench.frame([&](Ui& ui, const Interaction& input) {
-        (void)accordion(ui, input, "acc", list, state);
-    });
+    bench.frame(
+        [&](Ui& ui, const Interaction& input) { (void)accordion(ui, input, "acc", list, state); });
     CHECK(!built);
 
     state.open.emplace("git");
-    bench.frame([&](Ui& ui, const Interaction& input) {
-        (void)accordion(ui, input, "acc", list, state);
-    });
+    bench.frame(
+        [&](Ui& ui, const Interaction& input) { (void)accordion(ui, input, "acc", list, state); });
     CHECK(built);
 }
 
@@ -207,9 +206,8 @@ TEST("every header says whether it is open before anybody presses it") {
     state.open.emplace("git");
     Bench bench;
     const auto list = sections(nullptr);
-    bench.frame([&](Ui& ui, const Interaction& input) {
-        (void)accordion(ui, input, "acc", list, state);
-    });
+    bench.frame(
+        [&](Ui& ui, const Interaction& input) { (void)accordion(ui, input, "acc", list, state); });
     CHECK(bench.accessibilityOf("acc.general")->role == Role::Button);
     CHECK(bench.accessibilityOf("acc.general")->state.expanded == Flag::False);
     CHECK(bench.accessibilityOf("acc.git")->state.expanded == Flag::True);
@@ -297,9 +295,8 @@ TEST("the last crumb is where you are, not a link") {
     // A link to the page you are on is a control that does nothing, and a reader
     // who tabs through five crumbs to find that out has been misled five times.
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)breadcrumbs(ui, input, "crumbs", kTrail);
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)breadcrumbs(ui, input, "crumbs", kTrail); });
     CHECK(bench.focusableAt("crumbs.0"));
     CHECK(bench.accessibilityOf("crumbs.0")->role == Role::Link);
 
@@ -312,9 +309,8 @@ TEST("the last crumb is where you are, not a link") {
 
 TEST("the trail says it is a trail") {
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)breadcrumbs(ui, input, "crumbs", kTrail);
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)breadcrumbs(ui, input, "crumbs", kTrail); });
     CHECK(bench.accessibilityOf("crumbs")->role == Role::Group);
     CHECK_EQ(std::string(bench.accessibilityOf("crumbs")->name), std::string("Breadcrumb"));
 }
@@ -328,9 +324,9 @@ TEST("the middle collapses and the ends stay") {
     bench.frame([](Ui& ui, const Interaction& input) {
         (void)breadcrumbs(ui, input, "crumbs", kTrail, {.maxVisible = 3});
     });
-    CHECK(!bench.input.frameOf("crumbs.0").empty());          // the root
-    CHECK(!bench.input.frameOf("crumbs.4").empty());          // where you are
-    CHECK(bench.input.frameOf("crumbs.2").empty());           // and the middle went
+    CHECK(!bench.input.frameOf("crumbs.0").empty());  // the root
+    CHECK(!bench.input.frameOf("crumbs.4").empty());  // where you are
+    CHECK(bench.input.frameOf("crumbs.2").empty());   // and the middle went
     CHECK(!bench.input.frameOf("crumbs.more").empty());
     // The ellipsis says how many it stands for, because "…" on its own is a
     // button whose whole meaning is the number.
@@ -362,12 +358,10 @@ TEST("the window keeps the first and last page whatever the current one is") {
     // "Jump to the end" is the second most common thing anybody does with a
     // paginator, and hiding it makes them press next forty times.
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)pagination(ui, input, "pages", 10, 40);
-    });
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)pagination(ui, input, "pages", 10, 40);
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)pagination(ui, input, "pages", 10, 40); });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)pagination(ui, input, "pages", 10, 40); });
     CHECK(!bench.input.frameOf("pages.0").empty());
     CHECK(!bench.input.frameOf("pages.39").empty());
     CHECK(!bench.input.frameOf("pages.9").empty());
@@ -377,9 +371,8 @@ TEST("the window keeps the first and last page whatever the current one is") {
 
 TEST("the page you are on is current, and takes no press") {
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)pagination(ui, input, "pages", 3, 20);
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)pagination(ui, input, "pages", 3, 20); });
     CHECK(bench.accessibilityOf("pages.3")->state.current == Flag::True);
     CHECK(!bench.focusableAt("pages.3"));
     CHECK(bench.accessibilityOf("pages.4")->role == Role::Button);
@@ -388,16 +381,13 @@ TEST("the page you are on is current, and takes no press") {
 
 TEST("the arrows are disabled at the ends rather than missing") {
     Bench bench;
-    bench.frame([](Ui& ui, const Interaction& input) {
-        (void)pagination(ui, input, "pages", 0, 5);
-    });
+    bench.frame(
+        [](Ui& ui, const Interaction& input) { (void)pagination(ui, input, "pages", 0, 5); });
     CHECK(bench.accessibilityOf("pages.previous")->state.disabled == Flag::True);
     CHECK(bench.accessibilityOf("pages.next")->state.disabled == Flag::False);
 
     Bench end;
-    end.frame([](Ui& ui, const Interaction& input) {
-        (void)pagination(ui, input, "pages", 4, 5);
-    });
+    end.frame([](Ui& ui, const Interaction& input) { (void)pagination(ui, input, "pages", 4, 5); });
     CHECK(end.accessibilityOf("pages.next")->state.disabled == Flag::True);
 }
 
