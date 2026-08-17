@@ -1,10 +1,13 @@
 ---
 editLink: false
-# No outline, and the example and the options table opt out of the prose
-# column: what these pages are for is a table of four columns whose last one is
-# a sentence, and the aside was taking a quarter of the width to list the two
-# headings the sidebar already shows. See .vitepress/theme/custom.css.
-aside: false
+# The example and the options table opt out of the prose column: what these
+# pages are for is a table of four columns whose last one is a sentence. See
+# .vitepress/theme/custom.css.
+#
+# The aside is on again. It was off when the only headings were the options
+# structs — a quarter of the width to list one thing — and now the page has
+# Import, Example and API to move between, which is what a rail is for.
+aside: true
 pageClass: component-page
 ---
 

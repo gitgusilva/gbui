@@ -81,11 +81,20 @@ html.dark .light-only {
   margin-inline: auto;
 }
 
+/* `.heading` is a column flex container and the two lines are its items, so
+ * `text-align` alone does not place them: an item narrower than the container
+ * sits at the start of the cross axis whatever its text does. Centring the
+ * *items* is what puts both lines on the same axis as the tagline. */
+.VPHero .heading {
+  align-items: center;
+}
+
 .VPHero .name,
 .VPHero .text {
   /* The default clamps these to a narrow measure for a two-column hero, which
    * wraps "A UI toolkit for C++" in the middle once it is centred. */
   max-width: none;
+  text-align: center;
 }
 
 .VPHero .tagline {
@@ -114,6 +123,49 @@ html.dark .light-only {
 
 .component-page .vp-doc > div > *:not(.gbui-component):not(table) {
   max-width: 760px;
+}
+
+/* ---- a component page reads as sections, not as one column of prose --------
+ *
+ * Import, Example and API each get a rule above them and a heading that is
+ * clearly a section rather than a paragraph with a bigger font. The parts a
+ * reader compares — the running example, the signature, the options table — sit
+ * on their own surface, so the boundary between "this is the component" and
+ * "this is the page talking about it" is visible rather than inferred. */
+.component-page .vp-doc h2 {
+  margin-top: 44px;
+  padding-top: 22px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+
+.component-page .vp-doc h3 {
+  margin-top: 32px;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+/* The signature, on the same surface as the example above it: they are one
+ * thing — this is what that picture is a picture of. */
+.component-page .vp-doc div[class*='language-'] {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+}
+
+.component-page .vp-doc table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* The first paragraph is the header's own sentence about the component, which is
+ * the one line a reader reads before deciding whether to stay. */
+.component-page .vp-doc > div > h1 + p + p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--vp-c-text-1);
 }
 
 /* The table is *not* given `display: table` here, the way the demos page gives
