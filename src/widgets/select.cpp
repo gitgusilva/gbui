@@ -79,12 +79,47 @@ NodeId nodeWithTag(const Arena& arena, std::string_view tag) {
     return NodeId{};
 }
 
-}  // namespace
+/**
+ * What the closed box says when it is holding several rows.
+ *
+ * Below `summariseFrom` the labels themselves, because "main, develop" is more
+ * use than "2 selected"; at or above it the count, because a box listing nine
+ * branch names is a box whose own label has gone.
+ */
+std::string summarise(const std::vector<std::string>& items,
+                      const std::vector<std::size_t>& selected, std::size_t summariseFrom) {
+    if (selected.empty()) return {};
+    if (summariseFrom > 0 && selected.size() >= summariseFrom) {
+        return std::to_string(selected.size()) + " selected";
+    }
+    std::string out;
+    for (const std::size_t index : selected) {
+        if (index >= items.size()) continue;
+        if (!out.empty()) out += ", ";
+        out += items[index];
+    }
+    return out;
+}
 
-SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
-                    const std::vector<std::string>& items, std::optional<std::size_t> selected,
-                    SelectState& state, const SelectOptions& options) {
+SelectResult selectImpl(Ui& ui, const Interaction& input, std::string_view id,
+                        const std::vector<std::string>& items,
+                        const std::vector<std::size_t>& selected, SelectState& state,
+                        const SelectOptions& options) {
     SelectResult result;
+
+    /** Whether a row is in the caller's set. Linear, and deliberately: a select
+     *  is dozens of options, and a set would cost more to build each frame than
+     *  the walk costs to do. */
+    const auto isSelected = [&](std::size_t index) {
+        for (const std::size_t entry : selected) {
+            if (entry == index) return true;
+        }
+        return false;
+    };
+    /** The first value, which is what the single-value behaviours read: where
+     *  the highlight opens, and what the arrows step from when closed. */
+    const std::optional<std::size_t> firstSelected =
+        selected.empty() ? std::nullopt : std::optional<std::size_t>(selected.front());
 
     const bool hovered = input.isHovered(id);
     const bool focused = input.isFocused(id);
@@ -148,22 +183,26 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
         boxNode = scope.id();
         ui.tag(id).focusable(!options.disabled).cursor(box.cursorHint);
 
-        const bool hasValue = selected && *selected < count;
+        // One label whichever form this is: a single value reads as itself, and
+        // several read as themselves until there are too many to be a label.
+        const std::string shown = summarise(items, selected, options.multiple
+                                                                 ? options.summariseFrom
+                                                                 : 0);
+        const bool hasValue = !shown.empty();
         ui.accessible({
             .role = Role::ComboBox,
             .name = options.name,
             .description = options.placeholder,
             .state = {.expanded = flag(wasOpen), .disabled = flag(options.disabled)},
-            .value = {.present = true,
-                      .text = hasValue ? std::string_view(items[*selected])
-                                       : std::string_view{}},
+            .value = {.present = true, .text = shown},
             .relations = {.controls = listId},
         });
-        text(ui, hasValue ? std::string_view(items[*selected]) : options.placeholder,
+        text(ui, hasValue ? std::string_view(shown) : options.placeholder,
              {.color = options.disabled ? Token::TextMuted
                        : hasValue        ? Token::Text
                                          : Token::TextMuted,
-              .grow = 1.0f});
+              .grow = 1.0f,
+              .overflow = TextOverflow::Ellipsis});
         // Down when closed, up when open — the convention every platform's
         // combobox uses. A right-pointing chevron is a *disclosure* triangle
         // and belongs on a tree node, where the thing it reveals appears
@@ -183,7 +222,7 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     // they opened to look at.
     const auto open = [&] {
         state.open = true;
-        state.highlighted = selected;
+        state.highlighted = firstSelected;
         // A filter left over from last time is a list with rows missing and
         // nothing on screen saying why.
         state.query = TextEditState{};
@@ -236,7 +275,10 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
                     if (state.highlighted && *state.highlighted < count) {
                         result.chosen = state.highlighted;
                     }
-                    close();
+                    // Holding several, the list stays up: a reader taking three
+                    // branches should not have to re-open it twice, and the
+                    // press that took the third is not a press that says "done".
+                    if (!options.multiple) close();
                 }
                 continue;
             }
@@ -263,7 +305,12 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
             } else if (down || up) {
                 // Closed, the arrows step the value itself, which is how a
                 // select behaves everywhere.
-                result.chosen = step(selected.value_or(0), count, down);
+                // Closed, the arrows step the value itself, which is how a
+                // select behaves everywhere — but only when there *is* one
+                // value. Stepping a set has no meaning, so a multiple one
+                // opens instead, which is what the reader wanted anyway.
+                if (options.multiple) open();
+                else result.chosen = step(firstSelected.value_or(0), count, down);
             }
         }
     }
@@ -290,6 +337,14 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     popoverOptions.role = Role::ListBox;
 
     auto list = popover(ui, input, listId, id, popoverOptions);
+    // How many of them the reader may take, on the list itself. Without it a
+    // multi-select list is announced exactly like a single-select one, and the
+    // first choice appears to have thrown the previous one away. Written to the
+    // popover's own node rather than through `PopoverOptions`, which carries a
+    // role and a name and no business knowing about this.
+    if (options.multiple) {
+        ui.accessible(list.id(), {.state = {.multiSelectable = Flag::True}});
+    }
     {
         // As many rows as `maxVisible` allows, and the rest behind a scroll.
         // Every row is built either way — a select is dozens of options, not
@@ -397,7 +452,7 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
             const std::size_t i = matches[at];
             const std::string itemId = listId + "." + std::to_string(i);
             MenuItemOptions row;
-            row.selected = selected && *selected == i;
+            row.selected = isSelected(i);
             // A list of values, not of commands: the tick goes on the right.
             row.checkSide = CheckSide::Trailing;
             row.highlighted = state.highlighted == i;
@@ -411,7 +466,10 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
             const bool chosen = menuItem(ui, input, itemId, items[i], row);
             if (chosen) {
                 result.chosen = i;
-                close();
+                // A row is a toggle when the control holds several, and the
+                // list stays where it is: the reader is probably not finished.
+                if (!options.multiple) close();
+                else state.highlighted = i;
             }
         }
         (void)view;
@@ -428,6 +486,25 @@ SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
     }
 
     return result;
+}
+
+}  // namespace
+
+SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
+                    const std::vector<std::string>& items, std::optional<std::size_t> selected,
+                    SelectState& state, const SelectOptions& options) {
+    // One value expressed as a set of at most one, so there is one
+    // implementation rather than two that drift apart.
+    std::vector<std::size_t> one;
+    if (selected && *selected < items.size()) one.push_back(*selected);
+    return selectImpl(ui, input, id, items, one, state, options);
+}
+
+SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
+                    const std::vector<std::string>& items,
+                    const std::vector<std::size_t>& selected, SelectState& state,
+                    const SelectOptions& options) {
+    return selectImpl(ui, input, id, items, selected, state, options);
 }
 
 }  // namespace gbui

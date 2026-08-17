@@ -162,6 +162,59 @@
     ]
   },
   {
+    "name": "breadcrumbs",
+    "group": "Elements",
+    "header": "gbui/widgets/breadcrumbs.hpp",
+    "summary": "Where you are, and every step back to the top.",
+    "signatures": [
+      "BreadcrumbsResult breadcrumbs(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Crumb>& trail, const BreadcrumbsOptions& options = {});"
+    ],
+    "notes": [
+      "A path, with everything but the last step navigable. The last crumb takes `current`, which is ARIA's `aria-current` and not `selected`: a reader is not being told they picked it, they are being told it is where they are."
+    ],
+    "optionsType": "BreadcrumbsOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "0",
+        "choices": [],
+        "doc": "How many crumbs may be drawn before the middle collapses. Zero draws all of them. Counted in *crumbs*, not pixels, because a trail that measured itself would need last frame's width and would therefore be one frame wrong every time the window changed \u2014 visibly, since the thing that changes is how many steps you can see.",
+        "optional": false
+      },
+      {
+        "name": "separator",
+        "kind": "Icon",
+        "type": "Icon",
+        "default": "Icon::ChevronRight",
+        "choices": [],
+        "doc": "Drawn between crumbs. A glyph rather than a character so it cannot be mistaken for part of a name.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Breadcrumb\"",
+        "choices": [],
+        "doc": "What the trail is, for a reader who arrives in the middle of a page. \"Breadcrumb\" is what every screen reader's user expects to hear.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "12.5f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "button",
     "group": "Elements",
     "header": "gbui/widgets/button.hpp",
@@ -842,6 +895,59 @@
     ]
   },
   {
+    "name": "pagination",
+    "group": "Elements",
+    "header": "gbui/widgets/pagination.hpp",
+    "summary": "Which page you are on, and the ones you can reach from here.",
+    "signatures": [
+      "PaginationResult pagination(Ui& ui, const Interaction& input, std::string_view id, std::size_t current, std::size_t pageCount, const PaginationOptions& options = {});"
+    ],
+    "notes": [
+      "A paginator for `pageCount` pages, sitting on `current` (zero-based). Left and Right step a page while the control has focus, Home and End reach the ends. The current page carries `current` \u2014 ARIA's `aria-current`, not `selected`: the reader is being told where they are, not that they chose it from a set of options they could choose differently."
+    ],
+    "optionsType": "PaginationOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "around",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "1",
+        "choices": [],
+        "doc": "How many numbered buttons to draw around the current page, on each side. One gives `1 \u2026 4 5 6 \u2026 20`, which is the shape most sites settled on: far enough to step without aiming, small enough to fit on a narrow window.",
+        "optional": false
+      },
+      {
+        "name": "arrows",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "true",
+        "choices": [],
+        "doc": "Draw the previous and next arrows. Off leaves only the numbers, for a strip that sits under something with its own paging controls.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"Pagination\"",
+        "choices": [],
+        "doc": "What the whole control is for \u2014 \"Search results\". A paginator with no name is a row of numbers a reader has to infer the subject of.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "12.5f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "progressBar",
     "group": "Elements",
     "header": "gbui/widgets/progress.hpp",
@@ -975,15 +1081,79 @@
     ]
   },
   {
+    "name": "segmented",
+    "group": "Elements",
+    "header": "gbui/widgets/segmented.hpp",
+    "summary": "A row of two to five choices, all of them on screen at once.",
+    "signatures": [
+      "std::optional<std::size_t> segmented(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Segment>& segments, std::size_t selected, const SegmentedOptions& options = {});"
+    ],
+    "notes": [
+      "A row of segments, one of them chosen. Returns the index pressed this frame, or nothing. The value is the caller's, like every other control here. The keyboard is ARIA's radio group, which is one Tab stop and not one per segment: Tab reaches the row, the arrows move *and choose* \u2014 because a radio group with a highlight separate from its value is a control where the reader has to press twice \u2014 and Home and End go to the ends."
+    ],
+    "optionsType": "SegmentedOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the whole row is for \u2014 \"Diff layout\", \"Range\". A group of choices with no name is a set of buttons a reader has to guess the subject of.",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "stretch",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Each segment takes an equal share of the width. Off sizes each to its own label, which is what a strip inside a toolbar wants.",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Zero takes the active design's control height, less two pixels for the track it sits in \u2014 so a strip lines up with the controls beside it.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "12.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "select",
     "group": "Elements",
     "header": "gbui/widgets/select.hpp",
     "summary": "A closed box that opens a list, and \u2014 with `filter` on \u2014 a combobox.",
     "signatures": [
-      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});"
+      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});",
+      "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, const std::vector<std::size_t>& selected, SelectState& state, const SelectOptions& options = {});"
     ],
     "notes": [
-      "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box \u2014 not the rows \u2014 keeps the keyboard, so Tab leaves the control rather than walking into the popup."
+      "A closed box that opens a list. Closed and focused, Up and Down step the value and Return or Space opens the list. Open, they walk the highlight, Home and End jump to the ends, Return or Space commits, and Escape closes without changing anything. The list keeps the highlighted row in view as it moves, and the box \u2014 not the rows \u2014 keeps the keyboard, so Tab leaves the control rather than walking into the popup.",
+      "The same control, holding more than one value. `selected` is the caller's own set, as indices into `items` \u2014 a vector rather than a `std::set` because the order a reader chose things in is worth keeping and because most callers already have one. `SelectResult::chosen` is the row that was **toggled** this frame, not the new value: the component says what happened and the caller decides what its set becomes, exactly as `checkbox` reports a press rather than writing a bool. if (const auto hit = result.chosen) { const auto at = std::find(picked.begin(), picked.end(), *hit); if (at != picked.end()) picked.erase(at); else picked.push_back(*hit); } Set `SelectOptions::multiple` with it. Without that the list closes on the first choice and the rows draw as values rather than as things to tick, which is the single-value control with a set awkwardly attached."
     ],
     "optionsType": "SelectOptions",
     "container": false,
@@ -1099,6 +1269,24 @@
         "default": "\"No matches\"",
         "choices": [],
         "doc": "Drawn where the rows would be when nothing matches. An empty list with no explanation reads as a list that failed to load.",
+        "optional": false
+      },
+      {
+        "name": "multiple",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "The reader may take several rows rather than one. An option and not a `multiSelect` component beside this, for the third time the same argument has been settled here: everything that makes a select a select is unchanged by how many rows it keeps. The value is still the caller's, the highlight is still separate from it, the list is still a popover. What changes is that a row **toggles** instead of replacing, that the list stays open so a second row can be taken, and that the closed box has more than one thing to say. `multiple` is the *interaction*; the caller's container is the value. Use the overload that takes a vector of indices to pass more than one \u2014 the single-value form still works and simply holds at most one.",
+        "optional": false
+      },
+      {
+        "name": "summariseFrom",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "3",
+        "choices": [],
+        "doc": "How the closed box reads once several rows are taken. Below the threshold the labels are listed; at or above it the box says \"N selected\", because a box listing nine branch names is a box whose own label has gone. Zero always lists them.",
         "optional": false
       }
     ]
@@ -1989,6 +2177,50 @@
         "kind": "Number",
         "type": "float",
         "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "accordion",
+    "group": "Containers",
+    "header": "gbui/widgets/accordion.hpp",
+    "summary": "Sections that open one at a time, or several.",
+    "signatures": [
+      "AccordionResult accordion(Ui& ui, const Interaction& input, std::string_view id, const std::vector<AccordionSection>& sections, AccordionState& state, const AccordionOptions& options = {});"
+    ],
+    "notes": [
+      "A stack of collapsible sections. Enter or Space on a header opens it, the arrows move between headers, and Home and End reach the ends. Every header carries `expanded`, so a reader is told what a press will do before they make it."
+    ],
+    "optionsType": "AccordionOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "exclusive",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Opening one closes the others. Off by default, and that is the less obvious choice: an accordion whose sections close each other cannot be used to *compare* two of them, and a reader who opens the second and loses the first will open both again one at a time. Turn it on when the sections are long enough that two of them on screen would be worse.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the whole stack is, for a reader arriving at it.",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "kind": "Number",
+        "type": "float",
+        "default": "6.0f",
         "choices": [],
         "doc": "",
         "optional": false
@@ -3695,6 +3927,94 @@
     ]
   },
   {
+    "name": "contextMenu",
+    "group": "Overlays",
+    "header": "gbui/widgets/contextMenu.hpp",
+    "summary": "A menu, and the same menu at a point rather than under a control.",
+    "signatures": [
+      "MenuResult contextMenu(Ui& ui, const Interaction& input, std::string_view id, Vec2 at, const std::vector<MenuEntry>& entries, MenuState& state, const MenuOptions& options = {});"
+    ],
+    "notes": [
+      "The same menu, at a point. `at` is where the pointer was when the reader asked for it \u2014 keep it, because a menu that re-reads the live pointer position walks away from itself as the reader moves towards it. if (input.rightClicked(\"row\")) { menuAt = input.pointer(); menuOpen = true; } if (menuOpen) { const MenuResult hit = contextMenu(ui, input, \"row.menu\", menuAt, items, state); if (hit.dismissed || hit.chosen) menuOpen = false; }"
+    ],
+    "optionsType": "MenuOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the menu is, announced before its first row.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "How wide it is. Zero sizes it to its widest row, which is what a menu should do \u2014 a fixed width either truncates a command or leaves a gap.",
+        "optional": false
+      },
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "14",
+        "choices": [],
+        "doc": "How many rows before it scrolls.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "menu",
+    "group": "Overlays",
+    "header": "gbui/widgets/contextMenu.hpp",
+    "summary": "A menu, and the same menu at a point rather than under a control.",
+    "signatures": [
+      "MenuResult menu(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const std::vector<MenuEntry>& entries, MenuState& state, const MenuOptions& options = {});"
+    ],
+    "notes": [
+      "A menu hanging off `anchorId`. Draw it while the caller's own flag says it is open, exactly as `popover` is drawn \u2014 this holds no open state of its own."
+    ],
+    "optionsType": "MenuOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What the menu is, announced before its first row.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "How wide it is. Zero sizes it to its widest row, which is what a menu should do \u2014 a fixed width either truncates a command or leaves a gap.",
+        "optional": false
+      },
+      {
+        "name": "maxVisible",
+        "kind": "Number",
+        "type": "std::size_t",
+        "default": "14",
+        "choices": [],
+        "doc": "How many rows before it scrolls.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "drawer",
     "group": "Overlays",
     "header": "gbui/widgets/drawer.hpp",
@@ -4043,10 +4363,12 @@
     "header": "gbui/widgets/popover.hpp",
     "summary": "An empty floating surface the caller fills.",
     "signatures": [
-      "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});"
+      "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});",
+      "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, Rect anchor, const PopoverOptions& options = {});"
     ],
     "notes": [
-      "Returns a scope, so its contents are written inside the braces like any other container."
+      "Returns a scope, so its contents are written inside the braces like any other container.",
+      "The same box, anchored to a rectangle the caller has rather than to a tag. For the two cases a tag cannot express: a menu at the pointer, where the anchor is a *point* and nothing was ever laid out there, and a box hanging off geometry the caller worked out itself. A zero-sized rectangle is a legitimate anchor \u2014 the placement engine only ever reads its edges. The tagged form is this one with `input.frameOf(anchorId)` passed in, which is why there is one implementation and not two."
     ],
     "optionsType": "PopoverOptions",
     "container": true,

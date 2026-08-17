@@ -75,6 +75,32 @@ struct SelectOptions : FloatingOptions {
     /** Drawn where the rows would be when nothing matches. An empty list with
      *  no explanation reads as a list that failed to load. */
     std::string_view emptyMessage = "No matches";
+
+    // ---- more than one at a time --------------------------------------------
+    /**
+     * The reader may take several rows rather than one.
+     *
+     * An option and not a `multiSelect` component beside this, for the third
+     * time the same argument has been settled here: everything that makes a
+     * select a select is unchanged by how many rows it keeps. The value is
+     * still the caller's, the highlight is still separate from it, the list is
+     * still a popover. What changes is that a row **toggles** instead of
+     * replacing, that the list stays open so a second row can be taken, and
+     * that the closed box has more than one thing to say.
+     *
+     * `multiple` is the *interaction*; the caller's container is the value. Use
+     * the overload that takes a vector of indices to pass more than one — the
+     * single-value form still works and simply holds at most one.
+     */
+    bool multiple = false;
+    /**
+     * How the closed box reads once several rows are taken.
+     *
+     * Below the threshold the labels are listed; at or above it the box says
+     * "N selected", because a box listing nine branch names is a box whose own
+     * label has gone. Zero always lists them.
+     */
+    std::size_t summariseFrom = 3;
 };
 
 /**
@@ -134,5 +160,31 @@ struct SelectResult {
 [[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
                     const std::vector<std::string>& items, std::optional<std::size_t> selected,
                     SelectState& state, const SelectOptions& options = {});
+
+/**
+ * The same control, holding more than one value.
+ *
+ * `selected` is the caller's own set, as indices into `items` — a vector rather
+ * than a `std::set` because the order a reader chose things in is worth keeping
+ * and because most callers already have one.
+ *
+ * `SelectResult::chosen` is the row that was **toggled** this frame, not the new
+ * value: the component says what happened and the caller decides what its set
+ * becomes, exactly as `checkbox` reports a press rather than writing a bool.
+ *
+ *     if (const auto hit = result.chosen) {
+ *         const auto at = std::find(picked.begin(), picked.end(), *hit);
+ *         if (at != picked.end()) picked.erase(at);
+ *         else picked.push_back(*hit);
+ *     }
+ *
+ * Set `SelectOptions::multiple` with it. Without that the list closes on the
+ * first choice and the rows draw as values rather than as things to tick, which
+ * is the single-value control with a set awkwardly attached.
+ */
+[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id,
+                    const std::vector<std::string>& items,
+                    const std::vector<std::size_t>& selected, SelectState& state,
+                    const SelectOptions& options = {});
 
 }  // namespace gbui

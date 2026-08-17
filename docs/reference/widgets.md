@@ -9,9 +9,9 @@ uses. Four umbrellas gather the groups for callers who want all of it:
 
 | Umbrella | What it pulls in |
 | --- | --- |
-| `gbui/widgets/elements.hpp` | `text`, `hyperlink`, `label`, `icon`, `image`, `badge`, `progressBar`, `divider`, `spacer` — and the input set: `button`, `checkbox`, `radio`, `toggle`, `select`, `slider`, `textInput`, `textarea`, and the `field` that wraps one |
-| `gbui/widgets/containers.hpp` | `box`, `panel`, `listRow`, `toolbar`, `scrollArea`, `scrollbar`, `table`, `tabs`, `tabPanels`, `virtualList`, `marquee`, `splitPane`, `treeView`, `carousel`, `gallery`, `compare` |
-| `gbui/widgets/overlays.hpp` | `tooltip`, `popover`, `menuItem`, `modal`, `drawer`, `toast` |
+| `gbui/widgets/elements.hpp` | `text`, `hyperlink`, `label`, `icon`, `image`, `badge`, `avatar`, `chip`, `kbd`, `spinner`, `skeleton`, `progressBar`, `divider`, `spacer`, `breadcrumbs`, `pagination` — and the input set: `button`, `checkbox`, `radio`, `toggle`, `select`, `segmented`, `slider`, `textInput`, `textarea`, and the `field` that wraps one |
+| `gbui/widgets/containers.hpp` | `box`, `panel`, `listRow`, `toolbar`, `accordion`, `scrollArea`, `scrollbar`, `table`, `tabs`, `tabPanels`, `virtualList`, `marquee`, `splitPane`, `treeView`, `carousel`, `gallery`, `compare` |
+| `gbui/widgets/overlays.hpp` | `tooltip`, `popover`, `menu`, `contextMenu`, `menuItem`, `modal`, `drawer`, `banner`, `toast` |
 | `gbui/widgets/components.hpp` | the composed editors — `colorPicker`, `datePicker`, `timePicker`, `dateTimePicker`, `richEditor`, each with its field form — and the charts |
 
 **Which group does a thing belong to?** Four questions, asked in this order.
@@ -1187,6 +1187,150 @@ The filterable form is `filter` — see [Select, and the combobox it
 becomes](#select-and-the-combobox-it-becomes), where the keyboard moves into the
 filter box and the control hands the target back rather than moving focus
 itself.
+
+### More than one at a time
+
+```cpp
+SelectOptions options;
+options.multiple = true;
+
+const SelectResult hit = select(ui, input, "branches", items, picked, state, options);
+if (const auto row = hit.chosen) {
+    const auto at = std::find(picked.begin(), picked.end(), *row);
+    if (at != picked.end()) picked.erase(at);
+    else picked.push_back(*row);
+}
+```
+
+**An option, not a `multiSelect` component beside it** — the third time that
+argument has been settled here, after `textField`/`numberField` → `textInput`
+and `combobox` → `select.filter`. Everything that makes a select a select is
+unchanged by how many rows it keeps: the value is still the caller's, the
+highlight is still separate from it, the list is still a popover. What changes is
+that a row **toggles** instead of replacing, that the list stays open so a second
+row can be taken, and that the closed box has more than one thing to say.
+
+`chosen` is the row that was **toggled**, not the new value: the component says
+what happened and the caller decides what its set becomes, exactly as `checkbox`
+reports a press rather than writing a `bool`.
+
+`multiple` is the *interaction* and the caller's container is the *value*, which
+is why the overload taking a `std::vector<std::size_t>` exists rather than a
+second component. The single-value form still works with `multiple` on and simply
+holds at most one.
+
+Below `summariseFrom` (3) the closed box lists the labels, because "main,
+feat/a" is more use than "2 selected"; at or above it, the count — a box listing
+nine branch names is a box whose own label has gone. The list carries
+`aria-multiselectable`, without which a multi-select list is announced exactly
+like a single-select one and the first choice appears to have thrown the previous
+one away.
+
+## Menus
+
+```cpp
+MenuResult menu(Ui&, const Interaction&, id, anchorId, entries, MenuState&, options);
+MenuResult contextMenu(Ui&, const Interaction&, id, Vec2 at, entries, MenuState&, options);
+```
+
+`menuItem` has always been the row; these are the box the rows go in, and the
+keyboard that walks them. Before them every caller wired a `popover` to a list by
+hand — which meant every caller got the geometry right and the keyboard wrong,
+because the geometry is visible and the keyboard is not.
+
+**One component, two anchors.** A dropdown hangs off a control and a context menu
+appears where the pointer was; that is the *only* difference, so anchoring to a
+zero-sized rectangle at a point is all the second one is. It flips off the bottom
+of the window and shifts off its right through the same placement engine, with no
+second path to get wrong.
+
+A menu is **one Tab stop, not one per row.** Nine commands that each took the
+keyboard would be nine Tab presses to cross one menu. The arrows move the
+highlight and skip separators and disabled rows — a highlight that stopped on
+either looks stuck, and Enter on it does nothing — Home and End reach the ends,
+Enter and Space activate, and Escape asks to close.
+
+```cpp
+if (input.secondaryClicked("row.7")) {
+    menuAt = input.pointer();      // where it was *then*
+    menuOpen = true;
+}
+```
+
+`Interaction::secondaryClicked` is the right button, and it exists for this and
+nothing else yet. It is its own press-and-release pair and deliberately shares
+none of the primary path: a right-click moves no focus and starts no drag, so a
+slider does not jump when somebody right-clicks it. Keep the pointer position
+from the frame the menu was asked for — one that re-reads the live position walks
+away from itself as the reader moves towards it.
+
+## Segmented, breadcrumbs, pagination
+
+```cpp
+std::optional<std::size_t> segmented(Ui&, const Interaction&, id, segments, selected, options);
+BreadcrumbsResult breadcrumbs(Ui&, const Interaction&, id, trail, options);
+PaginationResult pagination(Ui&, const Interaction&, id, current, pageCount, options);
+```
+
+**`segmented` is a `select` whose options are worth the room.** Two or three —
+unified and split, day and week and month — read faster as a row than as a box
+that has to be opened, and the reader can see what they did *not* pick. Past
+about five, use `select`: a strip of nine is a row of tiny targets that wraps.
+
+It is a **radio group and not a tab strip**, though it looks identical to one.
+Tabs *show a panel*: the strip and the panel are one widget. This changes a
+**value**, and the thing it changes may be nowhere near it — announced as tabs, a
+reader is told to expect a panel that never comes. The arrows move *and choose*
+in one press, because a radio group that needed a second press to commit is not
+how any platform's works.
+
+**`breadcrumbs` says where you are as much as it navigates**, which is why the
+last crumb is not a link and takes no focus: a link to the page you are on is a
+control that does nothing. It carries `current` — ARIA's `aria-current`, not
+`selected`, because the reader is not being told they picked it.
+
+Given `maxVisible`, the **middle** collapses to an ellipsis and the ends stay:
+those are the two a reader needs — where they are, and the root they can get back
+to. The count is in the ellipsis's own name, because "…" alone is a button whose
+whole meaning is the number it stands for.
+
+**`pagination` always keeps the first and last page**, whatever the current one
+is: "jump to the end" is the second most common thing anybody does with a
+paginator, and hiding it makes them press next forty times. A gap of exactly one
+page is drawn as the page — an ellipsis standing in for a single button is
+strictly worse than the button. The current page takes `current` and no press.
+
+For data a reader *scans* rather than navigates, `virtualList` is the better
+answer: it builds only the visible rows of fifty thousand and nobody has to
+decide what a page is. Reach for a paginator when the underlying query is paged
+anyway.
+
+## Accordion
+
+```cpp
+AccordionResult accordion(Ui&, const Interaction&, id, sections, AccordionState&, options);
+```
+
+Not `tabs`, though both hide all but one thing: tabs are *one* of a set and the
+set is always visible, while an accordion can have **none** open or all of them,
+and the sections it is not showing take no room. Use tabs when the reader is
+switching between views of the same size, and this when they are opening a long
+thing to read it.
+
+A section's body is a **callback**, called only while it is open — a closed
+section costs nothing rather than being built and hidden. Every header is a
+button carrying `expanded`, so a reader is told what a press will do before they
+make it.
+
+`exclusive` is **off** by default, which is the less obvious choice: an accordion
+whose sections close each other cannot be used to *compare* two of them, and a
+reader who opens the second and loses the first will open both again one at a
+time. Turn it on when the sections are long enough that two on screen would be
+worse.
+
+The arrows walk the headers and **stop at the ends** rather than wrapping, unlike
+a radio group: a stack of sections has a visible top and bottom, and wrapping
+from the last to the first reads as the list having scrolled.
 
 ## Charts
 

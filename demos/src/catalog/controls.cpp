@@ -112,8 +112,7 @@ void addControlExamples(std::vector<Example>& out) {
                          {.size = 13.0f, .color = Token::TextMuted, .phase = state.clock * 1.4f});
                  text(ui, "Pushing…", {.color = Token::TextMuted, .size = 12.0f});
              }
-         },
-         60});
+         }, 60});
 
     out.push_back({"skeleton",
                    [](Ui& ui, const Interaction&, State& state) {
@@ -131,8 +130,7 @@ void addControlExamples(std::vector<Example>& out) {
                            skeleton(ui,
                                     {.width = 140.0f, .height = 9.0f, .phase = state.clock * 0.6f});
                        }
-                   },
-                   110});
+                   }, 110});
 
     out.push_back({"progressBar", [](Ui& ui, const Interaction&, State& state) {
                        progressBar(ui, {.value = state.fraction, .name = "Cloning"});

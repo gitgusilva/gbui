@@ -32,6 +32,19 @@ namespace gbui {
 struct InputFrame {
     Vec2 pointer{};
     bool pointerDown = false;
+    /**
+     * The secondary button — right, or a two-finger tap.
+     *
+     * Separate from `pointerDown` and deliberately not folded into a button
+     * mask: everything in this library that answers a press means the *primary*
+     * one, and a mask would have made every one of those call sites decide
+     * which buttons it meant. A secondary press moves no focus and starts no
+     * drag, so a slider does not jump when somebody right-clicks it.
+     *
+     * `contextMenu` is what this is for, and until it existed nothing needed a
+     * second button at all.
+     */
+    bool secondaryDown = false;
     /** Wheel movement in lines; positive scrolls the content up. */
     float wheel = 0.0f;
     /**
@@ -51,6 +64,7 @@ struct InputFrame {
     void swap_with(InputFrame& other) {
         pointer = other.pointer;
         pointerDown = other.pointerDown;
+        secondaryDown = other.secondaryDown;
         wheel = other.wheel;
         modifiers = other.modifiers;
         keys.swap(other.keys);
@@ -133,6 +147,26 @@ public:
      * `pressedOutside`, which is the usual reason to want this.
      */
     bool pointerPressed() const { return pointerPressed_; }
+    /**
+     * True for one frame, when the *secondary* button was released over the same
+     * tag it was pressed on — `clicked`, for the other button.
+     *
+     * What a context menu is opened by. Take the pointer position with it and
+     * keep it: a menu that re-reads the live position walks away from itself as
+     * the reader moves towards it.
+     *
+     *     if (input.secondaryClicked("row.7")) {
+     *         menuAt = input.pointer();
+     *         menuOpen = true;
+     *     }
+     */
+    bool secondaryClicked(std::string_view tag) const {
+        return !tag.empty() && tag == secondaryClicked_;
+    }
+    /** The tag the secondary button was released over, or empty. For a caller
+     *  with many rows that would otherwise ask about each of them. */
+    std::string_view secondaryClicked() const { return secondaryClicked_; }
+    bool secondaryDown() const { return secondaryDown_; }
     /** The tag the current press started on, held until release even when the
      *  pointer leaves it. A slider keeps following the pointer that way. */
     std::string_view dragging() const { return pressed_; }
@@ -226,6 +260,10 @@ private:
     Cursor cursor_ = Cursor::Default;
     bool pointerDown_ = false;
     bool pointerPressed_ = false;
+    bool secondaryDown_ = false;
+    bool secondaryWasDown_ = false;
+    std::string secondaryPressed_;
+    std::string secondaryClicked_;
     bool wasDown_ = false;
     bool focusVisible_ = false;
     bool keyboardModality_ = false;

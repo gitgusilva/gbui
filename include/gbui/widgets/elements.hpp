@@ -39,6 +39,7 @@
 // ---- content ---------------------------------------------------------------
 #include "gbui/widgets/avatar.hpp"
 #include "gbui/widgets/badge.hpp"
+#include "gbui/widgets/breadcrumbs.hpp"
 #include "gbui/widgets/banner.hpp"
 #include "gbui/widgets/chip.hpp"
 #include "gbui/widgets/kbd.hpp"
@@ -58,6 +59,8 @@
 #include "gbui/widgets/field.hpp"
 #include "gbui/widgets/radio.hpp"
 #include "gbui/widgets/select.hpp"
+#include "gbui/widgets/pagination.hpp"
+#include "gbui/widgets/segmented.hpp"
 #include "gbui/widgets/slider.hpp"
 #include "gbui/widgets/textarea.hpp"
 #include "gbui/widgets/textInput.hpp"

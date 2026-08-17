@@ -272,9 +272,12 @@ void Host::pointerMove(float x, float y) { pending_.pointer = {x, y}; }
 
 void Host::pointerButton(bool down) { pending_.pointerDown = down; }
 
+void Host::secondaryButton(bool down) { pending_.secondaryDown = down; }
+
 void Host::pointerLeave() {
     pending_.pointer = {-1.0f, -1.0f};
     pending_.pointerDown = false;
+    pending_.secondaryDown = false;
 }
 
 void Host::wheel(float lines) { pending_.wheel += lines; }

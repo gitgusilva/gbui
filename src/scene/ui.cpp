@@ -123,6 +123,8 @@ Ui& Ui::accessible(NodeId node, const Accessibility& info) {
     mergeFlag(target.state.invalid, info.state.invalid);
     mergeFlag(target.state.busy, info.state.busy);
     mergeFlag(target.state.required, info.state.required);
+    mergeFlag(target.state.current, info.state.current);
+    mergeFlag(target.state.multiSelectable, info.state.multiSelectable);
     if (info.state.sorted != Sort::Unset) target.state.sorted = info.state.sorted;
 
     if (info.value.present) {

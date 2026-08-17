@@ -88,4 +88,18 @@ struct PopoverOptions : FloatingOptions {
 Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
                   std::string_view anchorId, const PopoverOptions& options = {});
 
+/**
+ * The same box, anchored to a rectangle the caller has rather than to a tag.
+ *
+ * For the two cases a tag cannot express: a menu at the pointer, where the
+ * anchor is a *point* and nothing was ever laid out there, and a box hanging off
+ * geometry the caller worked out itself. A zero-sized rectangle is a legitimate
+ * anchor — the placement engine only ever reads its edges.
+ *
+ * The tagged form is this one with `input.frameOf(anchorId)` passed in, which is
+ * why there is one implementation and not two.
+ */
+Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, Rect anchor,
+                  const PopoverOptions& options = {});
+
 }  // namespace gbui

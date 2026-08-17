@@ -138,12 +138,21 @@ public:
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         mouse_.leftDown = true;
                         input_.pointerDown = true;
+                    } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                        // The secondary button, which is what a context menu is
+                        // opened by. Kept level like the primary one, and
+                        // re-asserted below for the same reason.
+                        mouse_.rightDown = true;
+                        input_.secondaryDown = true;
                     }
                     break;
                 case SDL_MOUSEBUTTONUP:
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         mouse_.leftDown = false;
                         input_.pointerDown = false;
+                    } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                        mouse_.rightDown = false;
+                        input_.secondaryDown = false;
                     }
                     break;
                 case SDL_MOUSEWHEEL:
@@ -202,6 +211,7 @@ public:
     InputFrame takeInput() override {
         input_.pointer = mouse_.position;
         input_.pointerDown = mouse_.leftDown;
+        input_.secondaryDown = mouse_.rightDown;
         InputFrame frame;
         frame.swap_with(input_);
         return frame;

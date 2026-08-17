@@ -1,5 +1,6 @@
 #include "gbui/widgets/select.hpp"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -302,6 +303,171 @@ TEST("a filtering list closes on an outside press too, and keeps the keyboard ho
     // The keyboard came back to the box rather than staying on a filter box
     // that no longer exists.
     CHECK(combo.input.isFocused("sel"));
+}
+
+// ---- more than one at a time ------------------------------------------------
+
+namespace {
+
+/** The same control holding a set, with the caller applying each toggle to its
+ *  own container — which is the contract: the component says what happened. */
+struct Multi {
+    Theme theme = Theme::dark();
+    Arena arena;
+    Interaction input;
+    SelectState state;
+    SelectOptions options{};
+    std::vector<std::string> items{"main", "feat/a", "feat/b", "fix/c", "release/1"};
+    std::vector<std::size_t> picked{};
+    std::optional<std::size_t> toggled;
+
+    Multi() { options.multiple = true; }
+
+    void frame(const InputFrame& event = {}) {
+        input.update(arena, arena.empty() ? NodeId{} : NodeId(0), event);
+        arena.reset();
+        Ui ui(arena);
+        {
+            auto root = ui.column({.gap = 6.0f, .padding = Edges::all(10.0f)});
+            const SelectResult result = select(ui, input, "sel", items, picked, state, options);
+            toggled = result.chosen;
+            if (result.chosen) {
+                const auto at = std::find(picked.begin(), picked.end(), *result.chosen);
+                if (at != picked.end()) picked.erase(at);
+                else picked.push_back(*result.chosen);
+            }
+            if (result.focus) input.focus(*result.focus, FocusSource::Keyboard);
+            (void)checkbox(ui, input, "after", false, {.label = "something else"});
+            (void)root;
+        }
+        LayoutContext context;
+        context.theme = &theme;
+        layout(arena, ui.root(), kWindow, context);
+    }
+
+    void settle() {
+        frame();
+        frame();
+    }
+
+    void press(Key key) {
+        InputFrame event;
+        event.keys.push_back({key, {}});
+        frame(event);
+    }
+
+    void clickAt(Vec2 point) {
+        InputFrame down;
+        down.pointer = point;
+        down.pointerDown = true;
+        frame(down);
+        InputFrame up;
+        up.pointer = point;
+        frame(up);
+    }
+
+    Vec2 centreOf(std::string_view tag) const {
+        const Rect box = input.frameOf(tag);
+        return {box.x + box.width / 2.0f, box.y + box.height / 2.0f};
+    }
+
+    const Accessibility* accessibilityOf(std::string_view tag) const {
+        for (std::size_t i = 0; i < arena.size(); ++i) {
+            const NodeId id{static_cast<std::uint32_t>(i)};
+            if (arena[id].id == tag) return arena.accessibility(id);
+        }
+        return nullptr;
+    }
+};
+
+}  // namespace
+
+TEST("a row toggles rather than replacing, and the list stays open") {
+    // A reader taking three branches should not have to re-open the list twice.
+    Multi multi;
+    multi.settle();
+    multi.clickAt(multi.centreOf("sel"));
+    multi.frame();
+    CHECK(multi.state.open);
+
+    multi.clickAt(multi.centreOf("sel.list.1"));
+    CHECK(multi.state.open);
+    CHECK_EQ(multi.picked.size(), std::size_t{1});
+
+    multi.frame();
+    multi.clickAt(multi.centreOf("sel.list.3"));
+    CHECK(multi.state.open);
+    CHECK_EQ(multi.picked.size(), std::size_t{2});
+
+    // And the same row again takes it off.
+    multi.frame();
+    multi.clickAt(multi.centreOf("sel.list.1"));
+    CHECK_EQ(multi.picked.size(), std::size_t{1});
+    CHECK_EQ(multi.picked.front(), std::size_t{3});
+}
+
+TEST("the closed box lists what was taken, then counts it") {
+    // A box listing nine branch names is a box whose own label has gone.
+    Multi multi;
+    multi.picked = {0, 1};
+    multi.settle();
+    CHECK_EQ(std::string(multi.accessibilityOf("sel")->value.text), std::string("main, feat/a"));
+
+    multi.picked = {0, 1, 3};
+    multi.settle();
+    CHECK_EQ(std::string(multi.accessibilityOf("sel")->value.text), std::string("3 selected"));
+}
+
+TEST("the list says how many of it may be taken") {
+    // Without it a multi-select list is announced exactly like a single-select
+    // one, and the first choice appears to have thrown the previous one away.
+    Multi multi;
+    multi.settle();
+    multi.clickAt(multi.centreOf("sel"));
+    multi.frame();
+    CHECK(multi.accessibilityOf("sel.list")->state.multiSelectable == Flag::True);
+    CHECK(multi.accessibilityOf("sel.list")->role == Role::ListBox);
+}
+
+TEST("Return takes a row without closing, and Escape closes") {
+    Multi multi;
+    multi.settle();
+    multi.input.focus("sel", FocusSource::Keyboard);
+    multi.press(Key::Return);   // opens
+    multi.frame();
+    CHECK(multi.state.open);
+
+    multi.press(Key::Down);
+    multi.press(Key::Return);
+    CHECK(multi.state.open);
+    CHECK_EQ(multi.picked.size(), std::size_t{1});
+
+    multi.press(Key::Escape);
+    CHECK(!multi.state.open);
+}
+
+TEST("closed, the arrows open it rather than stepping a set") {
+    // Stepping a set has no meaning; opening is what the reader wanted anyway.
+    Multi multi;
+    multi.settle();
+    multi.input.focus("sel", FocusSource::Keyboard);
+    multi.press(Key::Down);
+    CHECK(multi.state.open);
+    CHECK(multi.picked.empty());
+}
+
+TEST("the single-value form still holds at most one, whatever multiple says") {
+    // `multiple` is the interaction; the caller's container is the value.
+    Combo combo;
+    combo.options.multiple = true;
+    combo.frame();
+    combo.frame();
+    combo.clickAt(combo.centreOf("sel"));
+    combo.frame();
+    combo.clickAt(combo.centreOf("sel.list.2"));
+    CHECK_EQ(combo.value.value_or(99), std::size_t{2});
+    // Still open, because that is what `multiple` means.
+    CHECK(combo.state.open);
 }
 
 // ---- pickers ---------------------------------------------------------------

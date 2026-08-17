@@ -48,6 +48,7 @@ bool sameAs(const AccessibilityNode& a, const AccessibilityNode& b) {
         return x.checked == y.checked && x.expanded == y.expanded && x.selected == y.selected &&
                x.pressed == y.pressed && x.disabled == y.disabled && x.readOnly == y.readOnly &&
                x.invalid == y.invalid && x.busy == y.busy && x.required == y.required &&
+               x.current == y.current && x.multiSelectable == y.multiSelectable &&
                x.sorted == y.sorted;
     };
     const auto sameValue = [](const AccessibilityValue& x, const AccessibilityValue& y) {

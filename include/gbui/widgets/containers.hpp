@@ -21,6 +21,7 @@
 #pragma once
 
 // ---- surfaces --------------------------------------------------------------
+#include "gbui/widgets/accordion.hpp"
 #include "gbui/widgets/box.hpp"
 #include "gbui/widgets/listRow.hpp"
 #include "gbui/widgets/panel.hpp"

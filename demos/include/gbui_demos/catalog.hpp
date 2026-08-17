@@ -93,6 +93,21 @@ struct State {
     DateTime stamp{Date{2026, 8, 12}, Time{14, 30, 0}};
     DateTimeFieldState stampState{};
 
+    /** Which sections of the `accordion` example are open. */
+    AccordionState sections{};
+    /** The `segmented` example's choice, and the `pagination` example's page. */
+    std::size_t segment = 1;
+    std::size_t page = 3;
+    /** The trail the `breadcrumbs` example is showing, as an index into it. */
+    std::size_t crumb = 0;
+    /** The two menus: where the highlight is, and where the pointer was when the
+     *  reader asked for one. */
+    MenuState menu{};
+    MenuState contextMenu{};
+    bool menuOpen = false;
+    bool contextOpen = false;
+    Vec2 contextAt{};
+
     bool modalOpen = false;
     /** Whether the `drawer` example's panel is in. */
     bool drawerOpen = false;

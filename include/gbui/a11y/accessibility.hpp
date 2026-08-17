@@ -81,6 +81,27 @@ struct AccessibilityState {
     /** Working: a value is being fetched, a list is loading. */
     Flag busy = Flag::Unset;
     Flag required = Flag::Unset;
+    /**
+     * The one in the set that the reader is *at* — ARIA's `aria-current`.
+     *
+     * Not `selected`, and the difference is the whole reason this exists: a
+     * breadcrumb trail's last crumb and a paginator's page 3 are not *chosen*
+     * from a set of options, they are where you already are. A reader running
+     * through a trail of five links needs to know which of them is the page
+     * they are on, and `selected` would say something else — that they picked
+     * it, and could pick another.
+     */
+    Flag current = Flag::Unset;
+    /**
+     * More than one of the children may be selected at once — ARIA's
+     * `aria-multiselectable`, on the container rather than on a child.
+     *
+     * A reader meeting a list of options is told how many of them they may
+     * take. Without it a multi-select list is announced exactly like a
+     * single-select one, and the first choice appears to have thrown away the
+     * previous one.
+     */
+    Flag multiSelectable = Flag::Unset;
     /** Column headers only. `None` says "sortable, not sorted by". */
     Sort sorted = Sort::Unset;
 };

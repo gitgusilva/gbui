@@ -119,6 +119,67 @@ void addOverlayExamples(std::vector<Example>& out) {
                        }
                    }, 220});
 
+    out.push_back({"menu",
+                   [](Ui& ui, const Interaction& input, State& state) {
+                       static const std::vector<MenuEntry> entries = {
+                           {.id = "stage", .label = "Stage file", .icon = Icon::FilePlus,
+                            .shortcut = "Ctrl+S"},
+                           {.id = "tags", .label = "Show tags", .checked = true},
+                           {},   // an entry with no label is a separator
+                           {.id = "discard", .label = "Discard changes",
+                            .icon = Icon::RotateCcw, .danger = true}};
+
+                       button(ui, input, "BRANCH",
+                              {.variant = ButtonVariant::Secondary, .id = "catalog.menu.open"});
+                       if (input.clicked("catalog.menu.open")) state.menuOpen = !state.menuOpen;
+                       if (!state.menuOpen) return;
+
+                       MenuOptions options;
+                       options.name = "Branch";
+                       const MenuResult hit = menu(ui, input, "catalog.menu", "catalog.menu.open",
+                                                   entries, state.menu, options);
+                       if (hit.focus) state.focusRequest = std::string(*hit.focus);
+                       if (hit.chosen || hit.dismissed) state.menuOpen = false;
+                   }, 200});
+
+    out.push_back({"contextMenu",
+                   [](Ui& ui, const Interaction& input, State& state) {
+                       static const std::vector<MenuEntry> entries = {
+                           {.id = "open", .label = "Open", .icon = Icon::File},
+                           {.id = "history", .label = "File history",
+                            .icon = Icon::GitCommitHorizontal},
+                           {},
+                           {.id = "delete", .label = "Delete", .danger = true}};
+
+                       // A right-click target, which is what this component is
+                       // opened by — `Interaction::secondaryClicked` exists for
+                       // exactly this and for nothing else yet.
+                       {
+                           auto row = listRow(ui, {.id = "catalog.context.row"});
+                           text(ui, "Right-click this row",
+                                {.color = Token::Text, .grow = 1.0f});
+                           text(ui, "src/widgets/toast.cpp",
+                                {.color = Token::TextMuted, .role = FontRole::Mono,
+                                 .size = 11.0f});
+                       }
+                       if (input.secondaryClicked("catalog.context.row")) {
+                           // The pointer as it was *then*: a menu that re-read
+                           // the live position would walk away from itself as
+                           // the reader moved towards it.
+                           state.contextAt = input.pointer();
+                           state.contextOpen = true;
+                       }
+                       if (!state.contextOpen) return;
+
+                       MenuOptions options;
+                       options.name = "File";
+                       const MenuResult hit =
+                           contextMenu(ui, input, "catalog.context", state.contextAt, entries,
+                                       state.contextMenu, options);
+                       if (hit.focus) state.focusRequest = std::string(*hit.focus);
+                       if (hit.chosen || hit.dismissed) state.contextOpen = false;
+                   }, 220});
+
     out.push_back({"banner",
                    [](Ui& ui, const Interaction& input, State& state) {
                        auto column = ui.column({.gap = 10.0f});
@@ -136,8 +197,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                                state.off = true;
                            }
                        }
-                   },
-                   150});
+                   }, 150});
 
     out.push_back({"drawer", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "FILTERS",

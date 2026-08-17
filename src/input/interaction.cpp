@@ -38,6 +38,7 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
     wheel_ = frame.wheel;
     modifiers_ = frame.modifiers;
     clicked_.clear();
+    secondaryClicked_.clear();
     pressStarted_.clear();
 
     const bool haveTree = root.valid() && !arena.empty();
@@ -112,6 +113,23 @@ void Interaction::update(const Arena& arena, NodeId root, const InputFrame& fram
 
     wasDown_ = frame.pointerDown;
     pointerDown_ = frame.pointerDown;
+
+    // ---- the secondary button ----------------------------------------------
+    //
+    // Its own press-and-release pair, and deliberately none of the rest: it
+    // moves no focus, starts no drag and sets no hover. A right-click on a
+    // slider must not take the keyboard off whatever had it and must not drag
+    // the thumb, which is exactly what sharing the primary path would do.
+    if (frame.secondaryDown && !secondaryWasDown_) {
+        secondaryPressed_ = std::string(under);
+    } else if (!frame.secondaryDown && secondaryWasDown_) {
+        if (!secondaryPressed_.empty() && secondaryPressed_ == under) {
+            secondaryClicked_ = secondaryPressed_;
+        }
+        secondaryPressed_.clear();
+    }
+    secondaryWasDown_ = frame.secondaryDown;
+    secondaryDown_ = frame.secondaryDown;
 
     // The cursor comes from the node under the pointer, walking up until one
     // has an opinion — so a label inside a button still shows the button's.

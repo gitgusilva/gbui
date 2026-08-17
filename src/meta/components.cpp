@@ -10,7 +10,7 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(73);
+    out.reserve(81);
 
     out.push_back(ComponentInfo{
         "avatar",
@@ -62,6 +62,23 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "BannerResult banner(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, const BannerOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "breadcrumbs",
+        "Elements",
+        "gbui/widgets/breadcrumbs.hpp",
+        "A path, with everything but the last step navigable. The last crumb takes `current`, which is ARIA's `aria-current` and not `selected`: a reader is not being told they picked it, they are being told it is where they are.",
+        "Where you are, and every step back to the top.",
+        "BreadcrumbsOptions",
+        {
+            PropertyInfo{"maxVisible", PropertyKind::Number, "std::size_t", "0", {}, "How many crumbs may be drawn before the middle collapses. Zero draws all of them. Counted in *crumbs*, not pixels, because a trail that measured itself would need last frame's width and would therefore be one frame wrong every time the window changed — visibly, since the thing that changes is how many steps you can see.", false},
+            PropertyInfo{"separator", PropertyKind::Icon, "Icon", "Icon::ChevronRight", {}, "Drawn between crumbs. A glyph rather than a character so it cannot be mistaken for part of a name.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "\"Breadcrumb\"", {}, "What the trail is, for a reader who arrives in the middle of a page. \"Breadcrumb\" is what every screen reader's user expects to hear.", false},
+            PropertyInfo{"size", PropertyKind::Number, "float", "12.5f", {}, "", false},
+        },
+        false,
+        true,
+        "BreadcrumbsResult breadcrumbs(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Crumb>& trail, const BreadcrumbsOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "button",
@@ -261,6 +278,23 @@ std::vector<ComponentInfo> build() {
         "std::optional<std::string_view> label(Ui& ui, const Interaction& input, std::string_view id, std::string_view text, const LabelOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "pagination",
+        "Elements",
+        "gbui/widgets/pagination.hpp",
+        "A paginator for `pageCount` pages, sitting on `current` (zero-based). Left and Right step a page while the control has focus, Home and End reach the ends. The current page carries `current` — ARIA's `aria-current`, not `selected`: the reader is being told where they are, not that they chose it from a set of options they could choose differently.",
+        "Which page you are on, and the ones you can reach from here.",
+        "PaginationOptions",
+        {
+            PropertyInfo{"around", PropertyKind::Number, "std::size_t", "1", {}, "How many numbered buttons to draw around the current page, on each side. One gives `1 … 4 5 6 … 20`, which is the shape most sites settled on: far enough to step without aiming, small enough to fit on a narrow window.", false},
+            PropertyInfo{"arrows", PropertyKind::Bool, "bool", "true", {}, "Draw the previous and next arrows. Off leaves only the numbers, for a strip that sits under something with its own paging controls.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "\"Pagination\"", {}, "What the whole control is for — \"Search results\". A paginator with no name is a row of numbers a reader has to infer the subject of.", false},
+            PropertyInfo{"size", PropertyKind::Number, "float", "12.5f", {}, "", false},
+        },
+        false,
+        true,
+        "PaginationResult pagination(Ui& ui, const Interaction& input, std::string_view id, std::size_t current, std::size_t pageCount, const PaginationOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "progressBar",
         "Elements",
         "gbui/widgets/progress.hpp",
@@ -298,6 +332,24 @@ std::vector<ComponentInfo> build() {
         "bool radio(Ui& ui, const Interaction& input, std::string_view id, bool selected, const RadioOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "segmented",
+        "Elements",
+        "gbui/widgets/segmented.hpp",
+        "A row of segments, one of them chosen. Returns the index pressed this frame, or nothing. The value is the caller's, like every other control here. The keyboard is ARIA's radio group, which is one Tab stop and not one per segment: Tab reaches the row, the arrows move *and choose* — because a radio group with a highlight separate from its value is a control where the reader has to press twice — and Home and End go to the ends.",
+        "A row of two to five choices, all of them on screen at once.",
+        "SegmentedOptions",
+        {
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the whole row is for — \"Diff layout\", \"Range\". A group of choices with no name is a set of buttons a reader has to guess the subject of.", false},
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"stretch", PropertyKind::Bool, "bool", "false", {}, "Each segment takes an equal share of the width. Off sizes each to its own label, which is what a strip inside a toolbar wants.", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height, less two pixels for the track it sits in — so a strip lines up with the controls beside it.", false},
+            PropertyInfo{"size", PropertyKind::Number, "float", "12.0f", {}, "", false},
+        },
+        false,
+        true,
+        "std::optional<std::size_t> segmented(Ui& ui, const Interaction& input, std::string_view id, const std::vector<Segment>& segments, std::size_t selected, const SegmentedOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "select",
         "Elements",
         "gbui/widgets/select.hpp",
@@ -317,10 +369,39 @@ std::vector<ComponentInfo> build() {
             PropertyInfo{"filter", PropertyKind::Bool, "bool", "false", {}, "A box at the top of the open list that narrows it as the reader types. **Hand `SelectResult::focus` to `Interaction::focus` when this is on.** Without it the filter box still works — a click focuses it — but it will not have the keyboard the moment the list opens, which is the whole gesture.", false},
             PropertyInfo{"filterPlaceholder", PropertyKind::Text, "std::string_view", "\"Type to filter…\"", {}, "The filter box's own hint.", false},
             PropertyInfo{"emptyMessage", PropertyKind::Text, "std::string_view", "\"No matches\"", {}, "Drawn where the rows would be when nothing matches. An empty list with no explanation reads as a list that failed to load.", false},
+            PropertyInfo{"multiple", PropertyKind::Bool, "bool", "false", {}, "The reader may take several rows rather than one. An option and not a `multiSelect` component beside this, for the third time the same argument has been settled here: everything that makes a select a select is unchanged by how many rows it keeps. The value is still the caller's, the highlight is still separate from it, the list is still a popover. What changes is that a row **toggles** instead of replacing, that the list stays open so a second row can be taken, and that the closed box has more than one thing to say. `multiple` is the *interaction*; the caller's container is the value. Use the overload that takes a vector of indices to pass more than one — the single-value form still works and simply holds at most one.", false},
+            PropertyInfo{"summariseFrom", PropertyKind::Number, "std::size_t", "3", {}, "How the closed box reads once several rows are taken. Below the threshold the labels are listed; at or above it the box says \"N selected\", because a box listing nine branch names is a box whose own label has gone. Zero always lists them.", false},
         },
         false,
         true,
         "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "select",
+        "Elements",
+        "gbui/widgets/select.hpp",
+        "The same control, holding more than one value. `selected` is the caller's own set, as indices into `items` — a vector rather than a `std::set` because the order a reader chose things in is worth keeping and because most callers already have one. `SelectResult::chosen` is the row that was **toggled** this frame, not the new value: the component says what happened and the caller decides what its set becomes, exactly as `checkbox` reports a press rather than writing a bool. if (const auto hit = result.chosen) { const auto at = std::find(picked.begin(), picked.end(), *hit); if (at != picked.end()) picked.erase(at); else picked.push_back(*hit); } Set `SelectOptions::multiple` with it. Without that the list closes on the first choice and the rows draw as values rather than as things to tick, which is the single-value control with a set awkwardly attached.",
+        "A closed box that opens a list, and — with `filter` on — a combobox.",
+        "SelectOptions",
+        {
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What this is called, for a reader who cannot see the caption beside it. Unnecessary when a `label` or a `field` names it — those attach the relation, and a name given twice is a name read out twice. Necessary the rest of the time, and the placeholder is not a substitute: a box named by its placeholder loses its name the moment somebody types in it.", false},
+            PropertyInfo{"placeholder", PropertyKind::Text, "std::string_view", "\"Select…\"", {}, "", false},
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "Zero takes the active design's control height, so a select lines up with every other control on its row without anyone matching numbers.", false},
+            PropertyInfo{"maxVisible", PropertyKind::Number, "std::size_t", "12", {}, "How many rows fit before the list scrolls. The rest are reachable by scrolling or by walking to them with the arrow keys.", false},
+            PropertyInfo{"maxListHeight", PropertyKind::Number, "float", "kAuto", {}, "A hard ceiling in pixels, which wins over `maxVisible` when both would apply — a row count cannot know how tall the window is. `kAuto` leaves the row count in charge.", false},
+            PropertyInfo{"listScroll", PropertyKind::Enum, "ScrollAxis", "ScrollAxis::Vertical", {"None", "Vertical", "Horizontal"}, "Whether the open list scrolls at all. `None` clips it instead, for a caller that would rather constrain the list than let it move.", false},
+            PropertyInfo{"filter", PropertyKind::Bool, "bool", "false", {}, "A box at the top of the open list that narrows it as the reader types. **Hand `SelectResult::focus` to `Interaction::focus` when this is on.** Without it the filter box still works — a click focuses it — but it will not have the keyboard the moment the list opens, which is the whole gesture.", false},
+            PropertyInfo{"filterPlaceholder", PropertyKind::Text, "std::string_view", "\"Type to filter…\"", {}, "The filter box's own hint.", false},
+            PropertyInfo{"emptyMessage", PropertyKind::Text, "std::string_view", "\"No matches\"", {}, "Drawn where the rows would be when nothing matches. An empty list with no explanation reads as a list that failed to load.", false},
+            PropertyInfo{"multiple", PropertyKind::Bool, "bool", "false", {}, "The reader may take several rows rather than one. An option and not a `multiSelect` component beside this, for the third time the same argument has been settled here: everything that makes a select a select is unchanged by how many rows it keeps. The value is still the caller's, the highlight is still separate from it, the list is still a popover. What changes is that a row **toggles** instead of replacing, that the list stays open so a second row can be taken, and that the closed box has more than one thing to say. `multiple` is the *interaction*; the caller's container is the value. Use the overload that takes a vector of indices to pass more than one — the single-value form still works and simply holds at most one.", false},
+            PropertyInfo{"summariseFrom", PropertyKind::Number, "std::size_t", "3", {}, "How the closed box reads once several rows are taken. Below the threshold the labels are listed; at or above it the box says \"N selected\", because a box listing nine branch names is a box whose own label has gone. Zero always lists them.", false},
+        },
+        false,
+        true,
+        "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, const std::vector<std::size_t>& selected, SelectState& state, const SelectOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "skeleton",
@@ -559,6 +640,22 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "[[nodiscard]] bool toggle(Ui& ui, const Interaction& input, std::string_view id, bool on, const ToggleOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "accordion",
+        "Containers",
+        "gbui/widgets/accordion.hpp",
+        "A stack of collapsible sections. Enter or Space on a header opens it, the arrows move between headers, and Home and End reach the ends. Every header carries `expanded`, so a reader is told what a press will do before they make it.",
+        "Sections that open one at a time, or several.",
+        "AccordionOptions",
+        {
+            PropertyInfo{"exclusive", PropertyKind::Bool, "bool", "false", {}, "Opening one closes the others. Off by default, and that is the less obvious choice: an accordion whose sections close each other cannot be used to *compare* two of them, and a reader who opens the second and loses the first will open both again one at a time. Turn it on when the sections are long enough that two of them on screen would be worse.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the whole stack is, for a reader arriving at it.", false},
+            PropertyInfo{"gap", PropertyKind::Number, "float", "6.0f", {}, "", false},
+        },
+        false,
+        true,
+        "AccordionResult accordion(Ui& ui, const Interaction& input, std::string_view id, const std::vector<AccordionSection>& sections, AccordionState& state, const AccordionOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "box",
@@ -925,6 +1022,38 @@ std::vector<ComponentInfo> build() {
         "VirtualSlice virtualList(Ui& ui, const Interaction& input, std::string_view id, ScrollState& state, const VirtualListOptions& options, const std::function<void(Ui&, std::size_t)>& row);",
     });
     out.push_back(ComponentInfo{
+        "contextMenu",
+        "Overlays",
+        "gbui/widgets/contextMenu.hpp",
+        "The same menu, at a point. `at` is where the pointer was when the reader asked for it — keep it, because a menu that re-reads the live pointer position walks away from itself as the reader moves towards it. if (input.rightClicked(\"row\")) { menuAt = input.pointer(); menuOpen = true; } if (menuOpen) { const MenuResult hit = contextMenu(ui, input, \"row.menu\", menuAt, items, state); if (hit.dismissed || hit.chosen) menuOpen = false; }",
+        "A menu, and the same menu at a point rather than under a control.",
+        "MenuOptions",
+        {
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the menu is, announced before its first row.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "0.0f", {}, "How wide it is. Zero sizes it to its widest row, which is what a menu should do — a fixed width either truncates a command or leaves a gap.", false},
+            PropertyInfo{"maxVisible", PropertyKind::Number, "std::size_t", "14", {}, "How many rows before it scrolls.", false},
+        },
+        false,
+        true,
+        "MenuResult contextMenu(Ui& ui, const Interaction& input, std::string_view id, Vec2 at, const std::vector<MenuEntry>& entries, MenuState& state, const MenuOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "menu",
+        "Overlays",
+        "gbui/widgets/contextMenu.hpp",
+        "A menu hanging off `anchorId`. Draw it while the caller's own flag says it is open, exactly as `popover` is drawn — this holds no open state of its own.",
+        "A menu, and the same menu at a point rather than under a control.",
+        "MenuOptions",
+        {
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What the menu is, announced before its first row.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "0.0f", {}, "How wide it is. Zero sizes it to its widest row, which is what a menu should do — a fixed width either truncates a command or leaves a gap.", false},
+            PropertyInfo{"maxVisible", PropertyKind::Number, "std::size_t", "14", {}, "How many rows before it scrolls.", false},
+        },
+        false,
+        true,
+        "MenuResult menu(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const std::vector<MenuEntry>& entries, MenuState& state, const MenuOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "drawer",
         "Overlays",
         "gbui/widgets/drawer.hpp",
@@ -1039,6 +1168,31 @@ std::vector<ComponentInfo> build() {
         true,
         true,
         "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, std::string_view anchorId, const PopoverOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "popover",
+        "Overlays",
+        "gbui/widgets/popover.hpp",
+        "The same box, anchored to a rectangle the caller has rather than to a tag. For the two cases a tag cannot express: a menu at the pointer, where the anchor is a *point* and nothing was ever laid out there, and a box hanging off geometry the caller worked out itself. A zero-sized rectangle is a legitimate anchor — the placement engine only ever reads its edges. The tagged form is this one with `input.frameOf(anchorId)` passed in, which is why there is one implementation and not two.",
+        "An empty floating surface the caller fills.",
+        "PopoverOptions",
+        {
+            PropertyInfo{"minWidth", PropertyKind::Number, "float", "160.0f", {}, "", false},
+            PropertyInfo{"maxWidth", PropertyKind::Number, "float", "420.0f", {}, "", false},
+            PropertyInfo{"minHeight", PropertyKind::Number, "float", "kAuto", {}, "A ceiling on how tall it may grow. `kAuto` does *not* mean unbounded: it means **the room actually available on the side it lands on**, less the margin. A popup that would run past the bottom of the window stops at it and scrolls inside instead — which is what JetBrains' popups do, and the only behaviour that works when the anchor is near an edge. A number overrides that, and a smaller one wins.", false},
+            PropertyInfo{"maxHeight", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"allowOverflow", PropertyKind::Bool, "bool", "false", {}, "Lets a popup grow past the window's edge, for a caller that would rather clip than scroll. Off, because the default should be reachable.", false},
+            PropertyInfo{"scroll", PropertyKind::Enum, "ScrollAxis", "ScrollAxis::Vertical", {"None", "Vertical", "Horizontal"}, "Scrolls its own contents once `maxHeight` bites, rather than making the caller wrap everything in a scroll view. The axis is the caller's: `ScrollAxis::None` clips instead, which is what a popover that must never scroll wants. **`scrollState` has to be set too, or this does nothing.** Both of them together are what turns the ceiling into a scroll; an axis on its own leaves the box clipped, which looks like the popup simply lost its last rows. Three callers had set exactly this and only this, and the calendar opened near the bottom of a window was missing a week with no way to reach it. There is no default state to fall back on: state belongs to the application here as it does everywhere else.", false},
+            PropertyInfo{"scrollState", PropertyKind::Opaque, "ScrollState*", "nullptr", {}, "Where the scroll position lives, when the popover scrolls its own contents. Null means it does not: the box is still bounded by `maxHeight` and still clips, but nothing moves. State belongs to the application here as it does everywhere else — a popover that kept its own offset would be a component with memory, and the tree is rebuilt every frame.", false},
+            PropertyInfo{"matchAnchorWidth", PropertyKind::Bool, "bool", "false", {}, "Matches the anchor's width — what a select's list wants.", false},
+            PropertyInfo{"padding", PropertyKind::Edges, "Edges", "Edges::all(6.0f)", {}, "", false},
+            PropertyInfo{"gapBetweenItems", PropertyKind::Number, "float", "2.0f", {}, "Between the things *inside* the surface, as distinct from the padding around them. A menu wants a couple of pixels and a calendar wants none.", false},
+            PropertyInfo{"role", PropertyKind::Opaque, "Role", "Role::None", {}, "What the surface is, to a reader who cannot see it float. `None` by default and on purpose: a popover is a *placement*, not a kind of thing, and the same box holds a menu, a list of values and a calendar. Whoever opened it knows which — `select` says `ListBox`, a context menu says `Menu` — and a default of \"menu\" would put that word in front of every date picker in the tree.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What it is called, when the role is worth announcing.", false},
+        },
+        true,
+        true,
+        "Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, Rect anchor, const PopoverOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "toast",

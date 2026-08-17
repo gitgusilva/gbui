@@ -15,6 +15,57 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
 
 ### Added
 
+- **`menu` and `contextMenu`** — `menuItem` was always the row; these are the
+  box the rows go in and the keyboard that walks them. Before them every caller
+  wired a `popover` to a list by hand, which meant every caller got the geometry
+  right and the keyboard wrong, because the geometry is visible and the keyboard
+  is not.
+
+  **One implementation, two anchors.** A dropdown hangs off a control and a
+  context menu appears where the pointer was; that is the only difference, so
+  the second is the first anchored to a zero-sized rectangle at a point. It
+  flips and shifts through the same placement engine, with no second path to get
+  wrong. `popover` grew a rect-anchored overload for it.
+
+  A menu is one Tab stop, not one per row. The arrows skip separators and
+  disabled rows, because a highlight that stops on either looks stuck and Enter
+  on it does nothing.
+- **`Interaction::secondaryClicked` and `InputFrame::secondaryDown`** — the right
+  button, which the library did not have at all. A context menu you cannot
+  right-click to open is not one. It is its own press-and-release pair and shares
+  none of the primary path: a right-click moves no focus and starts no drag, so a
+  slider does not jump when somebody right-clicks it. Wired through the SDL2
+  backend and the WebAssembly embed, which also swallows the browser's own menu
+  over the canvas.
+- **`segmented`** — a `select` whose options are worth the room. A **radio group
+  and not a tab strip**, though it looks identical: tabs show a panel and the
+  strip and panel are one widget, while this changes a *value* that may be
+  nowhere near it. The arrows move *and* choose in one press, because a radio
+  group needing a second press to commit is not how any platform's works.
+- **`accordion`** — sections whose bodies are callbacks, called only while open,
+  so a closed section costs nothing rather than being built and hidden.
+  `exclusive` is off by default: an accordion whose sections close each other
+  cannot be used to compare two of them. The arrows stop at the ends rather than
+  wrapping, unlike a radio group — a stack has a visible top and bottom.
+- **`breadcrumbs`** — where the last crumb is not a link and takes no focus,
+  because a link to the page you are on is a control that does nothing. Given a
+  `maxVisible` the *middle* collapses, since the ends are the two a reader needs:
+  where they are, and the way home. The ellipsis says how many it stands for.
+- **`pagination`** — the first and last page are always present, because "jump
+  to the end" is the second most common thing anybody does with a paginator. A
+  gap of exactly one page is drawn as the page: an ellipsis standing in for a
+  single button is strictly worse than the button.
+- **`SelectOptions::multiple`**, and an overload taking a vector of indices. An
+  option rather than a `multiSelect` component, which is the third time that
+  argument has been settled here — everything that makes a select a select is
+  unchanged by how many rows it keeps. `chosen` is the row that was *toggled*,
+  not the new value: the component says what happened and the caller decides
+  what its set becomes. The closed box lists the labels until there are three,
+  then counts them.
+- **`AccessibilityState::current` and `multiSelectable`** — ARIA's `aria-current`
+  and `aria-multiselectable`. `current` is not `selected`, and the difference is
+  the point: a breadcrumb's last crumb and a paginator's page 3 are not *chosen*
+  from a set, they are where you already are.
 - **Six components the GitBox port asked for**, chosen by counting what the
   application actually repeats rather than by what a component list usually
   has: `spinner` (28 files use one), `avatar` (26), `banner` (6), `chip`,

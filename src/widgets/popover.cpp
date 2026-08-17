@@ -14,7 +14,13 @@ using namespace detail;
 
 Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id,
                   std::string_view anchorId, const PopoverOptions& options) {
-    const Rect anchor = input.frameOf(anchorId);
+    // Last frame's rectangle for the anchor, which is the frame the reader was
+    // looking at — the same one every hit test here uses.
+    return popover(ui, input, id, input.frameOf(anchorId), options);
+}
+
+Ui::Scope popover(Ui& ui, const Interaction& input, std::string_view id, Rect anchor,
+                  const PopoverOptions& options) {
     const Rect bounds = boundsFor(input, options);
 
     float width = options.matchAnchorWidth && anchor.width > 0.0f

@@ -403,6 +403,12 @@ EMSCRIPTEN_KEEPALIVE void gbui_demos_pointer(void* handle, float x, float y, int
     host->pointerButton(down != 0);
 }
 
+/** The secondary button, level like the primary one. What opens a context
+ *  menu, and the reason the page has to swallow the browser's own. */
+EMSCRIPTEN_KEEPALIVE void gbui_demos_secondary(void* handle, int down) {
+    asHost(handle)->secondaryButton(down != 0);
+}
+
 EMSCRIPTEN_KEEPALIVE void gbui_demos_pointer_leave(void* handle) { asHost(handle)->pointerLeave(); }
 
 EMSCRIPTEN_KEEPALIVE void gbui_demos_wheel(void* handle, float lines) {

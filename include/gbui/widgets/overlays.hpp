@@ -13,6 +13,7 @@
 // Each also has a header of its own.
 #pragma once
 
+#include "gbui/widgets/contextMenu.hpp"
 #include "gbui/widgets/drawer.hpp"
 #include "gbui/widgets/floating.hpp"
 #include "gbui/widgets/menu.hpp"

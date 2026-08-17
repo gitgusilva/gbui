@@ -263,7 +263,34 @@ export async function mountDemo(canvas, options = {}) {
     schedule()
   }
 
+  // The browser's own menu would land on top of the toolkit's. Swallowed for
+  // the canvas only, so the rest of the page keeps its right-click.
+  const onContextMenu = (event) => {
+    event.preventDefault()
+  }
+
+  const onSecondaryDown = (event) => {
+    if (event.button !== 2) return
+    const at = pointerAt(event)
+    canvas.focus({ preventScroll: true })
+    module._gbui_demos_pointer(handle, at.x, at.y, event.buttons & 1 ? 1 : 0)
+    module._gbui_demos_secondary(handle, 1)
+    schedule()
+  }
+
+  const onSecondaryUp = (event) => {
+    if (event.button !== 2) return
+    const at = pointerAt(event)
+    module._gbui_demos_pointer(handle, at.x, at.y, event.buttons & 1 ? 1 : 0)
+    module._gbui_demos_secondary(handle, 0)
+    schedule()
+  }
+
   const onPointerDown = (event) => {
+    if (event.button === 2) {
+      onSecondaryDown(event)
+      return
+    }
     if (event.button !== 0) return
     const at = pointerAt(event)
     // The capture is what makes a drag survive leaving the canvas — a slider
@@ -327,6 +354,8 @@ export async function mountDemo(canvas, options = {}) {
 
   canvas.addEventListener('pointermove', onPointerMove)
   canvas.addEventListener('pointerdown', onPointerDown)
+  canvas.addEventListener('pointerup', onSecondaryUp)
+  canvas.addEventListener('contextmenu', onContextMenu)
   canvas.addEventListener('pointerup', onPointerUp)
   canvas.addEventListener('pointerleave', onPointerLeave)
   canvas.addEventListener('pointercancel', onPointerLeave)
@@ -407,6 +436,8 @@ export async function mountDemo(canvas, options = {}) {
       window.removeEventListener('resize', applySize)
       canvas.removeEventListener('pointermove', onPointerMove)
       canvas.removeEventListener('pointerdown', onPointerDown)
+      canvas.removeEventListener('pointerup', onSecondaryUp)
+      canvas.removeEventListener('contextmenu', onContextMenu)
       canvas.removeEventListener('pointerup', onPointerUp)
       canvas.removeEventListener('pointerleave', onPointerLeave)
       canvas.removeEventListener('pointercancel', onPointerLeave)

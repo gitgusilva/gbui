@@ -40,6 +40,7 @@ set(GBUI_SOURCES
     src/layout/textWrap.cpp
     src/paint/paint.cpp
     src/paint/canvas.cpp
+    src/widgets/contextMenu.cpp
     src/widgets/detail.cpp
     src/widgets/drawer.cpp
     src/widgets/floating.cpp
@@ -48,6 +49,10 @@ set(GBUI_SOURCES
     src/widgets/chip.cpp
     src/widgets/kbd.cpp
     src/widgets/skeleton.cpp
+    src/widgets/accordion.cpp
+    src/widgets/segmented.cpp
+    src/widgets/breadcrumbs.cpp
+    src/widgets/pagination.cpp
     src/widgets/badge.cpp
     src/widgets/box.cpp
     src/widgets/button.cpp

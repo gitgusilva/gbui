@@ -148,6 +148,8 @@ public:
 
     void pointerMove(float x, float y);
     void pointerButton(bool down);
+    /** The secondary button — what a context menu is opened by. */
+    void secondaryButton(bool down);
     /** Parks the pointer outside the window, which is what ends a hover. */
     void pointerLeave();
     void wheel(float lines);

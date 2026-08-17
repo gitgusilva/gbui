@@ -41,6 +41,9 @@ struct WindowOptions {
 struct MouseState {
     Vec2 position{};
     bool leftDown = false;
+    /** The secondary button. What a context menu is opened by, and the reason
+     *  this struct grew past one button. */
+    bool rightDown = false;
 };
 
 class Window {
