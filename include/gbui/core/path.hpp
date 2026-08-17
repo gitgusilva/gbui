@@ -24,6 +24,25 @@ public:
     void lineTo(Vec2 point);
     /** Cubic Bézier, flattened to `tolerance` device pixels of error. */
     void cubicTo(Vec2 control1, Vec2 control2, Vec2 end, float tolerance = 0.2f);
+    /**
+     * Sweeps an arc from `fromDegrees` to `toDegrees`, as cubic Béziers.
+     *
+     * Degrees, clockwise, zero at three o'clock. Sweeping backwards is a
+     * smaller `to` than `from`, and it draws the arc the other way round rather
+     * than the long way — which is the difference between a ring and a
+     * polygon, and was a real bug in the donut chart before this was written
+     * once instead of twice.
+     *
+     * The handle length is `(4/3)·tan(Δ/4)` times the radius, **signed** by
+     * the sweep, and the sweep is cut into quarter turns: a linear tangent
+     * approximation is only exact at ninety degrees, and four of them make a
+     * circle to within a thousandth of the radius.
+     *
+     * Continues the current contour when there is one, so an arc after a
+     * `lineTo` is joined to it — which is how a ring segment with flat ends is
+     * drawn as one closed shape.
+     */
+    void arcTo(Vec2 centre, float radius, float fromDegrees, float toDegrees);
     void close();
 
     const std::vector<Contour>& contours() const { return contours_; }

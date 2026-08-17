@@ -76,6 +76,50 @@ void addComponentExamples(std::vector<Example>& out) {
                        (void)scope;
                    }, 100});
 
+    out.push_back({"avatar", [](Ui& ui, const Interaction&, State&) {
+                       auto row = ui.row({.align = Align::Center, .gap = 10.0f});
+                       // No picture: the initials and a colour derived from the
+                       // name, which is the same on every machine and in every
+                       // session because it is a hash rather than a choice.
+                       avatar(ui, "Ada Lovelace");
+                       avatar(ui, "Grace Hopper", {.size = 34.0f});
+                       avatar(ui, "gitbox-bot", {.size = 24.0f, .square = true});
+                       text(ui, "Ada Lovelace", {.color = Token::Text});
+                       // Beside its own name, so it says nothing: a row that
+                       // reads "Ada Lovelace, Ada Lovelace" has said it twice.
+                       avatar(ui, "Ada Lovelace", {.size = 20.0f, .decorative = true});
+                   }, 70});
+
+    out.push_back({"chip", [](Ui& ui, const Interaction& input, State& state) {
+                       auto row = ui.row({.align = Align::Center, .gap = 8.0f});
+                       if (chip(ui, input, "catalog.chip.merged", "Merged",
+                                {.selected = state.on, .leading = Icon::GitMerge}).pressed) {
+                           state.on = !state.on;
+                       }
+                       if (chip(ui, input, "catalog.chip.stale", "Stale",
+                                {.selected = state.off}).pressed) {
+                           state.off = !state.off;
+                       }
+                       // Removable: the × is a second control with a name of
+                       // its own, and Delete takes it off from the keyboard.
+                       chip(ui, input, "catalog.chip.branch", "feat/nord-tuning",
+                            {.removable = true, .leading = Icon::GitBranch});
+                   }, 60});
+
+    out.push_back({"kbd", [](Ui& ui, const Interaction&, State&) {
+                       auto column = ui.column({.gap = 10.0f});
+                       {
+                           auto row = ui.row({.align = Align::Center, .gap = 8.0f});
+                           text(ui, "Command palette", {.color = Token::Text, .grow = 1.0f});
+                           kbd(ui, "Ctrl+Shift+P");
+                       }
+                       {
+                           auto row = ui.row({.align = Align::Center, .gap = 8.0f});
+                           text(ui, "Stage everything", {.color = Token::Text, .grow = 1.0f});
+                           kbd(ui, "Ctrl + A");
+                       }
+                   }, 80});
+
     out.push_back({"badge", [](Ui& ui, const Interaction&, State&) {
                        // A row, because the stage stretches its children and a
                        // badge that spans the panel is not a badge.

@@ -185,6 +185,85 @@ A badge is a pill, and it never shrinks: a branch name that elides to nothing is
 worse than a row that overflows. See [Icons](/guide/icons) for the set and how
 to extend it.
 
+## The small ones
+
+```cpp
+NodeId     spinner(Ui&, const SpinnerOptions& = {});
+NodeId     avatar(Ui&, std::string_view name, const AvatarOptions& = {});
+std::string initialsFor(std::string_view name);
+ChipResult chip(Ui&, const Interaction&, id, std::string_view label, const ChipOptions& = {});
+NodeId     kbd(Ui&, std::string_view keys, const KbdOptions& = {});
+NodeId     skeleton(Ui&, const SkeletonOptions& = {});
+```
+
+**`spinner` and `progressBar` are both here on purpose.** A bar is a horizontal
+rule that wants a row of its own; a spinner is a glyph that goes *inside* things
+— in a button that is submitting, at the end of a row that is loading. Use a bar
+when you know how far along you are: a spinner says only "still working", and a
+reader watching one cannot tell whether to wait or leave.
+
+Both take a `phase` rather than keeping a clock, like everything else here that
+moves. Feed it `frame.time`.
+
+**`avatar` is its fallback.** Drawing a bitmap in a circle is four lines; what
+to draw when there is no bitmap is the part applications get wrong, and a grey
+circle is indistinguishable from a broken one. With no `picture` it draws the
+initials on a colour derived from the name by hash — stable, so the same person
+is the same colour on every screen and in every session with nobody storing one.
+`square` is the signal for a thing rather than a person: an organisation, a
+repository, a bot.
+
+**`chip` is not `badge`.** A badge is output — a count, a status, something the
+reader cannot act on. A chip is input: a filter that is on, a tag that can be
+taken off. That is why they are two components and not one with a flag; giving
+`badge` a press and a focus ring would put every status pill on every screen on
+the Tab route. A chip announces itself as a toggle button with `pressed`, its ×
+is named after it — "Remove feat/nord", not "Remove" six times — and Delete or
+Backspace removes it from the keyboard.
+
+**`kbd` splits the string.** `kbd(ui, "Ctrl+Shift+P")` is three caps with the
+pluses between them, because a caller should be able to write a shortcut the way
+they would say it. The caps are hidden from the accessibility tree and the group
+carries the whole shortcut as its name, so a reader hears it once instead of
+three loose letters.
+
+**`skeleton` is a lie with a short shelf life.** It exists to stop the page
+jumping when the data lands, not for the shimmer. Past about a second it is
+worse than a spinner, because the reader is looking at a layout that is not
+there. Name only the *first* of a set: six placeholders that each announce
+themselves are six announcements of nothing, so every unnamed one is hidden.
+
+## Banner
+
+```cpp
+BannerResult banner(Ui&, const Interaction&, id, std::string_view title,
+                    const BannerOptions& = {});
+```
+
+The other half of `toast`, and applications reach for the wrong one constantly.
+A toast is **transient and global**: a corner, a sentence about what just
+happened, gone. A banner is **persistent and local**: in the layout, above the
+thing it is about, still there because the condition is still true.
+
+*"Merge in progress — 3 conflicts remain"* is a banner; a reader who looked away
+would have lost it as a toast, and the merge is still going on. *"Pushed 3
+commits"* is a toast; there is nothing left to do about it and it would sit
+there forever as a banner. **The rule: if dismissing it would lose information
+the reader still needs, it is a banner.**
+
+`Danger` and `Warning` take ARIA's `alert`, which interrupts a screen reader
+mid-sentence; `Info` and `Success` take `status`, which waits for a pause. That
+is the whole reason the kind is not just a colour.
+
+::: tip Why the four kinds differ by *shape*
+This palette has 24 tokens and no amber — the token list is a contract shared
+with the theme registry, not somewhere to invent a colour — so `Warning` borrows
+`Modified`, which is a blue, and sits next to the accent's blue. Colour was
+never a safe signal on its own anyway. A triangle is a warning everywhere, a
+circled `i` is a note, a tick is done and a circled `!` is a failure, and all
+four read at a glance in one colour.
+:::
+
 ## Containers
 
 ```cpp

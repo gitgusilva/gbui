@@ -26,11 +26,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # script without arguments.
 DEFAULT_ICONS = [
     "archive", "bold", "chart-pie", "check", "chevron-down", "chevron-left", "chevron-right",
-    "chevron-up", "circle-alert", "clock-fading", "download", "eye", "eye-off", "file",
-    "file-minus", "file-plus", "folder", "git-branch", "git-commit-horizontal", "git-merge",
-    "heading", "image", "italic", "link", "list", "list-ordered", "minus", "package",
-    "panel-left", "plus", "quote", "refresh-cw", "rotate-ccw", "search", "settings",
-    "strikethrough", "terminal", "trending-down", "trending-up", "underline", "upload", "x",
+    "chevron-up", "circle-alert", "circle-check", "clock-fading", "download", "eye", "eye-off",
+    "file", "file-minus", "file-plus", "folder", "funnel", "git-branch",
+    "git-commit-horizontal", "git-merge", "heading", "image", "info", "italic", "link", "list",
+    "list-ordered", "minus", "package", "panel-left", "plus", "quote", "refresh-cw",
+    "rotate-ccw", "search", "settings", "strikethrough", "terminal", "trending-down",
+    "trending-up", "triangle-alert", "underline", "upload", "user", "x",
 ]
 
 # The constant that turns a quarter circle into a cubic.

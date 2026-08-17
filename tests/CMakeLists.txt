@@ -4,6 +4,7 @@ add_executable(gbui_tests
     toastTest.cpp
     compareTest.cpp
     drawerTest.cpp
+    elementsTest.cpp
     carouselTest.cpp
     galleryTest.cpp
     treeViewTest.cpp

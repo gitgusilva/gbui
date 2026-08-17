@@ -10,8 +10,26 @@ namespace {
 
 std::vector<ComponentInfo> build() {
     std::vector<ComponentInfo> out;
-    out.reserve(67);
+    out.reserve(73);
 
+    out.push_back(ComponentInfo{
+        "avatar",
+        "Elements",
+        "gbui/widgets/avatar.hpp",
+        "A person's picture, or their initials. `name` is what it is announced as and where the initials and the colour come from, so it is a parameter rather than an option: an avatar without one is a decoration, and this component would have nothing to draw.",
+        "A person, as a small round picture — or as their initials when there is none.",
+        "AvatarOptions",
+        {
+            PropertyInfo{"size", PropertyKind::Number, "float", "28.0f", {}, "", false},
+            PropertyInfo{"picture", PropertyKind::Opaque, "std::optional<Bitmap>", "", {}, "The picture. Nothing draws the initials instead. Borrowed for the frame like every other bitmap here — read when the frame is painted, never copied. See `image`.", true},
+            PropertyInfo{"square", PropertyKind::Bool, "bool", "false", {}, "Square instead of round. A round avatar is a person and a square one is a thing — an organisation, a repository, a bot. Worth the option because the shape is the only signal a reader gets, and getting it backwards makes a list of teams look like a list of people.", false},
+            PropertyInfo{"initials", PropertyKind::Text, "std::string_view", "", {}, "Overrides the initials, which are otherwise taken from the name. For the cases the derivation gets wrong and only the caller can know: a handle with no spaces in it, a name written family-first, an emoji.", false},
+            PropertyInfo{"decorative", PropertyKind::Bool, "bool", "false", {}, "Announced instead of the name, when the name is already beside it. A row that reads out \"Ada Lovelace, Ada Lovelace\" has said it twice.", false},
+        },
+        false,
+        false,
+        "NodeId avatar(Ui& ui, std::string_view name, const AvatarOptions& options = {});",
+    });
     out.push_back(ComponentInfo{
         "badge",
         "Elements",
@@ -26,6 +44,24 @@ std::vector<ComponentInfo> build() {
         false,
         false,
         "NodeId badge(Ui& ui, std::string_view value, const BadgeOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "banner",
+        "Elements",
+        "gbui/widgets/banner.hpp",
+        "A message in the flow. `Danger` and `Warning` take ARIA's `alert`, which interrupts a screen reader mid-sentence; `Info` and `Success` take `status`, which waits for a pause. That difference is the whole reason the kind is not just a colour: a conflict a reader has to know about now and a note they can hear in a moment are not the same message.",
+        "A message that stays, in the flow, where the thing it is about is.",
+        "BannerOptions",
+        {
+            PropertyInfo{"kind", PropertyKind::Enum, "BannerKind", "BannerKind::Info", {"Info", "Success", "Warning", "Danger"}, "How much attention it is owed — and therefore whether a screen reader is interrupted by it. See `BannerKind`.", false},
+            PropertyInfo{"detail", PropertyKind::Text, "std::string_view", "", {}, "A second line under the title, for the part that does not fit in one.", false},
+            PropertyInfo{"icon", PropertyKind::Icon, "std::optional<Icon>", "", {}, "Overrides the glyph the kind would pick.", true},
+            PropertyInfo{"closable", PropertyKind::Bool, "bool", "false", {}, "An × at the trailing edge. A banner whose condition the reader cannot clear should not have one — an × that puts the message back next frame is a control that does not work.", false},
+            PropertyInfo{"action", PropertyKind::Text, "std::string_view", "", {}, "The label of a single action at the trailing edge — \"Resolve\", \"Retry\", \"Reload\". Empty draws none.", false},
+        },
+        false,
+        true,
+        "BannerResult banner(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, const BannerOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "button",
@@ -87,6 +123,25 @@ std::vector<ComponentInfo> build() {
         false,
         true,
         "[[nodiscard]] bool checkbox(Ui& ui, const Interaction& input, std::string_view id, bool checked, const CheckboxOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "chip",
+        "Elements",
+        "gbui/widgets/chip.hpp",
+        "A pressable pill. Enter and Space press it; when it is removable, Delete and Backspace remove it while it has focus — which is the gesture every tag field on the web has and the reason a removable chip needs no pointer at all.",
+        "A pill you can press, or take off.",
+        "ChipOptions",
+        {
+            PropertyInfo{"selected", PropertyKind::Bool, "bool", "false", {}, "Drawn as chosen: filled rather than outlined, and announced as pressed. This is what a filter chip is for. A chip that only ever looks the same is a label with a cursor on it.", false},
+            PropertyInfo{"removable", PropertyKind::Bool, "bool", "false", {}, "An × at the trailing edge, and a second thing to press.", false},
+            PropertyInfo{"leading", PropertyKind::Icon, "std::optional<Icon>", "", {}, "A glyph before the label.", true},
+            PropertyInfo{"disabled", PropertyKind::Bool, "bool", "false", {}, "", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What it is called, when the label is not enough on its own — \"main\" on a branch chip is a word, not a sentence.", false},
+            PropertyInfo{"color", PropertyKind::Token, "Token", "Token::Accent", {}, "", false},
+        },
+        false,
+        true,
+        "ChipResult chip(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const ChipOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "field",
@@ -168,6 +223,22 @@ std::vector<ComponentInfo> build() {
         false,
         false,
         "NodeId image(Ui& ui, const Bitmap& source, const ImageOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
+        "kbd",
+        "Elements",
+        "gbui/widgets/kbd.hpp",
+        "One or more keycaps. The string is split on `separator`, so `\"Ctrl+P\"` is two caps and `\"Ctrl\"` is one. Whitespace around each part is trimmed, because `\"Ctrl + P\"` is how people write it.",
+        "A key, drawn as a key.",
+        "KbdOptions",
+        {
+            PropertyInfo{"size", PropertyKind::Number, "float", "11.0f", {}, "", false},
+            PropertyInfo{"separator", PropertyKind::Text, "std::string_view", "\"+\"", {}, "What separates the keys in the string, and what is drawn between the caps. `+` is the desktop convention and `-` is Emacs's. Setting it to nothing draws the whole string as one cap, which is what a key with a plus in its *name* needs.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "Announced instead of the keys. A reader hears \"Control Shift P\" rather than three letters when the caller spells it out; empty reads the caps as they are written.", false},
+        },
+        false,
+        false,
+        "NodeId kbd(Ui& ui, std::string_view keys, const KbdOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "label",
@@ -252,6 +323,26 @@ std::vector<ComponentInfo> build() {
         "[[nodiscard]] SelectResult select(Ui& ui, const Interaction& input, std::string_view id, const std::vector<std::string>& items, std::optional<std::size_t> selected, SelectState& state, const SelectOptions& options = {});",
     });
     out.push_back(ComponentInfo{
+        "skeleton",
+        "Elements",
+        "gbui/widgets/skeleton.hpp",
+        "A placeholder in the shape of what is coming.",
+        "The shape of content that has not arrived, in place of it.",
+        "SkeletonOptions",
+        {
+            PropertyInfo{"shape", PropertyKind::Enum, "SkeletonShape", "SkeletonShape::Text", {"Text", "Block", "Circle"}, "What it is standing in for: a line, a block, or an avatar.", false},
+            PropertyInfo{"width", PropertyKind::Number, "float", "kAuto", {}, "", false},
+            PropertyInfo{"height", PropertyKind::Number, "float", "0.0f", {}, "", false},
+            PropertyInfo{"grow", PropertyKind::Number, "float", "0.0f", {}, "", false},
+            PropertyInfo{"radius", PropertyKind::Number, "float", "0.0f", {}, "", false},
+            PropertyInfo{"phase", PropertyKind::Number, "float", "0.0f", {}, "Where in its sweep the shimmer is, in turns. Feed it a clock. The caller's, like `spinner`'s and `progressBar`'s: a component here holds no state. Leave it at zero for a still placeholder, which is the honest choice when several are on screen — a dozen shimmers out of step with each other is a page that looks broken rather than busy.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What is loading, announced once for the group. Put it on the *first* skeleton of a set and leave the rest silent. A reader told \"loading\" six times has been told nothing six times, which is why every one of these is hidden from the tree unless it is named.", false},
+        },
+        false,
+        false,
+        "NodeId skeleton(Ui& ui, const SkeletonOptions& options = {});",
+    });
+    out.push_back(ComponentInfo{
         "slider",
         "Elements",
         "gbui/widgets/slider.hpp",
@@ -298,6 +389,25 @@ std::vector<ComponentInfo> build() {
         false,
         false,
         "NodeId spacer(Ui& ui, float grow = 1.0f);",
+    });
+    out.push_back(ComponentInfo{
+        "spinner",
+        "Elements",
+        "gbui/widgets/spinner.hpp",
+        "A turning ring.",
+        "A circle that turns while something is happening.",
+        "SpinnerOptions",
+        {
+            PropertyInfo{"size", PropertyKind::Number, "float", "16.0f", {}, "", false},
+            PropertyInfo{"thickness", PropertyKind::Number, "float", "0.0f", {}, "How thick the ring is. Zero takes a sixth of `size`, which keeps a large spinner from looking like a hairline and a small one from looking like a doughnut.", false},
+            PropertyInfo{"color", PropertyKind::Token, "Token", "Token::Accent", {}, "", false},
+            PropertyInfo{"track", PropertyKind::Token, "Token", "Token::Border", {}, "The part of the ring that is not the moving arc, behind it.", false},
+            PropertyInfo{"name", PropertyKind::Text, "std::string_view", "", {}, "What is happening — \"Cloning\", \"Signing in\". Announced as a live region, because a spinner is the one control whose whole meaning is invisible to a reader who cannot see it turning. Empty says nothing at all, which is right when the surrounding text already says it or when a `busy` state on the container does.", false},
+            PropertyInfo{"phase", PropertyKind::Number, "float", "0.0f", {}, "Where in its turn it is, in turns. Feed it a clock. The caller's, exactly as `progressBar`'s indeterminate form takes it, and for the same reason: a component here holds no state, and \"how long has this been spinning\" is state. One turn per second is `time`; half that speed is `time * 0.5f`. The fractional part is all that is read, so a clock that never resets is fine.", false},
+        },
+        false,
+        false,
+        "NodeId spinner(Ui& ui, const SpinnerOptions& options = {});",
     });
     out.push_back(ComponentInfo{
         "emphasis",

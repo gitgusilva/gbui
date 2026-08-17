@@ -43,6 +43,11 @@ set(GBUI_SOURCES
     src/widgets/detail.cpp
     src/widgets/drawer.cpp
     src/widgets/floating.cpp
+    src/widgets/avatar.cpp
+    src/widgets/banner.cpp
+    src/widgets/chip.cpp
+    src/widgets/kbd.cpp
+    src/widgets/skeleton.cpp
     src/widgets/badge.cpp
     src/widgets/box.cpp
     src/widgets/button.cpp
@@ -73,6 +78,7 @@ set(GBUI_SOURCES
     src/widgets/select.cpp
     src/widgets/slider.cpp
     src/widgets/spacing.cpp
+    src/widgets/spinner.cpp
     src/widgets/splitPane.cpp
     src/widgets/toggle.cpp
     src/widgets/table.cpp

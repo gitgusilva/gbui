@@ -37,13 +37,19 @@
 #pragma once
 
 // ---- content ---------------------------------------------------------------
+#include "gbui/widgets/avatar.hpp"
 #include "gbui/widgets/badge.hpp"
+#include "gbui/widgets/banner.hpp"
+#include "gbui/widgets/chip.hpp"
+#include "gbui/widgets/kbd.hpp"
+#include "gbui/widgets/skeleton.hpp"
 #include "gbui/widgets/hyperlink.hpp"
 #include "gbui/widgets/icon.hpp"
 #include "gbui/widgets/image.hpp"
 #include "gbui/widgets/label.hpp"
 #include "gbui/widgets/progress.hpp"
 #include "gbui/widgets/spacing.hpp"
+#include "gbui/widgets/spinner.hpp"
 #include "gbui/widgets/text.hpp"
 
 // ---- input -----------------------------------------------------------------

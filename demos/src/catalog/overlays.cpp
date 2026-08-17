@@ -119,6 +119,23 @@ void addOverlayExamples(std::vector<Example>& out) {
                        }
                    }, 220});
 
+    out.push_back({"banner", [](Ui& ui, const Interaction& input, State& state) {
+                       auto column = ui.column({.gap = 10.0f});
+                       // The case a toast cannot take: the merge is still going
+                       // on, so a message that went away would take the only
+                       // thing saying so with it.
+                       banner(ui, input, "catalog.banner.merge", "Merge in progress",
+                              {.kind = BannerKind::Warning,
+                               .detail = "3 of 7 conflicts remain in src/widgets.",
+                               .action = "Resolve"});
+                       if (!state.off) {
+                           if (banner(ui, input, "catalog.banner.note", "Signed commits are on",
+                                      {.closable = true}).dismissed) {
+                               state.off = true;
+                           }
+                       }
+                   }, 150});
+
     out.push_back({"drawer", [](Ui& ui, const Interaction& input, State& state) {
                        button(ui, input, "FILTERS",
                               {.variant = ButtonVariant::Secondary, .id = "catalog.drawer.open"});
@@ -129,7 +146,7 @@ void addOverlayExamples(std::vector<Example>& out) {
                        // its own way out; see the top of drawer.hpp.
                        auto sheet = drawer(ui, input, "catalog.drawer", "Filters",
                                            state.drawerOpen,
-                                           {.size = 260.0f, .icon = Icon::Settings});
+                                           {.size = 260.0f, .icon = Icon::Funnel});
                        if (sheet.result.dismissed) state.drawerOpen = false;
                        if (!sheet.result.visible) return;
 

@@ -212,6 +212,37 @@ void Path::cubicTo(Vec2 c1, Vec2 c2, Vec2 end, float tolerance) {
     current_ = end;
 }
 
+void Path::arcTo(Vec2 centre, float radius, float fromDegrees, float toDegrees) {
+    constexpr float kPi = 3.14159265358979323846f;
+    const auto onCircle = [&](float degrees) {
+        const float radians = degrees * kPi / 180.0f;
+        return Vec2{centre.x + radius * std::cos(radians), centre.y + radius * std::sin(radians)};
+    };
+
+    const int steps =
+        std::max(1, static_cast<int>(std::ceil(std::fabs(toDegrees - fromDegrees) / 90.0f)));
+    const float sweep = (toDegrees - fromDegrees) / static_cast<float>(steps);
+    const float handle = radius * (4.0f / 3.0f) * std::tan(sweep * kPi / 180.0f / 4.0f);
+
+    // Only start a contour when there is not one to continue: an arc after a
+    // `lineTo` is part of that shape, and a `moveTo` here would cut it in two.
+    if (contours_.empty() || contours_.back().closed) moveTo(onCircle(fromDegrees));
+
+    float at = fromDegrees;
+    for (int i = 0; i < steps; ++i) {
+        const float next = at + sweep;
+        const float a = at * kPi / 180.0f;
+        const float b = next * kPi / 180.0f;
+        const Vec2 start = onCircle(at);
+        const Vec2 end = onCircle(next);
+        // The handles run along the tangent at each end: (-sin, cos) is the
+        // tangent to a circle, and `handle` carries the direction.
+        cubicTo({start.x - handle * std::sin(a), start.y + handle * std::cos(a)},
+                {end.x + handle * std::sin(b), end.y - handle * std::cos(b)}, end);
+        at = next;
+    }
+}
+
 void Path::close() {
     if (contours_.empty()) return;
     contours_.back().closed = true;

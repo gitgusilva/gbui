@@ -1,5 +1,67 @@
 [
   {
+    "name": "avatar",
+    "group": "Elements",
+    "header": "gbui/widgets/avatar.hpp",
+    "summary": "A person, as a small round picture \u2014 or as their initials when there is none.",
+    "signatures": [
+      "NodeId avatar(Ui& ui, std::string_view name, const AvatarOptions& options = {});"
+    ],
+    "notes": [
+      "A person's picture, or their initials. `name` is what it is announced as and where the initials and the colour come from, so it is a parameter rather than an option: an avatar without one is a decoration, and this component would have nothing to draw."
+    ],
+    "optionsType": "AvatarOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "28.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "picture",
+        "kind": "Opaque",
+        "type": "std::optional<Bitmap>",
+        "default": "",
+        "choices": [],
+        "doc": "The picture. Nothing draws the initials instead. Borrowed for the frame like every other bitmap here \u2014 read when the frame is painted, never copied. See `image`.",
+        "optional": true
+      },
+      {
+        "name": "square",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Square instead of round. A round avatar is a person and a square one is a thing \u2014 an organisation, a repository, a bot. Worth the option because the shape is the only signal a reader gets, and getting it backwards makes a list of teams look like a list of people.",
+        "optional": false
+      },
+      {
+        "name": "initials",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Overrides the initials, which are otherwise taken from the name. For the cases the derivation gets wrong and only the caller can know: a handle with no spaces in it, a name written family-first, an emoji.",
+        "optional": false
+      },
+      {
+        "name": "decorative",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Announced instead of the name, when the name is already beside it. A row that reads out \"Ada Lovelace, Ada Lovelace\" has said it twice.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "badge",
     "group": "Elements",
     "header": "gbui/widgets/badge.hpp",
@@ -28,6 +90,73 @@
         "default": "Token::TextMuted",
         "choices": [],
         "doc": "The text on the wash. Paired with `background`, and the contrast between the two is the caller's to get right \u2014 a pill is one node and there is nothing here that can check it.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "banner",
+    "group": "Elements",
+    "header": "gbui/widgets/banner.hpp",
+    "summary": "A message that stays, in the flow, where the thing it is about is.",
+    "signatures": [
+      "BannerResult banner(Ui& ui, const Interaction& input, std::string_view id, std::string_view title, const BannerOptions& options = {});"
+    ],
+    "notes": [
+      "A message in the flow. `Danger` and `Warning` take ARIA's `alert`, which interrupts a screen reader mid-sentence; `Info` and `Success` take `status`, which waits for a pause. That difference is the whole reason the kind is not just a colour: a conflict a reader has to know about now and a note they can hear in a moment are not the same message."
+    ],
+    "optionsType": "BannerOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "kind",
+        "kind": "Enum",
+        "type": "BannerKind",
+        "default": "BannerKind::Info",
+        "choices": [
+          "Info",
+          "Success",
+          "Warning",
+          "Danger"
+        ],
+        "doc": "How much attention it is owed \u2014 and therefore whether a screen reader is interrupted by it. See `BannerKind`.",
+        "optional": false
+      },
+      {
+        "name": "detail",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "A second line under the title, for the part that does not fit in one.",
+        "optional": false
+      },
+      {
+        "name": "icon",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "Overrides the glyph the kind would pick.",
+        "optional": true
+      },
+      {
+        "name": "closable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "An \u00d7 at the trailing edge. A banner whose condition the reader cannot clear should not have one \u2014 an \u00d7 that puts the message back next frame is a control that does not work.",
+        "optional": false
+      },
+      {
+        "name": "action",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "The label of a single action at the trailing edge \u2014 \"Resolve\", \"Retry\", \"Reload\". Empty draws none.",
         "optional": false
       }
     ]
@@ -186,6 +315,77 @@
         "default": "0.0f",
         "choices": [],
         "doc": "Zero takes the active design's box size and corner.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "chip",
+    "group": "Elements",
+    "header": "gbui/widgets/chip.hpp",
+    "summary": "A pill you can press, or take off.",
+    "signatures": [
+      "ChipResult chip(Ui& ui, const Interaction& input, std::string_view id, std::string_view label, const ChipOptions& options = {});"
+    ],
+    "notes": [
+      "A pressable pill. Enter and Space press it; when it is removable, Delete and Backspace remove it while it has focus \u2014 which is the gesture every tag field on the web has and the reason a removable chip needs no pointer at all."
+    ],
+    "optionsType": "ChipOptions",
+    "container": false,
+    "interactive": true,
+    "properties": [
+      {
+        "name": "selected",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "Drawn as chosen: filled rather than outlined, and announced as pressed. This is what a filter chip is for. A chip that only ever looks the same is a label with a cursor on it.",
+        "optional": false
+      },
+      {
+        "name": "removable",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "An \u00d7 at the trailing edge, and a second thing to press.",
+        "optional": false
+      },
+      {
+        "name": "leading",
+        "kind": "Icon",
+        "type": "std::optional<Icon>",
+        "default": "",
+        "choices": [],
+        "doc": "A glyph before the label.",
+        "optional": true
+      },
+      {
+        "name": "disabled",
+        "kind": "Bool",
+        "type": "bool",
+        "default": "false",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What it is called, when the label is not enough on its own \u2014 \"main\" on a branch chip is a word, not a sentence.",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
         "optional": false
       }
     ]
@@ -513,6 +713,50 @@
         "default": "",
         "choices": [],
         "doc": "Drawn instead when there are no pixels \u2014 HTML's `alt`, doing the job `alt` actually does in a browser rather than the one it is credited with. An empty one leaves the box empty, which is right for decoration. A missing logo in a list of companies is not decoration, and a row that silently loses its mark is worse than one showing three letters.",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "kbd",
+    "group": "Elements",
+    "header": "gbui/widgets/kbd.hpp",
+    "summary": "A key, drawn as a key.",
+    "signatures": [
+      "NodeId kbd(Ui& ui, std::string_view keys, const KbdOptions& options = {});"
+    ],
+    "notes": [
+      "One or more keycaps. The string is split on `separator`, so `\"Ctrl+P\"` is two caps and `\"Ctrl\"` is one. Whitespace around each part is trimmed, because `\"Ctrl + P\"` is how people write it."
+    ],
+    "optionsType": "KbdOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "11.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "separator",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "\"+\"",
+        "choices": [],
+        "doc": "What separates the keys in the string, and what is drawn between the caps. `+` is the desktop convention and `-` is Emacs's. Setting it to nothing draws the whole string as one cap, which is what a key with a plus in its *name* needs.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "Announced instead of the keys. A reader hears \"Control Shift P\" rather than three letters when the caller spells it out; empty reads the caps as they are written.",
         "optional": false
       }
     ]
@@ -860,6 +1104,90 @@
     ]
   },
   {
+    "name": "skeleton",
+    "group": "Elements",
+    "header": "gbui/widgets/skeleton.hpp",
+    "summary": "The shape of content that has not arrived, in place of it.",
+    "signatures": [
+      "NodeId skeleton(Ui& ui, const SkeletonOptions& options = {});"
+    ],
+    "notes": [
+      "A placeholder in the shape of what is coming."
+    ],
+    "optionsType": "SkeletonOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "shape",
+        "kind": "Enum",
+        "type": "SkeletonShape",
+        "default": "SkeletonShape::Text",
+        "choices": [
+          "Text",
+          "Block",
+          "Circle"
+        ],
+        "doc": "What it is standing in for: a line, a block, or an avatar.",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "kind": "Number",
+        "type": "float",
+        "default": "kAuto",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "height",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "grow",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "radius",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Where in its sweep the shimmer is, in turns. Feed it a clock. The caller's, like `spinner`'s and `progressBar`'s: a component here holds no state. Leave it at zero for a still placeholder, which is the honest choice when several are on screen \u2014 a dozen shimmers out of step with each other is a page that looks broken rather than busy.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is loading, announced once for the group. Put it on the *first* skeleton of a set and leave the rest silent. A reader told \"loading\" six times has been told nothing six times, which is why every one of these is hidden from the tree unless it is named.",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "slider",
     "group": "Elements",
     "header": "gbui/widgets/slider.hpp",
@@ -1006,6 +1334,77 @@
     "container": false,
     "interactive": false,
     "properties": []
+  },
+  {
+    "name": "spinner",
+    "group": "Elements",
+    "header": "gbui/widgets/spinner.hpp",
+    "summary": "A circle that turns while something is happening.",
+    "signatures": [
+      "NodeId spinner(Ui& ui, const SpinnerOptions& options = {});"
+    ],
+    "notes": [
+      "A turning ring."
+    ],
+    "optionsType": "SpinnerOptions",
+    "container": false,
+    "interactive": false,
+    "properties": [
+      {
+        "name": "size",
+        "kind": "Number",
+        "type": "float",
+        "default": "16.0f",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "thickness",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "How thick the ring is. Zero takes a sixth of `size`, which keeps a large spinner from looking like a hairline and a small one from looking like a doughnut.",
+        "optional": false
+      },
+      {
+        "name": "color",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Accent",
+        "choices": [],
+        "doc": "",
+        "optional": false
+      },
+      {
+        "name": "track",
+        "kind": "Token",
+        "type": "Token",
+        "default": "Token::Border",
+        "choices": [],
+        "doc": "The part of the ring that is not the moving arc, behind it.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "kind": "Text",
+        "type": "std::string_view",
+        "default": "",
+        "choices": [],
+        "doc": "What is happening \u2014 \"Cloning\", \"Signing in\". Announced as a live region, because a spinner is the one control whose whole meaning is invisible to a reader who cannot see it turning. Empty says nothing at all, which is right when the surrounding text already says it or when a `busy` state on the container does.",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "kind": "Number",
+        "type": "float",
+        "default": "0.0f",
+        "choices": [],
+        "doc": "Where in its turn it is, in turns. Feed it a clock. The caller's, exactly as `progressBar`'s indeterminate form takes it, and for the same reason: a component here holds no state, and \"how long has this been spinning\" is state. One turn per second is `time`; half that speed is `time * 0.5f`. The fractional part is all that is read, so a clock that never resets is fine.",
+        "optional": false
+      }
+    ]
   },
   {
     "name": "emphasis",

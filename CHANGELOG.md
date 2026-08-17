@@ -15,6 +15,37 @@ Work lands on `main` and gets a number when it ships, not commit by commit.
 
 ### Added
 
+- **Six components the GitBox port asked for**, chosen by counting what the
+  application actually repeats rather than by what a component list usually
+  has: `spinner` (28 files use one), `avatar` (26), `banner` (6), `chip`,
+  `kbd`, `skeleton`.
+
+  Three of them are pairs with something that already existed, and each pair is
+  two components rather than one with a flag because the difference is what
+  they are *for*:
+
+  - **`spinner` beside `progressBar`** — a bar is a rule that wants a row; a
+    spinner is a glyph that goes inside a button or a row. Use the bar when you
+    know how far along you are.
+  - **`chip` beside `badge`** — a badge is output and a chip is input. Giving
+    `badge` a press and a focus ring would put every status pill on every
+    screen on the Tab route.
+  - **`banner` beside `toast`** — a toast is transient and global, a banner is
+    persistent and local. If dismissing it would lose information the reader
+    still needs, it is a banner.
+
+  `avatar` is its fallback: with no picture it draws the initials on a colour
+  hashed from the name, so the same person is the same colour on every screen
+  and in every session without anybody storing one. `kbd` splits `"Ctrl+Shift+P"`
+  into caps and hides them from the accessibility tree behind one group, so a
+  reader hears the shortcut once rather than three loose letters. `skeleton`
+  names only the first of a set, for the same reason.
+- **`Path::arcTo`** — hoisted out of `chart.cpp`'s anonymous namespace, where it
+  had been the only implementation of a signed, quarter-split arc sweep. The
+  spinner needed the same one.
+- **Five more icons**: `Info`, `TriangleAlert`, `CircleCheck`, `Funnel`, `User`
+  — the first two because this palette has no amber, so a warning banner and a
+  note are the same blue and the *shape* has to carry the difference.
 - **A preview is as tall as its example needs.** Every component preview on the
   site was 320 pixels, which is why an open combobox looked broken while the
   control under it was fine: twelve rows and a filter box want four hundred and
